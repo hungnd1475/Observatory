@@ -1,0 +1,84 @@
+﻿<Application x:Class="Observatory.UI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Observatory.UI"
+             xmlns:localconverters="using:Observatory.UI.Shared.Converters"
+             xmlns:media="using:Microsoft.UI.Xaml.Media"
+             xmlns:toolkitconverters="using:Microsoft.Toolkit.Uwp.UI.Converters">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls"/>
+      </ResourceDictionary.MergedDictionaries>
+
+      <!--  Converters  -->
+      <localconverters:FunctionalityModeIconConverter x:Key="FunctionalityModeIconConverter"/>
+      <toolkitconverters:BoolNegationConverter x:Key="BoolNegationConverter"/>
+      <toolkitconverters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+      <toolkitconverters:BoolToObjectConverter x:Key="BoolToFontWeightSemiBoldConverter"
+                                               FalseValue="Normal"
+                                               TrueValue="SemiBold"/>
+
+      <!--  Styles  -->
+      <Style TargetType="Button">
+        <Setter Property="CornerRadius" Value="0"/>
+      </Style>
+
+      <Style x:Key="NavigationPaneButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="MinWidth" Value="40"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="Button">
+              <Grid x:Name="ContentPresenterGrid"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}">
+                <ContentPresenter x:Name="ContentPresenter"
+                                  Padding="{TemplateBinding Padding}"
+                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                  AutomationProperties.AccessibilityView="Raw"
+                                  Content="{TemplateBinding Content}"
+                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                  ContentTransitions="{TemplateBinding ContentTransitions}"
+                                  Foreground="{TemplateBinding Foreground}"/>
+                <VisualStateManager.VisualStateGroups>
+                  <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal"/>
+                    <VisualState x:Name="PointerOver">
+                      <VisualState.Setters>
+                        <Setter Target="ContentPresenterGrid.(media:RevealBrush.State)" Value="PointerOver"/>
+                        <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListLowRevealBackgroundBrush}"/>
+                        <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource SystemControlHighlightAltBaseHighBrush}"/>
+                        <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightTransparentRevealBorderBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                      <VisualState.Setters>
+                        <Setter Target="ContentPresenterGrid.(media:RevealBrush.State)" Value="Pressed"/>
+                        <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListMediumRevealBackgroundBrush}"/>
+                        <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource SystemControlHighlightAltBaseHighBrush}"/>
+                        <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                      <VisualState.Setters>
+                        <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlTransparentBrush}"/>
+                        <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource SystemControlDisabledBaseMediumLowBrush}"/>
+                        <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlTransparentBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                  </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+              </Grid>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+    </ResourceDictionary>
+  </Application.Resources>
+</Application>
