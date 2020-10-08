@@ -10,8 +10,8 @@ namespace Observatory.Core.ViewModels.Calendar
     {
         public string UrlPathSegment { get; } = "calendar";
 
-        public IScreen HostScreen { get; set; }
+        IScreen IRoutableViewModel.HostScreen => HostScreen;
 
-        public MainViewModel Main => (MainViewModel)HostScreen;
+        public MainViewModel HostScreen { get; set; }
     }
 }
