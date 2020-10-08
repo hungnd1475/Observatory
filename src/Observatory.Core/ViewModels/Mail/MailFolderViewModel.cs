@@ -31,9 +31,6 @@ namespace Observatory.Core.ViewModels.Mail
         [Reactive]
         public bool IsFavorite { get; set; }
 
-        [Reactive]
-        public bool IsSelected { get; set; }
-
         public ReadOnlyObservableCollection<MailFolderViewModel> ChildFolders => _childFolders;
 
         public ReadOnlyObservableCollection<MessageSummaryViewModel> Messages => throw new NotImplementedException();

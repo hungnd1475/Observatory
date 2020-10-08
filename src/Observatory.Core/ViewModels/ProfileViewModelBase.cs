@@ -17,7 +17,6 @@ namespace Observatory.Core.ViewModels
         public abstract MailBoxViewModel MailBox { get; }
         public abstract CalendarViewModel Calendar { get; }
 
-        [Reactive] public bool IsSelected { get; set; }
         [Reactive] public bool IsAuthenticated { get; set; }
 
         public abstract ReactiveCommand<Unit, Unit> AuthenticateCommand { get; }
