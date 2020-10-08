@@ -17,12 +17,12 @@ namespace Observatory.Core.Services
         /// <summary>
         /// Gets an observable of change events happened to the mail folders.
         /// </summary>
-        IObservable<IChangeSet<MailFolder, string>> FolderChanges { get; }
+        IObservable<IEnumerable<DeltaEntity<MailFolder>>> FolderChanges { get; }
 
         /// <summary>
         /// Gets an observable of change events happened to the messages.
         /// </summary>
-        IObservable<IChangeSet<MessageSummary, string>> MessageChanges { get; }
+        IObservable<IEnumerable<DeltaEntity<MessageSummary>>> MessageChanges { get; }
 
         /// <summary>
         /// Synchronizes the mail folders. All changes will be published to <see cref="FolderChanges"/>.

@@ -6,6 +6,7 @@ using Observatory.Core.Persistence;
 using Observatory.Core.Services;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using Splat;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -43,7 +44,6 @@ namespace Observatory.Core.ViewModels.Mail
 
             var sharedFoldersConnection = _sourceFolders.Connect()
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .Or(new[] { _mailService.FolderChanges })
                 .Sort(SortExpressionComparer<MailFolder>.Ascending(f => f.Type).ThenByAscending(f => f.Name))
                 .TransformToTree(f => f.ParentId)
                 .Transform(n => new MailFolderViewModel(n))
@@ -68,7 +68,32 @@ namespace Observatory.Core.ViewModels.Mail
             sharedFoldersConnection.Connect()
                 .DisposeWith(_disposables);
 
+            _mailService.FolderChanges
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe(changes =>
+                {
+                    _sourceFolders.Edit(updater =>
+                    {
+                        foreach (var c in changes)
+                        {
+                            switch (c.State)
+                            {
+                                case DeltaState.Add:
+                                case DeltaState.Update:
+                                    updater.AddOrUpdate(c.Entity);
+                                    break;
+                                case DeltaState.Remove:
+                                    updater.RemoveKey(c.Id);
+                                    break;
+                            }
+                        }
+                    });
+                })
+                .DisposeWith(_disposables);
+
             SynchronizeCommand = ReactiveCommand.CreateFromTask(_mailService.SynchronizeFoldersAsync);
+            SynchronizeCommand.ThrownExceptions
+                .Subscribe(ex => this.Log().Error(ex));
             SynchronizeCommand.IsExecuting
                 .ToPropertyEx(this, x => x.IsSynchronizing)
                 .DisposeWith(_disposables);
@@ -79,7 +104,11 @@ namespace Observatory.Core.ViewModels.Mail
             using var query = _queryFactory.Connect();
             var folders = await query.Folders.ToListAsync();
             _sourceFolders.Edit(updater => updater.Load(folders));
-            SynchronizeCommand.Execute().Subscribe();
+
+            Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(30))
+                .Select(_ => Unit.Default)
+                .InvokeCommand(SynchronizeCommand)
+                .DisposeWith(_disposables);
         }
 
         public void Dispose()

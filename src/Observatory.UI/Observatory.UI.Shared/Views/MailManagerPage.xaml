@@ -312,24 +312,16 @@
                   ToolTipService.ToolTip="View all folders">
             <Grid>
               <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="39"/>
                 <ColumnDefinition Width="*"/>
               </Grid.ColumnDefinitions>
               <FontIcon Glyph="&#xF12B;"/>
-              <Grid Grid.Column="1">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="*"/>
-                  <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock HorizontalAlignment="Stretch"
-                           VerticalAlignment="Center"
-                           FontSize="18"
-                           FontWeight="SemiBold"
-                           Text="Folders"/>
-                <FontIcon Grid.Column="1"
-                          Margin="8,6"
-                          Glyph="&#xE00F;"/>
-              </Grid>
+              <TextBlock Grid.Column="1"
+                         HorizontalAlignment="Stretch"
+                         VerticalAlignment="Center"
+                         FontSize="18"
+                         FontWeight="SemiBold"
+                         Text="Folders"/>
             </Grid>
           </Button>
           <ListView Grid.Row="5"
@@ -340,14 +332,22 @@
                     Style="{StaticResource FolderListViewStyle}"/>
           <Button Grid.Row="6"
                   Padding="0"
+                  HorizontalContentAlignment="Stretch"
                   Click="{x:Bind ToggleFolderListPane}"
-                  Style="{StaticResource NavigationPaneButtonStyle}">
+                  Style="{StaticResource NavigationPaneButtonStyle}"
+                  ToolTipService.ToolTip="View all folders">
             <Grid>
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="39"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
               </Grid.ColumnDefinitions>
-              <TextBlock Grid.Column="1" Text="More"/>
+              <TextBlock Grid.Column="1"
+                         VerticalAlignment="Center"
+                         Text="More"/>
+              <FontIcon Grid.Column="2"
+                        Margin="8,6"
+                        Glyph="&#xE00F;"/>
             </Grid>
           </Button>
           <Grid Grid.Row="8">

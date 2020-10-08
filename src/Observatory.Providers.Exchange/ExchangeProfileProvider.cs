@@ -30,19 +30,6 @@ namespace Observatory.Providers.Exchange
             var result = await _authenticationService.AcquireTokenInteractiveAsync();
             var emailAddress = result.Account.Username;
             var profileDataPath = Path.Combine(profileDataDirectory, emailAddress);
-            var store = new ExchangeProfileDataStore(profileDataPath);
-            await store.Database.EnsureCreatedAsync();
-
-            store.Profiles.Add(new Profile()
-            {
-                EmailAddress = emailAddress,
-                DisplayName = emailAddress,
-                ProviderId = PROVIDER_ID,
-            });
-            store.FolderSynchronizationStates.Add(new FolderSynchronizationState());
-            store.MessageSynchronizationStates.Add(new MessageSynchronizationState());
-            await store.SaveChangesAsync();
-
             return new ProfileRegister() 
             { 
                 Id = emailAddress,
@@ -54,6 +41,20 @@ namespace Observatory.Providers.Exchange
 
         public async Task<ProfileViewModelBase> CreateViewModelAsync(ProfileRegister register)
         {
+            var store = new ExchangeProfileDataStore(register.DataFilePath);
+            if (await store.Database.EnsureCreatedAsync())
+            {
+                store.Profiles.Add(new Profile()
+                {
+                    EmailAddress = register.EmailAddress,
+                    DisplayName = register.EmailAddress,
+                    ProviderId = PROVIDER_ID,
+                });
+                store.FolderSynchronizationStates.Add(new FolderSynchronizationState());
+                store.MessageSynchronizationStates.Add(new MessageSynchronizationState());
+                await store.SaveChangesAsync();
+            }
+
             var storeFactory = new ExchangeProfileDataStoreFactory(register.DataFilePath);
             var profile = new ExchangeProfileViewModel(register.EmailAddress, storeFactory, _authenticationService);
             await profile.RestoreAsync();

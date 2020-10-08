@@ -31,14 +31,14 @@ namespace Observatory.Providers.Exchange.Services
 
         private readonly ExchangeProfileDataStoreFactory _storeFactory;
         private readonly MG.GraphServiceClient _client;
-        private readonly Subject<IChangeSet<MailFolder, string>> _folderChanges =
-            new Subject<IChangeSet<MailFolder, string>>();
-        private readonly Subject<IChangeSet<MessageSummary, string>> _messageChanges =
-            new Subject<IChangeSet<MessageSummary, string>>();
+        private readonly Subject<IEnumerable<DeltaEntity<MailFolder>>> _folderChanges =
+            new Subject<IEnumerable<DeltaEntity<MailFolder>>>();
+        private readonly Subject<IEnumerable<DeltaEntity<MessageSummary>>> _messageChanges =
+            new Subject<IEnumerable<DeltaEntity<MessageSummary>>>();
 
-        public IObservable<IChangeSet<MailFolder, string>> FolderChanges => _folderChanges.AsObservable();
+        public IObservable<IEnumerable<DeltaEntity<MailFolder>>> FolderChanges => _folderChanges.AsObservable();
 
-        public IObservable<IChangeSet<MessageSummary, string>> MessageChanges => _messageChanges.AsObservable();
+        public IObservable<IEnumerable<DeltaEntity<MessageSummary>>> MessageChanges => _messageChanges.AsObservable();
 
         public ExchangeMailService(ExchangeProfileDataStoreFactory storeFactory,
             MG.GraphServiceClient client)
@@ -103,8 +103,9 @@ namespace Observatory.Providers.Exchange.Services
                         store.AddRange(folders);
                         await store.SaveChangesAsync();
 
-                        _folderChanges.OnNext(new ChangeSet<MailFolder, string>(
-                            folders.Select(f => new Change<MailFolder, string>(ChangeReason.Add, f.Id, f))));
+                        _folderChanges.OnNext(folders
+                            .Select(f => DeltaEntity.Added(f.Id, f))
+                            .ToList().AsEnumerable());
                         break;
                     }
                 }
@@ -154,10 +155,10 @@ namespace Observatory.Providers.Exchange.Services
                 store.RemoveRange(removedFolders);
                 await store.SaveChangesAsync();
 
-                var changes = new ChangeSet<MailFolder, string>();
-                changes.AddRange(newFolders.Select(f => new Change<MailFolder, string>(ChangeReason.Add, f.Id, f)));
-                changes.AddRange(updatedFolders.Values.Select(f => new Change<MailFolder, string>(ChangeReason.Update, f.Entity.Id, f.Entity)));
-                changes.AddRange(removedFolders.Select(f => new Change<MailFolder, string>(ChangeReason.Remove, f.Id, f)));
+                var changes = new List<DeltaEntity<MailFolder>>();
+                changes.AddRange(newFolders.Select(f => DeltaEntity.Added(f.Id, f)));
+                changes.AddRange(updatedFolders.Values.Select(f => DeltaEntity.Updated(f.Entity.Id, f.Entity)));
+                changes.AddRange(removedFolders.Select(f => DeltaEntity.Removed<MailFolder>(f.Id)));
                 if (changes.Count > 0 && _folderChanges.HasObservers)
                 {
                     _folderChanges.OnNext(changes);
