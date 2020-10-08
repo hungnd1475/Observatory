@@ -19,6 +19,9 @@
     <PackageReference Include="Splat.Autofac">
       <Version>9.5.49</Version>
     </PackageReference>
+    <PackageReference Include="Splat.Microsoft.Extensions.Logging">
+      <Version>9.5.49</Version>
+    </PackageReference>
     <PackageReference Include="Uno.Core" Version="2.0.0" />
     <PackageReference Include="Uno.UI" Version="3.0.17" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />

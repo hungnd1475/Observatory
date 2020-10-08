@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.Extensions.Logging;
 using Observatory.Core.Persistence;
 using Observatory.Providers.Exchange.Models;
 
@@ -7,11 +8,13 @@ namespace Observatory.Providers.Exchange.Persistence
 {
     public class ExchangeProfileDataStore : ProfileDataStore
     {
+        public delegate ExchangeProfileDataStore Factory(string path);
+
         public DbSet<FolderSynchronizationState> FolderSynchronizationStates { get; set; }
         public DbSet<MessageSynchronizationState> MessageSynchronizationStates { get; set; }
 
-        public ExchangeProfileDataStore(string path)
-            : base(path)
+        public ExchangeProfileDataStore(string path, ILoggerFactory loggerFactory)
+            : base(path, loggerFactory)
         {
         }
 

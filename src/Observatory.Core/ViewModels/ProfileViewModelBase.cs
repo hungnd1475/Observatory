@@ -1,4 +1,5 @@
-﻿using Observatory.Core.ViewModels.Calendar;
+﻿using Observatory.Core.Models;
+using Observatory.Core.ViewModels.Calendar;
 using Observatory.Core.ViewModels.Mail;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -11,7 +12,9 @@ namespace Observatory.Core.ViewModels
 {
     public abstract class ProfileViewModelBase : ReactiveObject
     {
-        public string EmailAddress { get; }
+        protected readonly ProfileRegister _register;
+
+        public string EmailAddress => _register.EmailAddress;
         [Reactive] public string DisplayName { get; set; }
         
         public abstract MailBoxViewModel MailBox { get; }
@@ -23,9 +26,9 @@ namespace Observatory.Core.ViewModels
         public abstract ReactiveCommand<string, Unit> UpdateNameCommand { get; }
         public abstract ReactiveCommand<Unit, Unit> DeleteCommand { get; }
 
-        public ProfileViewModelBase(string emailAddress)
+        public ProfileViewModelBase(ProfileRegister register)
         {
-            EmailAddress = emailAddress;
+            _register = register;
         }
     }
 }

@@ -19,7 +19,7 @@ namespace Observatory.Providers.Exchange
 {
     public class ExchangeProfileViewModel : ProfileViewModelBase
     {
-        private readonly ExchangeProfileDataStoreFactory _storeFactory;
+        private readonly ExchangeProfileDataStore.Factory _storeFactory;
         private readonly GraphServiceClient _client;
         private readonly ExchangeMailService _mailService;
 
@@ -33,10 +33,10 @@ namespace Observatory.Providers.Exchange
 
         public override ReactiveCommand<Unit, Unit> DeleteCommand => throw new NotImplementedException();
 
-        public ExchangeProfileViewModel(string emailAddress,
-            ExchangeProfileDataStoreFactory storeFactory,
+        public ExchangeProfileViewModel(ProfileRegister register,
+            ExchangeProfileDataStore.Factory storeFactory,
             ExchangeAuthenticationService authenticationService)
-            : base(emailAddress)
+            : base(register)
         {
             _storeFactory = storeFactory;
             _client = new GraphServiceClient(
@@ -55,17 +55,18 @@ namespace Observatory.Providers.Exchange
                         this.Log().Error(ex, $"Failed to silently authenticate {EmailAddress}.");
                     }
                 }));
-            _mailService = new ExchangeMailService(_storeFactory, _client);
-            MailBox = new MailBoxViewModel(_storeFactory, _mailService);
+            _mailService = new ExchangeMailService(register, _storeFactory, _client);
+            MailBox = new MailBoxViewModel(new ExchangeProfileDataQueryFactory(register.DataFilePath, storeFactory), _mailService);
         }
 
         public async Task RestoreAsync()
         {
+            this.Log().Info($"Initializing {_register.EmailAddress} profile.");
             var restoringTasks = Task.WhenAll(
                 _mailService.InitializeAsync(),
                 MailBox.RestoreAsync());
 
-            var store = _storeFactory.Connect();
+            var store = _storeFactory.Invoke(_register.DataFilePath);
             var state = await store.Profiles.FirstAsync();
             DisplayName = state.DisplayName;
 

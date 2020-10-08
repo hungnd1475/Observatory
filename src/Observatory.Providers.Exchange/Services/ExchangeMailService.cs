@@ -2,7 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Observatory.Core.Models;
 using Observatory.Core.Services;
+using Observatory.Providers.Exchange.Models;
 using Observatory.Providers.Exchange.Persistence;
+using Splat;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +31,8 @@ namespace Observatory.Providers.Exchange.Services
         public const string PREFER_HEADER = "Prefer";
         public const string MAX_PAGE_SIZE = "odata.maxpagesize";
 
-        private readonly ExchangeProfileDataStoreFactory _storeFactory;
+        private readonly ProfileRegister _register;
+        private readonly ExchangeProfileDataStore.Factory _storeFactory;
         private readonly MG.GraphServiceClient _client;
         private readonly Subject<IEnumerable<DeltaEntity<MailFolder>>> _folderChanges =
             new Subject<IEnumerable<DeltaEntity<MailFolder>>>();
@@ -40,16 +43,30 @@ namespace Observatory.Providers.Exchange.Services
 
         public IObservable<IEnumerable<DeltaEntity<MessageSummary>>> MessageChanges => _messageChanges.AsObservable();
 
-        public ExchangeMailService(ExchangeProfileDataStoreFactory storeFactory,
+        public ExchangeMailService(ProfileRegister register,
+            ExchangeProfileDataStore.Factory storeFactory,
             MG.GraphServiceClient client)
         {
+            _register = register;
             _storeFactory = storeFactory;
             _client = client;
         }
 
-        public Task InitializeAsync()
+        public async Task InitializeAsync()
         {
-            return Task.CompletedTask;
+            using var store = _storeFactory.Invoke(_register.DataFilePath);
+            if (await store.Database.EnsureCreatedAsync())
+            {
+                store.Profiles.Add(new Profile()
+                {
+                    EmailAddress = _register.EmailAddress,
+                    DisplayName = _register.EmailAddress,
+                    ProviderId = _register.ProviderId,
+                });
+                store.FolderSynchronizationStates.Add(new FolderSynchronizationState());
+                store.MessageSynchronizationStates.Add(new MessageSynchronizationState());
+                await store.SaveChangesAsync();
+            }
         }
 
         public Task<MessageDetail> FetchMessageDetailAsync(string id, CancellationToken cancellationToken = default)
@@ -59,7 +76,7 @@ namespace Observatory.Providers.Exchange.Services
 
         public async Task SynchronizeFoldersAsync(CancellationToken cancellationToken = default)
         {
-            using var store = _storeFactory.Connect();
+            using var store = _storeFactory.Invoke(_register.DataFilePath);
             var state = await store.FolderSynchronizationStates.FirstAsync();
             if (state.DeltaLink == null)
             {

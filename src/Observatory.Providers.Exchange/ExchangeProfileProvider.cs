@@ -15,10 +15,13 @@ namespace Observatory.Providers.Exchange
     {
         public const string PROVIDER_ID = "Exchange";
         private readonly ExchangeAuthenticationService _authenticationService;
+        private readonly ExchangeProfileDataStore.Factory _storeFactory;
 
-        public ExchangeProfileProvider(ExchangeAuthenticationService authenticationService)
+        public ExchangeProfileProvider(ExchangeAuthenticationService authenticationService,
+            ExchangeProfileDataStore.Factory storeFactory)
         {
             _authenticationService = authenticationService;
+            _storeFactory = storeFactory;
         }
 
         public string DisplayName { get; } = "Exchange";
@@ -41,22 +44,7 @@ namespace Observatory.Providers.Exchange
 
         public async Task<ProfileViewModelBase> CreateViewModelAsync(ProfileRegister register)
         {
-            var store = new ExchangeProfileDataStore(register.DataFilePath);
-            if (await store.Database.EnsureCreatedAsync())
-            {
-                store.Profiles.Add(new Profile()
-                {
-                    EmailAddress = register.EmailAddress,
-                    DisplayName = register.EmailAddress,
-                    ProviderId = PROVIDER_ID,
-                });
-                store.FolderSynchronizationStates.Add(new FolderSynchronizationState());
-                store.MessageSynchronizationStates.Add(new MessageSynchronizationState());
-                await store.SaveChangesAsync();
-            }
-
-            var storeFactory = new ExchangeProfileDataStoreFactory(register.DataFilePath);
-            var profile = new ExchangeProfileViewModel(register.EmailAddress, storeFactory, _authenticationService);
+            var profile = new ExchangeProfileViewModel(register, _storeFactory, _authenticationService);
             await profile.RestoreAsync();
             return profile;
         }

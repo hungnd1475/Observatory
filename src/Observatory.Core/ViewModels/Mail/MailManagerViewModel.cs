@@ -1,6 +1,5 @@
 ﻿using Autofac.Features.Indexed;
 using DynamicData;
-using Microsoft.EntityFrameworkCore.Internal;
 using Observatory.Core.Services;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -55,7 +54,7 @@ namespace Observatory.Core.ViewModels.Mail
             sharedProfilesConnection
                 .Connect()
                 .DisposeWith(_disposables);
-            
+
             this.WhenAnyValue(x => x.SelectedProfile)
                 .Where(p => p != null)
                 .DistinctUntilChanged()

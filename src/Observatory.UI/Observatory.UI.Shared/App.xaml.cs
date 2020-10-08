@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Observatory.Core;
 using Observatory.Core.Services;
@@ -7,6 +8,7 @@ using Observatory.UI.Shared;
 using Observatory.UI.Views;
 using ReactiveUI;
 using Splat.Autofac;
+using Splat.Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -43,7 +45,7 @@ namespace Observatory.UI
         public App()
         {
             ConfigureFilters(Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory);
-            Container = ConfigureServices();
+            Container = ConfigureServices(Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory);
 
             this.InitializeComponent();
             this.Suspending += OnSuspending;
@@ -122,7 +124,6 @@ namespace Observatory.UI
             deferral.Complete();
         }
 
-
         /// <summary>
         /// Configures global logging
         /// </summary>
@@ -134,6 +135,7 @@ namespace Observatory.UI
                     {
                         { "Uno", LogLevel.Warning },
                         { "Windows", LogLevel.Warning },
+                        { DbLoggerCategory.Database.Command.Name, LogLevel.Debug },
 
 						// Debug JS interop
 						// { "Uno.Foundation.WebAssemblyRuntime", LogLevel.Debug },
@@ -169,14 +171,10 @@ namespace Observatory.UI
 						// { "Windows.UI.Xaml.Controls.VirtualizingPanelGenerator", LogLevel.Debug }, //WASM
 					}
                 )
-#if DEBUG
-				.AddConsole(LogLevel.Debug);
-#else
-                .AddConsole(LogLevel.Information);
-#endif
+                .AddSplat();
         }
 
-        static IContainer ConfigureServices()
+        static IContainer ConfigureServices(ILoggerFactory loggerFactory)
         {
             var builder = new ContainerBuilder();
 #if DEBUG
@@ -188,6 +186,9 @@ namespace Observatory.UI
 #endif
             builder.RegisterModule(new ExchangeModule());
             builder.RegisterModule(new UIModule());
+            builder.RegisterInstance(loggerFactory)
+                .As<ILoggerFactory>()
+                .SingleInstance();
 
             var resolver = builder.UseAutofacDependencyResolver();
             builder.RegisterInstance(resolver);

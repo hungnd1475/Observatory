@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.Extensions.Logging;
 using Observatory.Core.Models;
 using Observatory.Core.Persistence.Conversion;
 using System.Collections.Generic;
@@ -21,13 +22,12 @@ namespace Observatory.Core.Persistence
 
         IQueryable<MessageDetail> IProfileDataQuery.MessageDetails => MessageDetails.AsQueryable();
 
-        public ProfileDataStore(string path)
+        public ProfileDataStore(string path, ILoggerFactory loggerFactory)
             : base(new DbContextOptionsBuilder<ProfileDataStore>()
                   .UseSqlite($@"Filename={path}")
-                  .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+                  .UseLoggerFactory(loggerFactory)
                   .Options)
         {
-            this.ChangeTracker.AutoDetectChangesEnabled = false;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

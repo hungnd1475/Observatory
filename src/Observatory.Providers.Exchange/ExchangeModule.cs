@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Observatory.Core.Services;
+using Observatory.Providers.Exchange.Persistence;
 using Observatory.Providers.Exchange.Services;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ namespace Observatory.Providers.Exchange
             builder.RegisterType<ExchangeAuthenticationService>()
                 .AsSelf()
                 .SingleInstance();
+            builder.RegisterType<ExchangeProfileDataStore>();
             builder.RegisterType<ExchangeProfileProvider>()
                 .As<IProfileProvider>()
                 .Keyed<IProfileProvider>(ExchangeProfileProvider.PROVIDER_ID)
