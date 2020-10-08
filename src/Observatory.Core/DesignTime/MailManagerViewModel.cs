@@ -10,11 +10,11 @@ namespace Observatory.Core.DesignTime
         public List<ProfileViewModel> Profiles { get; }
         public ProfileViewModel SelectedProfile => Profiles[0];
         public MailFolderViewModel SelectedFolder => Profiles[0].MailBox.FavoriteFolders[0];
-        public MainViewModel Main { get; set; }
+        public MainViewModel HostScreen { get; set; }
 
         public MailManagerViewModel() 
         {
-            Main = new MainViewModel()
+            HostScreen = new MainViewModel()
             {
                 SelectedMode = ViewModels.FunctionalityMode.Mail,
             };
