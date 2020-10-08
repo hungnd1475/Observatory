@@ -18,6 +18,20 @@ namespace Observatory.Core.ViewModels.Mail
         private readonly ReadOnlyObservableCollection<ProfileViewModelBase> _profiles;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
+        public ReadOnlyObservableCollection<ProfileViewModelBase> Profiles => _profiles;
+
+        [Reactive]
+        public ProfileViewModelBase SelectedProfile { get; set; }
+
+        [Reactive]
+        public MailFolderViewModel SelectedFolder { get; set; }
+
+        public string UrlPathSegment { get; } = "mail";
+
+        IScreen IRoutableViewModel.HostScreen => HostScreen;
+
+        public MainViewModel HostScreen { get; set; }
+
         public MailManagerViewModel(ProfileRegistrationService profileRegistrationService,
             IIndex<string, IProfileProvider> providers)
         {
@@ -41,7 +55,7 @@ namespace Observatory.Core.ViewModels.Mail
             sharedProfilesConnection
                 .Connect()
                 .DisposeWith(_disposables);
-
+            
             this.WhenAnyValue(x => x.SelectedProfile)
                 .Where(p => p != null)
                 .DistinctUntilChanged()
@@ -49,45 +63,7 @@ namespace Observatory.Core.ViewModels.Mail
                 .Do(f => SelectedFolder = f)
                 .Subscribe()
                 .DisposeWith(_disposables);
-
-            this.WhenAnyValue(x => x.SelectedProfile)
-                .DistinctUntilChanged()
-                .Buffer(2, 1)
-                .Select(x => (Previous: x[0], Current: x[1]))
-                .Do(x =>
-                {
-                    if (x.Previous != null) x.Previous.IsSelected = false;
-                    if (x.Current != null) x.Current.IsSelected = true;
-                })
-                .Subscribe()
-                .DisposeWith(_disposables);
-
-            this.WhenAnyValue(x => x.SelectedFolder)
-                .DistinctUntilChanged()
-                .Buffer(2, 1)
-                .Select(x => (Previous: x[0], Current: x[1]))
-                .Do(x =>
-                {
-                    if (x.Previous != null) x.Previous.IsSelected = false;
-                    if (x.Current != null) x.Current.IsSelected = true;
-                })
-                .Subscribe()
-                .DisposeWith(_disposables);
         }
-
-        public ReadOnlyObservableCollection<ProfileViewModelBase> Profiles => _profiles;
-
-        [Reactive]
-        public ProfileViewModelBase SelectedProfile { get; set; }
-
-        [Reactive]
-        public MailFolderViewModel SelectedFolder { get; set; }
-
-        public string UrlPathSegment { get; } = "mail";
-
-        public IScreen HostScreen { get; set; }
-
-        public MainViewModel Main => (MainViewModel)HostScreen;
 
         public void Dispose()
         {

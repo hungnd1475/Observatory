@@ -49,7 +49,7 @@ namespace Observatory.UI.Views
                 this.WhenAnyValue(x => x.ViewModel)
                     .Select(vm =>
                     {
-                        var providers = vm.Main.Providers;
+                        var providers = vm.HostScreen.Providers;
                         var flyout = new MenuFlyout()
                         {
                             Placement = FlyoutPlacementMode.Full,
@@ -80,7 +80,7 @@ namespace Observatory.UI.Views
                                 Height = 45,
                                 VerticalContentAlignment = VerticalAlignment.Center,
                                 Text = p.DisplayName,
-                                Command = vm.Main.AddProfile,
+                                Command = vm.HostScreen.AddProfile,
                                 CommandParameter = p,
                                 Icon = new PathIcon()
                                 {

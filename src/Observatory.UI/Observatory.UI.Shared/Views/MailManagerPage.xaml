@@ -356,12 +356,12 @@
               <ColumnDefinition Width="*"/>
               <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <ListView d:ItemsSource="{Binding Main.Modes}"
-                      d:SelectedItem="{Binding Main.SelectedMode}"
+            <ListView d:ItemsSource="{Binding HostScreen.Modes}"
+                      d:SelectedItem="{Binding HostScreen.SelectedMode}"
                       ItemContainerStyle="{StaticResource ModeSelectorListViewItemStyle}"
                       ItemTemplate="{StaticResource ModeSelectorItemTemplate}"
-                      ItemsSource="{x:Bind ViewModel.Main.Modes}"
-                      SelectedItem="{x:Bind ViewModel.Main.SelectedMode, Mode=TwoWay}"
+                      ItemsSource="{x:Bind ViewModel.HostScreen.Modes}"
+                      SelectedItem="{x:Bind ViewModel.HostScreen.SelectedMode, Mode=TwoWay}"
                       SelectionMode="Single">
               <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -418,11 +418,11 @@
             <FontIcon Glyph="&#xF12B;"/>
           </Button>
           <StackPanel Grid.Row="5" HorizontalAlignment="Left">
-            <ListView d:ItemsSource="{Binding Main.Modes}"
+            <ListView d:ItemsSource="{Binding HostScreen.Modes}"
                       ItemContainerStyle="{StaticResource ModeSelectorListViewItemStyle}"
                       ItemTemplate="{StaticResource ModeSelectorItemTemplate}"
-                      ItemsSource="{x:Bind ViewModel.Main.Modes}"
-                      SelectedItem="{x:Bind ViewModel.Main.SelectedMode, Mode=TwoWay}"
+                      ItemsSource="{x:Bind ViewModel.HostScreen.Modes}"
+                      SelectedItem="{x:Bind ViewModel.HostScreen.SelectedMode, Mode=TwoWay}"
                       SelectionMode="Single"/>
             <Button Grid.Column="3"
                     Width="40"
