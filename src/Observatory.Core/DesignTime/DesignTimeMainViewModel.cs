@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Observatory.Core.DesignTime
 {
-    public class MainViewModel
+    public class DesignTimeMainViewModel
     {
         public IEnumerable<FunctionalityMode> Modes { get; } = new FunctionalityMode[]
         {

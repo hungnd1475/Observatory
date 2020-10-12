@@ -4,11 +4,11 @@ using System.Text;
 
 namespace Observatory.Core.DesignTime
 {
-    public class ProfileViewModel
+    public class DesignTimeProfileViewModel
     {
         public string EmailAddress { get; set; }
         public string DisplayName { get; set; }
-        public MailBoxViewModel MailBox { get; set; }
+        public DesignTimeMailBoxViewModel MailBox { get; set; }
         public bool IsSelected { get; set; }
     }
 }

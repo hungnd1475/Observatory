@@ -11,7 +11,7 @@
       xmlns:toolkit="using:Microsoft.Toolkit.Uwp.UI.Controls"
       xmlns:toolkitconverters="using:Microsoft.Toolkit.Uwp.UI.Converters"
       xmlns:vm="using:Observatory.Core.ViewModels"
-      d:DataContext="{d:DesignInstance Type=dt:MailManagerViewModel,
+      d:DataContext="{d:DesignInstance Type=dt:DesignTimeMailManagerViewModel,
                                        IsDesignTimeCreatable=True}"
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
       mc:Ignorable="d">
