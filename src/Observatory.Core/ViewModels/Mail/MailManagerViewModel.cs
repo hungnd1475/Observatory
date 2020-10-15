@@ -31,7 +31,7 @@ namespace Observatory.Core.ViewModels.Mail
 
         public MainViewModel HostScreen { get; set; }
 
-        public MailManagerViewModel(ProfileRegistrationService profileRegistrationService,
+        public MailManagerViewModel(IProfileRegistrationService profileRegistrationService,
             IIndex<string, IProfileProvider> providers)
         {
             var sharedProfilesConnection = profileRegistrationService.Connect()

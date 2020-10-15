@@ -7,6 +7,7 @@ using Observatory.Providers.Exchange.Persistence;
 using Splat;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -24,7 +25,7 @@ namespace Observatory.Providers.Exchange.Services
         public const string NEXT_LINK = "@odata.nextLink";
 
         public const string MESSAGES_SELECT_QUERY = "Subject,Sender,ReceivedDateTime,IsRead,Importance," +
-            "HasAttachments,Flag,ToRecipients,CcRecipients,Body," +
+            "HasAttachments,Flag,ToRecipients,CcRecipients," +
             "ConversationId,ConversationIndex,IsDraft,ParentFolderId," +
             "From,BodyPreview";
 
@@ -36,12 +37,16 @@ namespace Observatory.Providers.Exchange.Services
         private readonly MG.GraphServiceClient _client;
         private readonly Subject<IEnumerable<DeltaEntity<MailFolder>>> _folderChanges =
             new Subject<IEnumerable<DeltaEntity<MailFolder>>>();
-        private readonly Subject<IEnumerable<DeltaEntity<MessageSummary>>> _messageChanges =
+        private readonly Subject<IEnumerable<DeltaEntity<MessageSummary>>> _messageSummaryChanges =
             new Subject<IEnumerable<DeltaEntity<MessageSummary>>>();
+        private readonly Subject<IEnumerable<DeltaEntity<MessageDetail>>> _messageDetailChanges =
+            new Subject<IEnumerable<DeltaEntity<MessageDetail>>>();
 
         public IObservable<IEnumerable<DeltaEntity<MailFolder>>> FolderChanges => _folderChanges.AsObservable();
 
-        public IObservable<IEnumerable<DeltaEntity<MessageSummary>>> MessageChanges => _messageChanges.AsObservable();
+        public IObservable<IEnumerable<DeltaEntity<MessageSummary>>> MessageSummaryChanges => _messageSummaryChanges.AsObservable();
+
+        public IObservable<IEnumerable<DeltaEntity<MessageDetail>>> MessageDetailChanges => _messageDetailChanges.AsObservable();
 
         public ExchangeMailService(ProfileRegister register,
             ExchangeProfileDataStore.Factory storeFactory,
@@ -80,13 +85,13 @@ namespace Observatory.Providers.Exchange.Services
             var state = await store.FolderSynchronizationStates.FirstAsync();
             if (state.DeltaLink == null)
             {
-                static async Task<MailFolder> RequestSpecialFolder(MG.IMailFolderRequestBuilder requestBuilder, 
+                static async Task<MailFolder> RequestSpecialFolder(MG.IMailFolderRequestBuilder requestBuilder,
                     FolderType type, bool isFavorite)
                 {
                     var folder = await requestBuilder.Request()
                         .GetAsync()
                         .ConfigureAwait(false);
-                    return folder.Create(type, isFavorite);
+                    return folder.Convert(type, isFavorite);
                 }
                 var specialFolders = await Task.WhenAll(
                     RequestSpecialFolder(_client.Me.MailFolders.Inbox, FolderType.Inbox, true),
@@ -107,7 +112,7 @@ namespace Observatory.Providers.Exchange.Services
                         .ConfigureAwait(false);
                     folders.AddRange(page
                         .Where(f => !specialIds.Contains(f.Id))
-                        .Select(f => f.Create()));
+                        .Select(f => f.Convert()));
 
                     if (page.NextPageRequest != null)
                     {
@@ -120,9 +125,12 @@ namespace Observatory.Providers.Exchange.Services
                         store.AddRange(folders);
                         await store.SaveChangesAsync();
 
-                        _folderChanges.OnNext(folders
-                            .Select(f => DeltaEntity.Added(f.Id, f))
-                            .ToList().AsEnumerable());
+                        if (folders.Count > 0 && _folderChanges.HasObservers)
+                        {
+                            _folderChanges.OnNext(folders
+                                .Select(f => DeltaEntity.Added(f))
+                                .ToList().AsEnumerable());
+                        }
                         break;
                     }
                 }
@@ -153,39 +161,145 @@ namespace Observatory.Providers.Exchange.Services
                     }
                 }
 
-                var updatedFolders = await store.Folders
-                    .Where(f => deltaFolders.Keys.Contains(f.Id))
-                    .Select(f => store.Entry(f))
-                    .ToDictionaryAsync(f => f.Entity.Id);
-                var newFolders = deltaFolders.Values
-                    .Where(f => !updatedFolders.ContainsKey(f.Id))
-                    .Select(f => f.Create())
-                    .ToList();
-                foreach (var f in updatedFolders)
+                var changes = new List<DeltaEntity<MailFolder>>();
+
+                if (deltaFolders.Count > 0)
                 {
-                    f.Value.Update(deltaFolders[f.Key]);
+                    var updatedFolders = await store.Folders
+                        .Where(f => deltaFolders.Keys.Contains(f.Id))
+                        .ToDictionaryAsync(f => f.Id);
+                    var newFolders = deltaFolders.Values
+                        .Where(f => !updatedFolders.ContainsKey(f.Id))
+                        .Select(f => f.Convert())
+                        .ToList();
+                    foreach (var f in updatedFolders)
+                    {
+                        store.Entry(f.Value).UpdateFrom(deltaFolders[f.Key]);
+                    }
+                    
+                    store.AddRange(newFolders);
+                    changes.AddRange(newFolders.Select(f => DeltaEntity.Added(f)));
+                    changes.AddRange(updatedFolders.Values.Select(f => DeltaEntity.Updated(f)));
+                }
+
+                if (removedFolders.Count > 0)
+                {
+                    store.RemoveRange(removedFolders);
+                    changes.AddRange(removedFolders.Select(f => DeltaEntity.Removed(f)));
                 }
 
                 state.DeltaLink = page.GetDeltaLink();
                 store.Update(state);
-                store.AddRange(newFolders);
-                store.RemoveRange(removedFolders);
-                await store.SaveChangesAsync();
+                await store.SaveChangesAsync(false);
 
-                var changes = new List<DeltaEntity<MailFolder>>();
-                changes.AddRange(newFolders.Select(f => DeltaEntity.Added(f.Id, f)));
-                changes.AddRange(updatedFolders.Values.Select(f => DeltaEntity.Updated(f.Entity.Id, f.Entity)));
-                changes.AddRange(removedFolders.Select(f => DeltaEntity.Removed<MailFolder>(f.Id)));
-                if (changes.Count > 0 && _folderChanges.HasObservers)
+                if (_folderChanges.HasObservers)
                 {
-                    _folderChanges.OnNext(changes);
+                    _folderChanges.OnNext(changes.AsEnumerable());
                 }
             }
         }
 
-        public Task SynchronizeMessagesAsync(CancellationToken cancellationToken = default)
+        public async Task SynchronizeMessagesAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            using var store = _storeFactory.Invoke(_register.DataFilePath);
+            var state = await store.MessageSynchronizationStates.FirstAsync();
+
+            MG.IMessageDeltaRequest request;
+            MG.IMessageDeltaCollectionPage page = new MG.MessageDeltaCollectionPage();
+
+            if (state.NextLink != null)
+            {
+                page.InitializeNextPageRequest(_client, state.NextLink);
+                request = page.NextPageRequest;
+            }
+            else if (state.DeltaLink != null)
+            {
+                page.InitializeNextPageRequest(_client, state.DeltaLink);
+                request = page.NextPageRequest;
+            }
+            else
+            {
+                var pageSize = 30;
+                request = _client.Me.Messages
+                    .Delta()
+                    .Request()
+                    .Select(MESSAGES_SELECT_QUERY)
+                    .Header(PREFER_HEADER, $"{MAX_PAGE_SIZE}={pageSize}")
+                    .OrderBy("ReceivedDateTime desc")
+                    .Filter($"ReceivedDateTime ge {DateTimeOffset.UtcNow.AddDays(-7):yyyy-MM-dd}");
+            }
+
+            while (!cancellationToken.IsCancellationRequested && request != null)
+            {
+                page = await request.GetAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                var deltaMessages = page.Where(m => !m.IsRemoved())
+                    .ToDictionary(m => m.Id);
+                var removedMessages = page.Where(m => m.IsRemoved())
+                    .Select(m => (Summary: new MessageSummary() { Id = m.Id }, Detail: new MessageDetail() { Id = m.Id }))
+                    .ToList();
+
+                if (deltaMessages.Count > 0)
+                {
+                    var updatedMessages = await store.MessageSummaries
+                        .Where(m => deltaMessages.Keys.Contains(m.Id))
+                        .Include(m => m.Detail)
+                        .ToDictionaryAsync(m => m.Id);
+                    var newMessages = deltaMessages
+                        .Where(m => updatedMessages.Keys.Contains(m.Key))
+                        .Select(m => (Summary: m.Value.ConvertToSummary(), Detail: m.Value.ConvertToDetail()));
+
+                    foreach (var m in updatedMessages)
+                    {
+                        store.Entry(m.Value).UpdateFrom(deltaMessages[m.Key]);
+                        store.Entry(m.Value.Detail).UpdateFrom(deltaMessages[m.Key]);
+                    }
+
+                    store.AddRange(newMessages.Select(m => m.Summary));
+                    store.AddRange(newMessages.Select(m => m.Detail));
+                }
+
+                if (removedMessages.Count > 0)
+                {
+                    store.RemoveRange(removedMessages.Select(m => m.Summary));
+                    store.RemoveRange(removedMessages.Select(m => m.Detail));
+                }
+
+                if (page.NextPageRequest != null)
+                {
+                    request = page.NextPageRequest;
+                    state.NextLink = page.GetNextLink();
+                }
+                else
+                {
+                    request = null;
+                    state.NextLink = null;
+                    state.DeltaLink = page.GetDeltaLink();
+                }
+
+                // save without accepting changes so that we can publish the changes after the save is successful
+                await store.SaveChangesAsync(acceptAllChangesOnSuccess: false);
+
+                if (_messageSummaryChanges.HasObservers)
+                {
+                    var changes = store.GetChanges<MessageSummary>();
+                    if (changes.Count > 0)
+                    {
+                        _messageSummaryChanges.OnNext(changes);
+                    }
+                }
+
+                if (_messageDetailChanges.HasObservers)
+                {
+                    var changes = store.GetChanges<MessageDetail>();
+                    if (changes.Count > 0)
+                    {
+                        _messageDetailChanges.OnNext(changes);
+                    }
+                }
+
+                store.ChangeTracker.AcceptAllChanges();
+            }
         }
     }
 }

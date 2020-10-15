@@ -66,9 +66,9 @@ namespace Observatory.UI.Views
                         {
                             new MenuFlyoutItem()
                             {
-                                Text = "Add a new account",
+                                Text = "Choose a provider",
                                 FontSize = 14,
-                                FontWeight = FontWeights.Bold,
+                                FontWeight = FontWeights.SemiBold,
                                 IsHitTestVisible = false,
                             },
                             new MenuFlyoutSeparator(),

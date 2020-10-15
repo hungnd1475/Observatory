@@ -1,0 +1,312 @@
+﻿<UserControl x:Class="Observatory.UI.Shared.Controls.MessageSummaryListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:dt="using:Observatory.Core.DesignTime"
+             xmlns:ex="using:Observatory.UI.Shared.Extentions"
+             xmlns:interaction="using:Microsoft.Xaml.Interactions.Core"
+             xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+             xmlns:local="using:Observatory.UI.Shared.Controls"
+             xmlns:localconverters="using:Observatory.UI.Shared.Converters"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="using:Observatory.Core.Models"
+             xmlns:toolkitconverters="using:Microsoft.Toolkit.Uwp.UI.Converters"
+             xmlns:vm="using:Observatory.Core.ViewModels.Mail"
+             d:DataContext="{d:DesignInstance Type=local:MessageSummaryListView,
+                                              IsDesignTimeCreatable=True}"
+             d:DesignHeight="600"
+             d:DesignWidth="500"
+             mc:Ignorable="d">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+          <SolidColorBrush x:Key="FlaggedColor" Color="#FFFFFFCC"/>
+          <SolidColorBrush x:Key="ArchiveIconColor" Color="#FF196A35"/>
+          <SolidColorBrush x:Key="DeleteIconColor" Color="#FFD72831"/>
+          <SolidColorBrush x:Key="FlagIconColor" Color="#FFAC2E00"/>
+          <SolidColorBrush x:Key="UnflagIconColor" Color="#FFE32A34"/>
+          <SolidColorBrush x:Key="HighImportanceIconColor" Color="#FFE8504F"/>
+          <SolidColorBrush x:Key="UnreadColor" Color="{ThemeResource SystemAccentColorDark2}"/>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="FlaggedColor" Color="#FFFFFFCC"/>
+          <SolidColorBrush x:Key="ArchiveIconColor" Color="#FF196A35"/>
+          <SolidColorBrush x:Key="DeleteIconColor" Color="#FFD72831"/>
+          <SolidColorBrush x:Key="FlagIconColor" Color="#FFAC2E00"/>
+          <SolidColorBrush x:Key="UnflagIconColor" Color="#FFE32A34"/>
+          <SolidColorBrush x:Key="HighImportanceIconColor" Color="#FFE8504F"/>
+          <SolidColorBrush x:Key="UnreadColor" Color="{ThemeResource SystemAccentColorDark2}"/>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+
+      <toolkitconverters:BoolToObjectConverter x:Key="UnreadMessageFontWeightConverter"
+                                               FalseValue="SemiBold"
+                                               TrueValue="Normal"/>
+
+      <Style x:Key="MessageListViewItemStyle" TargetType="ListViewItem">
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="ListViewItem">
+              <Grid x:Name="ContentPresenterGrid"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}">
+                <Rectangle HorizontalAlignment="Stretch"
+                           VerticalAlignment="Stretch"
+                           Fill="Beige"
+                           Visibility="{Binding ViewModel.IsRead, Mode=OneWay, Converter={StaticResource BoolNegationToVisibilityConverter}}"/>
+                <ContentPresenter x:Name="ContentPresenter"
+                                  Margin="{TemplateBinding Padding}"
+                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                  Content="{TemplateBinding Content}"
+                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                  ContentTransitions="{TemplateBinding ContentTransitions}"
+                                  Foreground="{TemplateBinding Foreground}"/>
+                <VisualStateManager.VisualStateGroups>
+                  <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal"/>
+
+                    <VisualState x:Name="PointerOver">
+                      <VisualState.Setters>
+                        <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+
+                    <VisualState x:Name="Pressed">
+                      <VisualState.Setters>
+                        <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+
+                    <VisualState x:Name="Selected">
+                      <VisualState.Setters>
+                        <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+
+                    <VisualState x:Name="PointerOverSelected">
+                      <VisualState.Setters>
+                        <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+
+                    <VisualState x:Name="PressedSelected">
+                      <VisualState.Setters>
+                        <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                  </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+              </Grid>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+
+      <Style TargetType="local:MessageListViewItem">
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="local:MessageListViewItem">
+              <Grid x:Name="BoundaryGrid"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="*"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Border Grid.RowSpan="2"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Background="{ThemeResource FlaggedColor}"
+                        Visibility="{x:Bind ShouldDisplayFlaggedBackground(Message.IsFlagged, IsPointerOver, IsSelected), Mode=OneWay}"/>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5"/>
+                    <ColumnDefinition Width="*"/>
+                  </Grid.ColumnDefinitions>
+                  <Rectangle HorizontalAlignment="Stretch"
+                             VerticalAlignment="Stretch"
+                             Fill="{ThemeResource UnreadColor}"
+                             Visibility="{x:Bind localconverters:Converters.BoolNegationToVisibility(Message.IsRead), Mode=OneWay}"/>
+                  <Grid Grid.Column="1" Margin="8">
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto"/>
+                      <RowDefinition Height="Auto"/>
+                      <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*"/>
+                      <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock FontSize="16"
+                               FontWeight="{x:Bind ConvertIsReadToFontWeight(Message.IsRead), Mode=OneWay}"
+                               Text="{x:Bind Message.Correspondents, Mode=OneWay}"/>
+                    <StackPanel Grid.Column="1"
+                                HorizontalAlignment="Right"
+                                d:Visibility="Collapsed"
+                                Orientation="Horizontal"
+                                Visibility="{x:Bind localconverters:Converters.BoolNegationToVisibility(IsPointerOver), Mode=OneWay}">
+                      <FontIcon Margin="0,0,3,0"
+                                FontSize="16"
+                                Glyph="&#xE16C;"
+                                Visibility="{x:Bind Message.HasAttachments, Mode=OneWay}"/>
+                      <FontIcon Margin="0,0,3,0"
+                                FontSize="16"
+                                Foreground="{ThemeResource HighImportanceIconColor}"
+                                Glyph="&#xE171;"
+                                Visibility="{x:Bind localconverters:Converters.EqualityToVisibility(Message.Importance, models:Importance.High), Mode=OneWay}"/>
+                      <FontIcon Margin="0,0,3,0"
+                                FontSize="16"
+                                Glyph="&#xE1FD;"
+                                Visibility="{x:Bind localconverters:Converters.EqualityToVisibility(Message.Importance, models:Importance.Low), Mode=OneWay}"/>
+                      <FontIcon FontSize="16"
+                                Foreground="{ThemeResource UnflagIconColor}"
+                                Glyph="&#xE129;"
+                                Visibility="{x:Bind Message.IsFlagged, Mode=OneWay}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1"
+                                HorizontalAlignment="Right"
+                                d:Visibility="Visible"
+                                Orientation="Horizontal"
+                                Visibility="{x:Bind IsPointerOver, Mode=OneWay}">
+                      <local:MessageSummaryCommandButton Margin="0,0,3,0" ActiveForeground="{ThemeResource ArchiveIconColor}">
+                        <FontIcon FontSize="16" Glyph="&#xE7B8;"/>
+                      </local:MessageSummaryCommandButton>
+                      <local:MessageSummaryCommandButton Margin="0,0,3,0" ActiveForeground="{ThemeResource DeleteIconColor}">
+                        <FontIcon FontSize="16" Glyph="&#xE107;"/>
+                      </local:MessageSummaryCommandButton>
+                      <local:MessageSummaryCommandButton Margin="0,0,3,0"
+                                                         ActiveForeground="{ThemeResource FlagIconColor}"
+                                                         Visibility="{x:Bind localconverters:Converters.BoolNegationToVisibility(Message.IsFlagged), Mode=OneWay}">
+                        <FontIcon FontSize="16" Glyph="&#xE129;"/>
+                      </local:MessageSummaryCommandButton>
+                      <local:MessageSummaryCommandButton ActiveForeground="{ThemeResource UnflagIconColor}"
+                                                         Foreground="{ThemeResource UnflagIconColor}"
+                                                         Visibility="{x:Bind Message.IsFlagged, Mode=OneWay}">
+                        <Grid>
+                          <FontIcon FontSize="16" Glyph="&#xE129;"/>
+                          <FontIcon FontSize="16" Glyph="&#xED2E;">
+                            <FontIcon.RenderTransform>
+                              <CompositeTransform TranslateX="2"/>
+                            </FontIcon.RenderTransform>
+                          </FontIcon>
+                        </Grid>
+                      </local:MessageSummaryCommandButton>
+                    </StackPanel>
+                    <TextBlock Grid.Row="1"
+                               Text="{x:Bind Message.Subject, Mode=OneWay}"
+                               Visibility="{x:Bind Message.IsRead, Mode=OneWay}"/>
+                    <TextBlock Grid.Row="1"
+                               FontWeight="SemiBold"
+                               Foreground="{ThemeResource UnreadColor}"
+                               Text="{x:Bind Message.Subject, Mode=OneWay}"
+                               Visibility="{x:Bind localconverters:Converters.BoolNegationToVisibility(Message.IsRead), Mode=OneWay}"/>
+                    <TextBlock Grid.Row="1"
+                               Grid.Column="1"
+                               Margin="8,0,0,0"
+                               FontSize="12"
+                               Foreground="{ThemeResource SystemColorGrayTextBrush}"
+                               Text="{x:Bind DisplayReceivedDateTime(Message.ReceivedDateTime), Mode=OneWay}"/>
+                    <TextBlock Grid.Row="2"
+                               d:Text="{Binding Preview}"
+                               Foreground="{ThemeResource SystemColorGrayTextBrush}"
+                               Text="{x:Bind Message.Preview, Mode=OneWay}"/>
+                  </Grid>
+                </Grid>
+                <Rectangle Grid.Row="1"
+                           Height="1"
+                           HorizontalAlignment="Stretch"
+                           Fill="{ThemeResource SystemBaseLowColor}"/>
+                <VisualStateManager.VisualStateGroups>
+                  <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal"/>
+
+                    <VisualState x:Name="PointerOver">
+                      <VisualState.Setters>
+                        <Setter Target="BoundaryGrid.Background" Value="{ThemeResource SystemControlHighlightListLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+
+                    <VisualState x:Name="Pressed">
+                      <VisualState.Setters>
+                        <Setter Target="BoundaryGrid.Background" Value="{ThemeResource SystemControlHighlightListLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+
+                    <VisualState x:Name="Selected">
+                      <VisualState.Setters>
+                        <Setter Target="BoundaryGrid.Background" Value="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+
+                    <VisualState x:Name="PointerOverSelected">
+                      <VisualState.Setters>
+                        <Setter Target="BoundaryGrid.Background" Value="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+
+                    <VisualState x:Name="PressedSelected">
+                      <VisualState.Setters>
+                        <Setter Target="BoundaryGrid.Background" Value="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                  </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+              </Grid>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <TextBox PlaceholderText="Search"/>
+      <Button Grid.Column="1" Command="{x:Bind Folder.SynchronizeCommand, Mode=OneWay}">
+        <SymbolIcon Symbol="Sync"/>
+      </Button>
+    </Grid>
+    <Grid Grid.Row="1" Margin="8">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <TextBlock FontSize="20"
+                 FontWeight="SemiBold"
+                 Text="{x:Bind Folder.Name, Mode=OneWay}"/>
+    </Grid>
+    <Grid Grid.Row="2">
+      <!--<ListView HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                ItemContainerStyle="{StaticResource MessageListViewItemStyle}"
+                ItemsSource="{x:Bind Folder.Messages, Mode=OneWay}">
+        <ListView.ItemTemplate>
+          <DataTemplate x:DataType="vm:MessageSummaryViewModel">
+            <local:MessageSummaryListViewItem ViewModel="{x:Bind Mode=OneWay}"/>
+          </DataTemplate>
+        </ListView.ItemTemplate>
+      </ListView>-->
+      <local:MessageListView HorizontalAlignment="Stretch"
+                             VerticalAlignment="Stretch"
+                             ItemsSource="{x:Bind Folder.Messages, Mode=OneWay}"/>
+    </Grid>
+  </Grid>
+</UserControl>

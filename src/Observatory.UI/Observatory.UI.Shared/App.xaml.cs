@@ -65,7 +65,7 @@ namespace Observatory.UI
 			}
 #endif
 
-            var profileRegistration = Container.Resolve<ProfileRegistrationService>();
+            var profileRegistration = Container.Resolve<IProfileRegistrationService>();
             await profileRegistration.InitializeAsync();
 
             // Do not repeat app initialization when the Window already has content,

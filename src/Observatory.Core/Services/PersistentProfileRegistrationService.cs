@@ -13,34 +13,25 @@ using System.Threading.Tasks;
 namespace Observatory.Core.Services
 {
     /// <summary>
-    /// Represents a service for registering profiles.
+    /// Represents a service to handle profiles registration.
     /// </summary>
-    public class ProfileRegistrationService
+    public class PersistentProfileRegistrationService :IProfileRegistrationService
     {
         private readonly string _storePath;
         private readonly SourceList<ProfileRegister> _sourceProfiles =
             new SourceList<ProfileRegister>();
 
-        /// <summary>
-        /// Connects to the changes in profile registers.
-        /// </summary>
-        /// <returns></returns>
         public IObservable<IChangeSet<ProfileRegister>> Connect() => _sourceProfiles.Connect();
 
         /// <summary>
-        /// Constructs a new instance of <see cref="ProfileRegistrationService"/>.
+        /// Constructs a new instance of <see cref="PersistentProfileRegistrationService"/>.
         /// </summary>
         /// <param name="path">The path to the registry file.</param>
-        public ProfileRegistrationService(string path)
+        public PersistentProfileRegistrationService(string path)
         {
             _storePath = path;             
         }
 
-        /// <summary>
-        /// Initializes the service, creating the registry file or loading existing profiles.
-        /// </summary>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns></returns>
         public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             using var store = new ProfileRegistry(_storePath);
@@ -50,11 +41,6 @@ namespace Observatory.Core.Services
             _sourceProfiles.AddRange(profiles);
         }
 
-        /// <summary>
-        /// Registers a new profile.
-        /// </summary>
-        /// <param name="profile">The profile to be registered.</param>
-        /// <returns></returns>
         public async Task RegisterAsync(ProfileRegister profile)
         {
             using var store = new ProfileRegistry(_storePath);
@@ -63,11 +49,6 @@ namespace Observatory.Core.Services
             _sourceProfiles.Add(profile);
         }
 
-        /// <summary>
-        /// Unregisters an existing profile.
-        /// </summary>
-        /// <param name="profile">The profile to be unregistered.</param>
-        /// <returns></returns>
         public async Task UnregisterAsync(ProfileRegister profile)
         {
             using var store = new ProfileRegistry(_storePath);

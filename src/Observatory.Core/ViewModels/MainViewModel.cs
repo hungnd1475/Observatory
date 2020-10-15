@@ -32,7 +32,7 @@ namespace Observatory.Core.ViewModels
 
         public RoutingState Router { get; } = new RoutingState();
 
-        public MainViewModel(ProfileRegistrationService profileRegistration,
+        public MainViewModel(IProfileRegistrationService profileRegistration,
             ProfilePersistenceConfiguration profilePersistenceConfiguration,
             IEnumerable<IProfileProvider> providers,
             MailManagerViewModel mailViewModel,

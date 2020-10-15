@@ -15,14 +15,19 @@ namespace Observatory.Core.Services
     public interface IMailService 
     {
         /// <summary>
-        /// Gets an observable of change events happened to the mail folders.
+        /// Gets an observable of changes to the mail folders.
         /// </summary>
         IObservable<IEnumerable<DeltaEntity<MailFolder>>> FolderChanges { get; }
 
         /// <summary>
-        /// Gets an observable of change events happened to the messages.
+        /// Gets an observable of changes to the message summaries.
         /// </summary>
-        IObservable<IEnumerable<DeltaEntity<MessageSummary>>> MessageChanges { get; }
+        IObservable<IEnumerable<DeltaEntity<MessageSummary>>> MessageSummaryChanges { get; }
+
+        /// <summary>
+        /// Gets an observable of changes to the message details.
+        /// </summary>
+        IObservable<IEnumerable<DeltaEntity<MessageDetail>>> MessageDetailChanges { get; }
 
         /// <summary>
         /// Synchronizes the mail folders. All changes will be published to <see cref="FolderChanges"/>.
@@ -32,7 +37,7 @@ namespace Observatory.Core.Services
         Task SynchronizeFoldersAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Synchronizes the messages. All changes with be published to <see cref="MessageChanges"/>.
+        /// Synchronizes the messages. All changes with be published to <see cref="MessageSummaryChanges"/> and <see cref="MessageDetailChanges"/>.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>

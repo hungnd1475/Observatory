@@ -12,22 +12,22 @@ namespace Observatory.Providers.Exchange
 {
     public static class ExchangeExtensions
     {
-        public static MailFolder Create(this MG.MailFolder folder, FolderType type = FolderType.None, bool isFavorite = false)
+        public static MailFolder Convert(this MG.MailFolder source, FolderType type = FolderType.None, bool isFavorite = false)
         {
             return new MailFolder()
             {
-                Id = folder.Id,
-                Name = folder.DisplayName,
-                ParentId = folder.ParentFolderId,
+                Id = source.Id,
+                Name = source.DisplayName,
+                ParentId = source.ParentFolderId,
                 Type = type,
                 IsFavorite = isFavorite,
             };
         }
 
-        public static void Update(this EntityEntry<MailFolder> folderEntry, MG.MailFolder folder)
+        public static void UpdateFrom(this EntityEntry<MailFolder> targetEntry, MG.MailFolder source)
         {
-            folderEntry.UpdateIfChanged(f => f.Name, folder.DisplayName);
-            folderEntry.UpdateIfChanged(f => f.ParentId, folder.ParentFolderId);
+            targetEntry.UpdateIfChanged(f => f.Name, source.DisplayName);
+            targetEntry.UpdateIfChanged(f => f.ParentId, source.ParentFolderId);
         }
 
         public static void UpdateIfChanged<TEntity, TValue>(this EntityEntry<TEntity> entityEntry,
@@ -40,58 +40,62 @@ namespace Observatory.Providers.Exchange
             }
         }
 
-        public static MessageSummary ConvertToSummary(this MG.Message message)
+        public static MessageSummary ConvertToSummary(this MG.Message source)
         {
             return new MessageSummary()
             {
-                Id = message.Id ?? throw new ArgumentNullException(),
-                Subject = message.Subject ?? throw new ArgumentNullException(),
-                Sender = message.Sender?.Convert() ?? throw new ArgumentNullException(),
-                ReceivedDateTime = message.ReceivedDateTime ?? throw new ArgumentNullException(),
-                IsRead = message.IsRead ?? throw new ArgumentNullException(),
-                Importance = message.Importance?.Convert() ?? throw new ArgumentNullException(),
-                HasAttachments = message.HasAttachments ?? throw new ArgumentNullException(),
-                ToRecipients = message.ToRecipients?.Convert() ?? throw new ArgumentNullException(),
-                CcRecipients = message.CcRecipients?.Convert() ?? throw new ArgumentNullException(),
-                ThreadId = message.ConversationId ?? throw new ArgumentNullException(),
-                IsDraft = message.IsDraft ?? throw new ArgumentNullException(),
-                FolderId = message.ParentFolderId ?? throw new ArgumentNullException(),
-                BodyPreview = message.BodyPreview ?? throw new ArgumentNullException(),
-                IsFlagged = message.Flag?.Convert() ?? throw new ArgumentNullException(),
+                Id = source.Id ?? throw new ArgumentNullException(),
+                Subject = source.Subject ?? throw new ArgumentNullException(),
+                Sender = source.Sender?.Convert() ?? throw new ArgumentNullException(),
+                ReceivedDateTime = source.ReceivedDateTime ?? throw new ArgumentNullException(),
+                IsRead = source.IsRead ?? throw new ArgumentNullException(),
+                Importance = source.Importance?.Convert() ?? throw new ArgumentNullException(),
+                HasAttachments = source.HasAttachments ?? throw new ArgumentNullException(),
+                ToRecipients = source.ToRecipients?.Convert() ?? throw new ArgumentNullException(),
+                CcRecipients = source.CcRecipients?.Convert() ?? throw new ArgumentNullException(),
+                ThreadId = source.ConversationId ?? throw new ArgumentNullException(),
+                IsDraft = source.IsDraft ?? throw new ArgumentNullException(),
+                FolderId = source.ParentFolderId ?? throw new ArgumentNullException(),
+                BodyPreview = source.BodyPreview ?? throw new ArgumentNullException(),
+                IsFlagged = source.Flag?.Convert() ?? throw new ArgumentNullException(),
             };
         }
 
-        public static MessageSummary Update(this MessageSummary state, MG.Message message)
+        public static void UpdateFrom(this EntityEntry<MessageSummary> targetEntry, MG.Message source)
         {
-            state.Id = message.Id ?? state.Id;
-            state.Subject = message.Subject ?? state.Subject;
-            state.Sender = message.Sender.Convert();
-            state.ReceivedDateTime = message.ReceivedDateTime ?? state.ReceivedDateTime;
-            state.IsRead = message.IsRead ?? state.IsRead;
-            state.Importance = message.Importance?.Convert() ?? state.Importance;
-            state.HasAttachments = message.HasAttachments ?? state.HasAttachments;
-            state.ToRecipients = message.ToRecipients?.Convert() ?? state.ToRecipients;
-            state.CcRecipients = message.CcRecipients?.Convert() ?? state.CcRecipients;
-            state.ThreadId = message.ConversationId ?? state.ThreadId;
-            state.IsDraft = message.IsDraft ?? state.IsDraft;
-            state.FolderId = message.ParentFolderId ?? state.FolderId;
-            state.BodyPreview = message.BodyPreview ?? state.BodyPreview;
-            state.IsFlagged = message.Flag?.Convert() ?? state.IsFlagged;
-            return state;
+            targetEntry.UpdateIfChanged(s => s.Subject, source.Subject);
+            targetEntry.UpdateIfChanged(s => s.Sender, source.Sender?.Convert());
+            targetEntry.UpdateIfChanged(s => s.ReceivedDateTime, source.ReceivedDateTime);
+            targetEntry.UpdateIfChanged(s => s.IsRead, source.IsRead);
+            targetEntry.UpdateIfChanged(s => s.Importance, source.Importance?.Convert());
+            targetEntry.UpdateIfChanged(s => s.HasAttachments, source.HasAttachments);
+            targetEntry.UpdateIfChanged(s => s.ToRecipients, source.ToRecipients?.Convert());
+            targetEntry.UpdateIfChanged(s => s.CcRecipients, source.CcRecipients?.Convert());
+            targetEntry.UpdateIfChanged(s => s.ThreadId, source.ConversationId);
+            targetEntry.UpdateIfChanged(s => s.IsDraft, source.IsDraft);
+            targetEntry.UpdateIfChanged(s => s.FolderId, source.ParentFolderId);
+            targetEntry.UpdateIfChanged(s => s.BodyPreview, source.BodyPreview);
+            targetEntry.UpdateIfChanged(s => s.IsFlagged, source.Flag?.Convert());
         }
 
-        public static MessageDetail ConvertToDetail(this MG.Message message)
+        public static MessageDetail ConvertToDetail(this MG.Message source)
         {
-            if (message.Body != null)
+            if (source.Body != null)
             {
                 return new MessageDetail()
                 {
-                    Id = message.Id,
-                    Body = message.Body.Content ?? throw new ArgumentNullException(),
-                    BodyType = message.Body.ContentType?.Convert() ?? throw new ArgumentNullException(),
+                    Id = source.Id,
+                    Body = source.Body.Content ?? throw new ArgumentNullException(),
+                    BodyType = source.Body.ContentType?.Convert() ?? throw new ArgumentNullException(),
                 };
             }
             return null;
+        }
+
+        public static void UpdateFrom(this EntityEntry<MessageDetail> targetEntry, MG.Message source)
+        {
+            targetEntry.UpdateIfChanged(d => d.Body, source.Body.Content);
+            targetEntry.UpdateIfChanged(d => d.BodyType, source.Body.ContentType?.Convert());
         }
 
         public static ContentType? Convert(this MG.BodyType bodyType)

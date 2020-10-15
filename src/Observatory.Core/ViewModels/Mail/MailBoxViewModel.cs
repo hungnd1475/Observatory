@@ -37,16 +37,16 @@ namespace Observatory.Core.ViewModels.Mail
         [ObservableAsProperty]
         public MailFolderViewModel Inbox { get; }
 
-        public MailBoxViewModel(IProfileDataQueryFactory profileQueryFactory, IMailService mailService)
+        public MailBoxViewModel(IProfileDataQueryFactory queryFactory, IMailService mailService)
         {
-            _queryFactory = profileQueryFactory;
+            _queryFactory = queryFactory;
             _mailService = mailService;
 
             var sharedFoldersConnection = _sourceFolders.Connect()
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Sort(SortExpressionComparer<MailFolder>.Ascending(f => f.Type).ThenByAscending(f => f.Name))
                 .TransformToTree(f => f.ParentId)
-                .Transform(n => new MailFolderViewModel(n))
+                .Transform(n => new MailFolderViewModel(n, queryFactory))
                 .Publish();
             sharedFoldersConnection
                 .ObserveOn(RxApp.MainThreadScheduler)
@@ -83,7 +83,7 @@ namespace Observatory.Core.ViewModels.Mail
                                     updater.AddOrUpdate(c.Entity);
                                     break;
                                 case DeltaState.Remove:
-                                    updater.RemoveKey(c.Id);
+                                    updater.RemoveKey(c.Entity.Id);
                                     break;
                             }
                         }
@@ -102,7 +102,7 @@ namespace Observatory.Core.ViewModels.Mail
         public async Task RestoreAsync()
         {
             using var query = _queryFactory.Connect();
-            var folders = await query.Folders.ToListAsync();
+            var folders = await query.GetFoldersAsync();
             _sourceFolders.Edit(updater => updater.Load(folders));
 
             Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(30))

@@ -18,7 +18,19 @@
     <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageListView.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageListViewItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageSummaryCommandButton.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageSummaryListView.xaml.cs">
+      <DependentUpon>MessageSummaryListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Converters\Converters.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converters\EqualityToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converters\FunctionalityModeIconConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converters\ImportanceToGlyphConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converters\ImportanceToVisibilityConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converters\ReceivedDateTimeFormatConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extentions\ButtonEx.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\CalendarManagerPage.xaml.cs">
       <DependentUpon>CalendarManagerPage.xaml</DependentUpon>
     </Compile>
@@ -31,6 +43,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)UIModule.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)Controls\MessageSummaryListView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="$(MSBuildThisFileDirectory)Views\CalendarManagerPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -49,8 +65,5 @@
   </ItemGroup>
   <ItemGroup>
     <PRIResource Include="$(MSBuildThisFileDirectory)Strings\en\Resources.resw" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Resources\" />
   </ItemGroup>
 </Project>

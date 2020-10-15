@@ -7,32 +7,30 @@ namespace Observatory.Core.Services
     public struct DeltaEntity<T>
     {
         public DeltaState State { get; }
-        public string Id { get; }
         public T Entity { get; }
 
-        public DeltaEntity(DeltaState state, string id, T entity)
+        public DeltaEntity(DeltaState state, T entity)
         {
             State = state;
-            Id = id;
             Entity = entity;
         }
     }
 
     public struct DeltaEntity
     {
-        public static DeltaEntity<T> Added<T>(string id, T entity)
+        public static DeltaEntity<T> Added<T>(T entity)
         {
-            return new DeltaEntity<T>(DeltaState.Add, id, entity);
+            return new DeltaEntity<T>(DeltaState.Add, entity);
         }
 
-        public static DeltaEntity<T> Updated<T>(string id, T entity)
+        public static DeltaEntity<T> Updated<T>(T entity)
         {
-            return new DeltaEntity<T>(DeltaState.Update, id, entity);
+            return new DeltaEntity<T>(DeltaState.Update, entity);
         }
 
-        public static DeltaEntity<T> Removed<T>(string id)
+        public static DeltaEntity<T> Removed<T>(T entity)
         {
-            return new DeltaEntity<T>(DeltaState.Remove, id, default);
+            return new DeltaEntity<T>(DeltaState.Remove, entity);
         }
     }
 }
