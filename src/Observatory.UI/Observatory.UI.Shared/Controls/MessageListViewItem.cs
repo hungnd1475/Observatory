@@ -11,9 +11,9 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 
-namespace Observatory.UI.Shared.Controls
+namespace Observatory.UI.Controls
 {
-    public class MessageListViewItem : ListViewItem
+    public partial class MessageListViewItem : ListViewItem
     {
         public static readonly DependencyProperty IsPointerOverProperty =
             DependencyProperty.Register(nameof(IsPointerOver), typeof(bool), typeof(MessageListViewItem), new PropertyMetadata(false));

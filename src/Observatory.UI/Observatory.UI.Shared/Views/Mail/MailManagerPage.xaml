@@ -1,16 +1,13 @@
-﻿<Page x:Class="Observatory.UI.Views.MailManagerPage"
+﻿<Page x:Class="Observatory.UI.Views.Mail.MailManagerPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:controls="using:Observatory.UI.Shared.Controls"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:dt="using:Observatory.Core.DesignTime"
-      xmlns:local="using:Observatory.UI.Shared"
+      xmlns:local="using:Observatory.UI.Views.Mail"
       xmlns:mailvm="using:Observatory.Core.ViewModels.Mail"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:media="using:Microsoft.UI.Xaml.Media"
       xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
-      xmlns:toolkit="using:Microsoft.Toolkit.Uwp.UI.Controls"
-      xmlns:toolkitconverters="using:Microsoft.Toolkit.Uwp.UI.Converters"
+      xmlns:ui="using:Observatory.UI"
       xmlns:vm="using:Observatory.Core.ViewModels"
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
       mc:Ignorable="d">
@@ -184,7 +181,7 @@
     <DataTemplate x:Key="ModeSelectorItemTemplate" x:DataType="vm:FunctionalityMode">
       <SymbolIcon HorizontalAlignment="Center"
                   VerticalAlignment="Center"
-                  Symbol="{Binding Converter={StaticResource FunctionalityModeIconConverter}}"/>
+                  Symbol="{x:Bind ui:Converters.FunctionalityModeToIcon((vm:FunctionalityMode))}"/>
     </DataTemplate>
 
     <Style x:Key="ProfileListViewStyle" TargetType="ListView">
@@ -516,7 +513,7 @@
             <ColumnDefinition Width="500"/>
             <ColumnDefinition Width="*"/>
           </Grid.ColumnDefinitions>
-          <controls:MessageSummaryListView Folder="{x:Bind ViewModel.SelectedFolder, Mode=OneWay}"/>
+          <local:MailFolderView Folder="{x:Bind ViewModel.SelectedFolder, Mode=OneWay}"/>
         </Grid>
       </SplitView>
     </SplitView>
@@ -525,7 +522,7 @@
     <VisualStateGroup>
       <VisualState>
         <VisualState.StateTriggers>
-          <StateTrigger IsActive="{x:Bind NavigationView.IsPaneOpen, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"/>
+          <StateTrigger IsActive="{x:Bind ui:Converters.BoolNegation(NavigationView.IsPaneOpen), Mode=OneWay}"/>
         </VisualState.StateTriggers>
         <VisualState.Setters>
           <Setter Target="ExpandedNavigationPane.Visibility" Value="Collapsed"/>

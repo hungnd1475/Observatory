@@ -6,7 +6,7 @@
     <SharedGUID>6279c845-92f8-4333-ab99-3d213163593c</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>Observatory.UI.Shared</Import_RootNamespace>
+    <Import_RootNamespace>Observatory.UI</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <ApplicationDefinition Include="$(MSBuildThisFileDirectory)App.xaml">
@@ -18,23 +18,17 @@
     <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageListView.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageListViewItem.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageSummaryCommandButton.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageSummaryListView.xaml.cs">
-      <DependentUpon>MessageSummaryListView.xaml</DependentUpon>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\Mail\MailFolderView.xaml.cs">
+      <DependentUpon>MailFolderView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)Converters\Converters.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Converters\EqualityToVisibilityConverter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Converters\FunctionalityModeIconConverter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Converters\ImportanceToGlyphConverter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Converters\ImportanceToVisibilityConverter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Converters\ReceivedDateTimeFormatConverter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Extentions\ButtonEx.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Views\CalendarManagerPage.xaml.cs">
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageListView.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageListViewItemButton.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converters.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Views\Calendar\CalendarManagerPage.xaml.cs">
       <DependentUpon>CalendarManagerPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)Views\MailManagerPage.xaml.cs">
+    <Compile Include="$(MSBuildThisFileDirectory)Views\Mail\MailManagerPage.xaml.cs">
       <DependentUpon>MailManagerPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml.cs">
@@ -43,15 +37,15 @@
     <Compile Include="$(MSBuildThisFileDirectory)UIModule.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="$(MSBuildThisFileDirectory)Controls\MessageSummaryListView.xaml">
+    <Page Include="$(MSBuildThisFileDirectory)Views\Mail\MailFolderView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="$(MSBuildThisFileDirectory)Views\CalendarManagerPage.xaml">
+    <Page Include="$(MSBuildThisFileDirectory)Views\Calendar\CalendarManagerPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="$(MSBuildThisFileDirectory)Views\MailManagerPage.xaml">
+    <Page Include="$(MSBuildThisFileDirectory)Views\Mail\MailManagerPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -65,5 +59,9 @@
   </ItemGroup>
   <ItemGroup>
     <PRIResource Include="$(MSBuildThisFileDirectory)Strings\en\Resources.resw" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Views\Mail\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Views\Calendar\" />
   </ItemGroup>
 </Project>

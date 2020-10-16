@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Observatory.Core;
 using Observatory.Core.Services;
 using Observatory.Providers.Exchange;
-using Observatory.UI.Shared;
 using Observatory.UI.Views;
 using ReactiveUI;
 using Splat.Autofac;

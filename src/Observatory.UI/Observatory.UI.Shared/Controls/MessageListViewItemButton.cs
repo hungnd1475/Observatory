@@ -6,12 +6,12 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 
-namespace Observatory.UI.Shared.Controls
+namespace Observatory.UI.Controls
 {
-    public class MessageSummaryCommandButton : Button
+    public class MessageListViewItemButton : Button
     {
         public static readonly DependencyProperty ActiveForegroundProperty =
-            DependencyProperty.Register(nameof(ActiveForeground), typeof(Brush), typeof(MessageSummaryCommandButton), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(ActiveForeground), typeof(Brush), typeof(MessageListViewItemButton), new PropertyMetadata(null));
 
         public Brush ActiveForeground
         {

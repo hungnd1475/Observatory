@@ -5,7 +5,7 @@ using System.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
-namespace Observatory.UI.Shared.Controls
+namespace Observatory.UI.Controls
 {
     public class MessageListView : ListView
     {

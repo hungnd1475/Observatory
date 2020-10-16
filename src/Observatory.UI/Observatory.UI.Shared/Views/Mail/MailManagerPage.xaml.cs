@@ -28,7 +28,7 @@ using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
-namespace Observatory.UI.Views
+namespace Observatory.UI.Views.Mail
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
