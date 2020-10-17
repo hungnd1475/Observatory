@@ -50,7 +50,6 @@ namespace Observatory.UI.Controls
 
         public MessageListViewItem()
         {
-            this.PointerExited += this.HandlePointerExited;
         }
 
         public void Prepare(MessageSummaryViewModel message)
@@ -121,14 +120,6 @@ namespace Observatory.UI.Controls
             }
 
             return receivedDateTime.ToString("dd/MM/yyyy hh:mm tt");
-        }
-
-        public void HandlePointerExited(object sender, PointerRoutedEventArgs e)
-        {
-            if (sender != this)
-            {
-                e.Handled = true;
-            }
         }
     }
 }

@@ -250,7 +250,6 @@
                       <controls:OneWayToggleButton x:Name="ToggleFlagButton"
                                                    Command="{x:Bind Message.ToggleFlagCommand, Mode=OneWay}"
                                                    IsChecked="{x:Bind Message.IsFlagged, Mode=OneWay}"
-                                                   PointerExited="{x:Bind HandlePointerExited}"
                                                    Style="{StaticResource MessageListViewItemToggleFlagButtonStyle}"
                                                    ToolTipService.ToolTip="Set flag on this item"/>
                     </StackPanel>

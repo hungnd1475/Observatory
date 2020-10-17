@@ -12,10 +12,10 @@
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
       mc:Ignorable="d">
   <Page.Resources>
-    <Style x:Key="ModeSelectorListViewItemStyle"
-           TargetType="ListViewItem">
+    <Style x:Key="ModeSelectorListViewItemStyle" TargetType="ListViewItem">
       <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
       <Setter Property="BorderBrush" Value="{ThemeResource SystemControlTransparentRevealBorderBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
       <Setter Property="Height" Value="40"/>
       <Setter Property="HorizontalContentAlignment" Value="Center"/>
       <Setter Property="MaxHeight" Value="40"/>
@@ -45,7 +45,7 @@
 
                   <VisualState x:Name="PointerOver">
                     <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.(media:RevealBrush.State)" Value="PointerOver"/>
+                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="PointerOver"/>
                       <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListLowRevealBackgroundBrush}"/>
                       <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
                     </VisualState.Setters>
@@ -53,7 +53,7 @@
 
                   <VisualState x:Name="Pressed">
                     <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.(media:RevealBrush.State)" Value="Pressed"/>
+                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="Pressed"/>
                       <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListMediumRevealBackgroundBrush}"/>
                       <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
                     </VisualState.Setters>
@@ -62,23 +62,23 @@
                   <VisualState x:Name="Selected">
                     <VisualState.Setters>
                       <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
+                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
                     </VisualState.Setters>
                   </VisualState>
 
                   <VisualState x:Name="PointerOverSelected">
                     <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.(media:RevealBrush.State)" Value="PointerOver"/>
+                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="PointerOver"/>
                       <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
+                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
                     </VisualState.Setters>
                   </VisualState>
 
                   <VisualState x:Name="PressedSelected">
                     <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.(media:RevealBrush.State)" Value="PointerOver"/>
+                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="Pressed"/>
                       <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
+                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
                     </VisualState.Setters>
                   </VisualState>
                 </VisualStateGroup>
@@ -91,8 +91,7 @@
       <Setter Property="Width" Value="40"/>
     </Style>
 
-    <Style x:Key="NavigationPaneListViewItemStyle"
-           TargetType="ListViewItem">
+    <Style x:Key="NavigationPaneListViewItemStyle" TargetType="ListViewItem">
       <Setter Property="AllowDrop" Value="False"/>
       <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
       <Setter Property="BorderBrush" Value="{ThemeResource SystemControlTransparentRevealBorderBrush}"/>
@@ -189,14 +188,12 @@
                   Symbol="{x:Bind ui:Converters.FunctionalityModeToIcon((vm:FunctionalityMode))}"/>
     </DataTemplate>
 
-    <Style x:Key="ProfileListViewStyle"
-           TargetType="ListView">
+    <Style x:Key="ProfileListViewStyle" TargetType="ListView">
       <Setter Property="HorizontalAlignment" Value="Stretch"/>
       <Setter Property="ItemContainerStyle">
         <Setter.Value>
-          <Style BasedOn="{StaticResource NavigationPaneListViewItemStyle}"
-                 TargetType="ListViewItem">
-            <Setter Property="Height" Value="48"/>
+          <Style BasedOn="{StaticResource NavigationPaneListViewItemStyle}" TargetType="ListViewItem">
+            <Setter Property="Height" Value="55"/>
           </Style>
         </Setter.Value>
       </Setter>
@@ -216,12 +213,10 @@
       <Setter Property="VerticalAlignment" Value="Stretch"/>
     </Style>
 
-    <Style x:Key="FolderListViewStyle"
-           TargetType="ListView">
+    <Style x:Key="FolderListViewStyle" TargetType="ListView">
       <Setter Property="ItemContainerStyle">
         <Setter.Value>
-          <Style BasedOn="{StaticResource NavigationPaneListViewItemStyle}"
-                 TargetType="ListViewItem">
+          <Style BasedOn="{StaticResource NavigationPaneListViewItemStyle}" TargetType="ListViewItem">
             <Setter Property="Height" Value="35"/>
             <Setter Property="MinHeight" Value="0"/>
           </Style>
