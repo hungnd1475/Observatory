@@ -1,19 +1,23 @@
 ﻿using Observatory.Core.ViewModels.Mail;
 using ReactiveUI;
+using Splat;
 using System;
 using System.Collections.Generic;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
 using Uno.Extensions.ValueType;
+using Windows.UI.Core;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 
 namespace Observatory.UI.Controls
 {
-    public partial class MessageListViewItem : ListViewItem
+    public partial class MessageListViewItem : ListViewItem, IEnableLogger
     {
         public static readonly DependencyProperty IsPointerOverProperty =
             DependencyProperty.Register(nameof(IsPointerOver), typeof(bool), typeof(MessageListViewItem), new PropertyMetadata(false));
@@ -21,8 +25,10 @@ namespace Observatory.UI.Controls
         public static readonly DependencyProperty MessageProperty =
             DependencyProperty.Register(nameof(Message), typeof(MessageSummaryViewModel), typeof(MessageListViewItem), new PropertyMetadata(null));
 
-        private readonly CompositeDisposable _disposables =
-            new CompositeDisposable();
+        public static readonly DependencyProperty StateNameProperty =
+            DependencyProperty.Register(nameof(StateName), typeof(string), typeof(MessageListViewItem), new PropertyMetadata("Normal"));
+
+        private IDisposable _stateSubscription;
 
         public MessageSummaryViewModel Message
         {
@@ -36,9 +42,44 @@ namespace Observatory.UI.Controls
             set { SetValue(IsPointerOverProperty, value); }
         }
 
+        public string StateName
+        {
+            get { return (string)GetValue(StateNameProperty); }
+            set { SetValue(StateNameProperty, value); }
+        }
+
+        public MessageListViewItem()
+        {
+            this.PointerExited += this.HandlePointerExited;
+        }
+
         public void Prepare(MessageSummaryViewModel message)
         {
             Message = message;
+            _stateSubscription = Observable.CombineLatest(message.WhenAnyValue(x => x.IsFlagged),
+                    this.WhenAnyValue(x => x.IsPointerOver),
+                    this.WhenAnyValue(x => x.IsSelected),
+                    (isFlagged, isPointerOver, isSelected) => (IsFlagged: isFlagged, IsPointerOver: isPointerOver, IsSelected: isSelected))
+                .Select(state =>
+                {
+                    if (state.IsSelected)
+                    {
+                        return "Selected";
+                    }
+                    else if (state.IsPointerOver)
+                    {
+                        return "PointerOver";
+                    }
+                    else if (state.IsFlagged)
+                    {
+                        return "Flagged";
+                    }
+                    else
+                    {
+                        return "Normal";
+                    }
+                })
+                .BindTo(this, x => x.StateName);
         }
 
         protected override void OnPointerEntered(PointerRoutedEventArgs e)
@@ -55,7 +96,8 @@ namespace Observatory.UI.Controls
 
         public void Clear()
         {
-            _disposables.Dispose();
+            _stateSubscription?.Dispose();
+            this.ClearValue(StateNameProperty);
             Message = null;
         }
 
@@ -94,6 +136,19 @@ namespace Observatory.UI.Controls
             }
 
             return isFlagged ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public void ToggleFlag()
+        {
+            Message?.ToggleFlagCommand?.Execute()?.Subscribe();
+        }
+
+        public void HandlePointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (sender != this)
+            {
+                e.Handled = true;
+            }
         }
     }
 }

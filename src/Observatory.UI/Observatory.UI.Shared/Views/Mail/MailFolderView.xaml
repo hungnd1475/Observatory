@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:models="using:Observatory.Core.Models"
+             xmlns:triggers="using:Microsoft.Toolkit.Uwp.UI.Triggers"
              xmlns:ui="using:Observatory.UI"
              d:DesignHeight="600"
              d:DesignWidth="500"
@@ -32,50 +33,208 @@
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
 
-      <Style TargetType="controls:MessageListViewItemButton">
+      <Style x:Key="MessageListViewItemArchiveButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Template">
           <Setter.Value>
-            <ControlTemplate TargetType="controls:MessageListViewItemButton">
-              <ContentPresenter x:Name="ContentPresenter"
-                                Padding="{TemplateBinding Padding}"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                Content="{TemplateBinding Content}"
-                                ContentTemplate="{TemplateBinding ContentTemplate}"
-                                Foreground="{TemplateBinding Foreground}">
+            <ControlTemplate TargetType="Button">
+              <FontIcon x:Name="Icon"
+                        FontSize="16"
+                        Glyph="{StaticResource ArchiveGlyph}">
                 <VisualStateManager.VisualStateGroups>
                   <VisualStateGroup x:Name="CommonStates">
                     <VisualState x:Name="Normal"/>
                     <VisualState x:Name="PointerOver">
                       <VisualState.Setters>
-                        <Setter Target="ContentPresenter.Foreground" Value="{Binding ActiveForeground, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>
+                        <Setter Target="Icon.Foreground" Value="{ThemeResource ArchiveIconColor}"/>
                       </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="Pressed">
                       <VisualState.Setters>
-                        <Setter Target="ContentPresenter.Foreground" Value="{Binding ActiveForeground, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>
+                        <Setter Target="Icon.Foreground" Value="{ThemeResource ArchiveIconColor}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                      <VisualState.Setters>
+                        <Setter Target="Icon.Foreground" Value="{ThemeResource SystemControlDisabledBaseMediumLowBrush}"/>
                       </VisualState.Setters>
                     </VisualState>
                   </VisualStateGroup>
                 </VisualStateManager.VisualStateGroups>
-              </ContentPresenter>
+              </FontIcon>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+
+      <Style x:Key="MessageListViewItemDeleteButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="Button">
+              <FontIcon x:Name="Icon"
+                        FontSize="16"
+                        Glyph="{StaticResource DeleteGlyph}">
+                <VisualStateManager.VisualStateGroups>
+                  <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal"/>
+                    <VisualState x:Name="PointerOver">
+                      <VisualState.Setters>
+                        <Setter Target="Icon.Foreground" Value="{ThemeResource DeleteIconColor}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                      <VisualState.Setters>
+                        <Setter Target="Icon.Foreground" Value="{ThemeResource DeleteIconColor}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                      <VisualState.Setters>
+                        <Setter Target="Icon.Foreground" Value="{ThemeResource SystemControlDisabledBaseMediumLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                  </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+              </FontIcon>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+
+      <Style x:Key="MessageListViewItemToggleFlagButtonStyle" TargetType="ToggleButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="ToggleButton">
+              <!--<FontIcon x:Name="FlagIcon"
+                        FontSize="16"
+                        Glyph="{StaticResource FlagGlyph}">
+                <VisualStateManager.VisualStateGroups>
+                  <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal"/>
+                    <VisualState x:Name="PointerOver">
+                      <VisualState.Setters>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource FlagIconColor}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                      <VisualState.Setters>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource FlagIconColor}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                      <VisualState.Setters>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource SystemControlDisabledBaseMediumLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Checked">
+                      <VisualState.Setters>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
+                        <Setter Target="FlagIcon.Glyph" Value="{StaticResource ArchiveGlyph}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="CheckedPointerOver">
+                      <VisualState.Setters>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
+                        <Setter Target="FlagIcon.Glyph" Value="{StaticResource ArchiveGlyph}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="CheckedPressed">
+                      <VisualState.Setters>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
+                        <Setter Target="FlagIcon.Glyph" Value="{StaticResource ArchiveGlyph}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="CheckedDisabled">
+                      <VisualState.Setters>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource SystemControlDisabledBaseMediumLowBrush}"/>
+                        <Setter Target="FlagIcon.Glyph" Value="{StaticResource ArchiveGlyph}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                  </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+              </FontIcon>-->
+              <Grid Background="{TemplateBinding Background}">
+                <FontIcon x:Name="FlagIcon"
+                          FontSize="16"
+                          Glyph="{StaticResource FlagGlyph}"/>
+                <FontIcon x:Name="UnflagIcon"
+                          FontSize="16"
+                          Glyph="{StaticResource UnflagGlyph}"
+                          Visibility="Collapsed">
+                  <FontIcon.RenderTransform>
+                    <TranslateTransform X="2"/>
+                  </FontIcon.RenderTransform>
+                </FontIcon>
+                <VisualStateManager.VisualStateGroups>
+                  <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal"/>
+                    <VisualState x:Name="PointerOver">
+                      <VisualState.Setters>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource FlagIconColor}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                      <VisualState.Setters>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource FlagIconColor}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                      <VisualState.Setters>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource SystemControlDisabledBaseMediumLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Checked">
+                      <VisualState.Setters>
+                        <Setter Target="UnflagIcon.Visibility" Value="Visible"/>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
+                        <Setter Target="UnflagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="CheckedPointerOver">
+                      <VisualState.Setters>
+                        <Setter Target="UnflagIcon.Visibility" Value="Visible"/>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
+                        <Setter Target="UnflagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="CheckedPressed">
+                      <VisualState.Setters>
+                        <Setter Target="UnflagIcon.Visibility" Value="Visible"/>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
+                        <Setter Target="UnflagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="CheckedDisabled">
+                      <VisualState.Setters>
+                        <Setter Target="UnflagIcon.Visibility" Value="Visible"/>
+                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource SystemControlDisabledBaseMediumLowBrush}"/>
+                        <Setter Target="UnflagIcon.Foreground" Value="{ThemeResource SystemControlDisabledBaseMediumLowBrush}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                  </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+              </Grid>
             </ControlTemplate>
           </Setter.Value>
         </Setter>
       </Style>
 
       <Style TargetType="controls:MessageListViewItem">
+        <Setter Property="Background" Value="Transparent"/>
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="controls:MessageListViewItem">
-              <Grid x:Name="BoundaryGrid"
+              <Grid x:Name="ContentGrid"
                     Background="{TemplateBinding Background}"
                     BorderBrush="{TemplateBinding BorderBrush}"
                     BorderThickness="{TemplateBinding BorderThickness}">
@@ -83,11 +242,6 @@
                   <RowDefinition Height="*"/>
                   <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Border Grid.RowSpan="2"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        Background="{ThemeResource FlaggedColor}"
-                        Visibility="{x:Bind ShouldDisplayFlaggedBackground(Message.IsFlagged, IsPointerOver, IsSelected), Mode=OneWay}"/>
                 <Grid>
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="5"/>
@@ -97,7 +251,8 @@
                              VerticalAlignment="Stretch"
                              Fill="{ThemeResource UnreadColor}"
                              Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(Message.IsRead), Mode=OneWay}"/>
-                  <Grid Grid.Column="1" Margin="8">
+                  <Grid Grid.Column="1"
+                        Margin="8">
                     <Grid.RowDefinitions>
                       <RowDefinition Height="Auto"/>
                       <RowDefinition Height="Auto"/>
@@ -114,21 +269,16 @@
                                 HorizontalAlignment="Right"
                                 d:Visibility="Collapsed"
                                 Orientation="Horizontal"
+                                Spacing="3"
                                 Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(IsPointerOver), Mode=OneWay}">
-                      <FontIcon Margin="0,0,3,0"
-                                FontSize="16"
+                      <FontIcon FontSize="16"
                                 Glyph="&#xE16C;"
                                 Visibility="{x:Bind Message.HasAttachments, Mode=OneWay}"/>
-                      <FontIcon Margin="0,0,3,0"
+                      <FontIcon x:Name="ImportanceIcon"
                                 FontSize="16"
-                                Foreground="{ThemeResource HighImportanceIconColor}"
-                                Glyph="&#xE171;"
-                                Visibility="{x:Bind ui:Converters.EqualityToVisibility(Message.Importance, models:Importance.High), Mode=OneWay}"/>
-                      <FontIcon Margin="0,0,3,0"
+                                Visibility="Collapsed"/>
+                      <FontIcon x:Name="FlagIcon"
                                 FontSize="16"
-                                Glyph="&#xE1FD;"
-                                Visibility="{x:Bind ui:Converters.EqualityToVisibility(Message.Importance, models:Importance.Low), Mode=OneWay}"/>
-                      <FontIcon FontSize="16"
                                 Foreground="{ThemeResource UnflagIconColor}"
                                 Glyph="&#xE129;"
                                 Visibility="{x:Bind Message.IsFlagged, Mode=OneWay}"/>
@@ -137,39 +287,20 @@
                                 HorizontalAlignment="Right"
                                 d:Visibility="Visible"
                                 Orientation="Horizontal"
+                                Spacing="3"
                                 Visibility="{x:Bind IsPointerOver, Mode=OneWay}">
-                      <controls:MessageListViewItemButton Margin="0,0,3,0" ActiveForeground="{ThemeResource ArchiveIconColor}">
-                        <FontIcon FontSize="16" Glyph="&#xE7B8;"/>
-                      </controls:MessageListViewItemButton>
-                      <controls:MessageListViewItemButton Margin="0,0,3,0" ActiveForeground="{ThemeResource DeleteIconColor}">
-                        <FontIcon FontSize="16" Glyph="&#xE107;"/>
-                      </controls:MessageListViewItemButton>
-                      <controls:MessageListViewItemButton Margin="0,0,3,0"
-                                                          ActiveForeground="{ThemeResource FlagIconColor}"
-                                                          Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(Message.IsFlagged), Mode=OneWay}">
-                        <FontIcon FontSize="16" Glyph="&#xE129;"/>
-                      </controls:MessageListViewItemButton>
-                      <controls:MessageListViewItemButton ActiveForeground="{ThemeResource UnflagIconColor}"
-                                                          Foreground="{ThemeResource UnflagIconColor}"
-                                                          Visibility="{x:Bind Message.IsFlagged, Mode=OneWay}">
-                        <Grid>
-                          <FontIcon FontSize="16" Glyph="&#xE129;"/>
-                          <FontIcon FontSize="16" Glyph="&#xED2E;">
-                            <FontIcon.RenderTransform>
-                              <CompositeTransform TranslateX="2"/>
-                            </FontIcon.RenderTransform>
-                          </FontIcon>
-                        </Grid>
-                      </controls:MessageListViewItemButton>
+                      <Button Command="{x:Bind Message.ArchiveCommand}"
+                              Style="{StaticResource MessageListViewItemArchiveButtonStyle}"/>
+                      <Button Command="{x:Bind Message.DeleteCommand}"
+                              Style="{StaticResource MessageListViewItemDeleteButtonStyle}"/>
+                      <controls:OneWayToggleButton Command="{x:Bind Message.ToggleFlagCommand, Mode=OneWay}"
+                                                   IsChecked="{x:Bind Message.IsFlagged, Mode=OneWay}"
+                                                   PointerExited="{x:Bind HandlePointerExited}"
+                                                   Style="{StaticResource MessageListViewItemToggleFlagButtonStyle}"/>
                     </StackPanel>
-                    <TextBlock Grid.Row="1"
-                               Text="{x:Bind Message.Subject, Mode=OneWay}"
-                               Visibility="{x:Bind Message.IsRead, Mode=OneWay}"/>
-                    <TextBlock Grid.Row="1"
-                               FontWeight="SemiBold"
-                               Foreground="{ThemeResource UnreadColor}"
-                               Text="{x:Bind Message.Subject, Mode=OneWay}"
-                               Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(Message.IsRead), Mode=OneWay}"/>
+                    <TextBlock x:Name="SubjectText"
+                               Grid.Row="1"
+                               Text="{x:Bind Message.Subject, Mode=OneWay}"/>
                     <TextBlock Grid.Row="1"
                                Grid.Column="1"
                                Margin="8,0,0,0"
@@ -187,36 +318,85 @@
                            HorizontalAlignment="Stretch"
                            Fill="{ThemeResource SystemBaseLowColor}"/>
                 <VisualStateManager.VisualStateGroups>
-                  <VisualStateGroup x:Name="CommonStates">
-                    <VisualState x:Name="Normal"/>
+                  <VisualStateGroup>
+                    <VisualState>
+                      <VisualState.StateTriggers>
+                        <triggers:IsEqualStateTrigger Value="{Binding StateName, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                                                      To="Normal"/>
+                      </VisualState.StateTriggers>
+                    </VisualState>
 
-                    <VisualState x:Name="PointerOver">
+                    <VisualState>
+                      <VisualState.StateTriggers>
+                        <triggers:IsEqualStateTrigger Value="{Binding StateName, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                                                      To="PointerOver"/>
+                      </VisualState.StateTriggers>
                       <VisualState.Setters>
-                        <Setter Target="BoundaryGrid.Background" Value="{ThemeResource SystemControlHighlightListLowBrush}"/>
+                        <Setter Target="ContentGrid.Background" Value="{ThemeResource SystemControlHighlightListLowBrush}"/>
                       </VisualState.Setters>
                     </VisualState>
 
-                    <VisualState x:Name="Pressed">
+                    <VisualState>
+                      <VisualState.StateTriggers>
+                        <triggers:IsEqualStateTrigger Value="{Binding StateName, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                                                      To="Selected"/>
+                      </VisualState.StateTriggers>
                       <VisualState.Setters>
-                        <Setter Target="BoundaryGrid.Background" Value="{ThemeResource SystemControlHighlightListLowBrush}"/>
+                        <Setter Target="ContentGrid.Background" Value="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
                       </VisualState.Setters>
                     </VisualState>
 
-                    <VisualState x:Name="Selected">
+                    <VisualState>
+                      <VisualState.StateTriggers>
+                        <triggers:IsEqualStateTrigger Value="{Binding StateName, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                                                      To="Flagged"/>
+                      </VisualState.StateTriggers>
                       <VisualState.Setters>
-                        <Setter Target="BoundaryGrid.Background" Value="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
+                        <Setter Target="ContentGrid.Background" Value="{ThemeResource FlaggedColor}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                  </VisualStateGroup>
+
+                  <VisualStateGroup>
+                    <VisualState>
+                      <VisualState.StateTriggers>
+                        <triggers:IsEqualStateTrigger Value="{Binding Message.IsRead, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                                                      To="False"/>
+                      </VisualState.StateTriggers>
+                      <VisualState.Setters>
+                        <Setter Target="SubjectText.FontWeight" Value="SemiBold"/>
+                        <Setter Target="SubjectText.Foreground" Value="{ThemeResource UnreadColor}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                  </VisualStateGroup>
+
+                  <VisualStateGroup>
+                    <VisualState x:Name="Low">
+                      <VisualState.StateTriggers>
+                        <triggers:IsEqualStateTrigger Value="{Binding Message.Importance, RelativeSource={RelativeSource Mode=TemplatedParent}}">
+                          <triggers:IsEqualStateTrigger.To>
+                            <models:Importance>Low</models:Importance>
+                          </triggers:IsEqualStateTrigger.To>
+                        </triggers:IsEqualStateTrigger>
+                      </VisualState.StateTriggers>
+                      <VisualState.Setters>
+                        <Setter Target="ImportanceIcon.Glyph" Value="{StaticResource LowImportanceGlyph}"/>
+                        <Setter Target="ImportanceIcon.Visibility" Value="Visible"/>
                       </VisualState.Setters>
                     </VisualState>
 
-                    <VisualState x:Name="PointerOverSelected">
+                    <VisualState x:Name="High">
+                      <VisualState.StateTriggers>
+                        <triggers:IsEqualStateTrigger Value="{Binding Message.Importance, RelativeSource={RelativeSource Mode=TemplatedParent}}">
+                          <triggers:IsEqualStateTrigger.To>
+                            <models:Importance>High</models:Importance>
+                          </triggers:IsEqualStateTrigger.To>
+                        </triggers:IsEqualStateTrigger>
+                      </VisualState.StateTriggers>
                       <VisualState.Setters>
-                        <Setter Target="BoundaryGrid.Background" Value="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
-                      </VisualState.Setters>
-                    </VisualState>
-
-                    <VisualState x:Name="PressedSelected">
-                      <VisualState.Setters>
-                        <Setter Target="BoundaryGrid.Background" Value="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
+                        <Setter Target="ImportanceIcon.Glyph" Value="{StaticResource HighImportanceGlyph}"/>
+                        <Setter Target="ImportanceIcon.Foreground" Value="{ThemeResource HighImportanceIconColor}"/>
+                        <Setter Target="ImportanceIcon.Visibility" Value="Visible"/>
                       </VisualState.Setters>
                     </VisualState>
                   </VisualStateGroup>
@@ -240,11 +420,13 @@
         <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
       <TextBox PlaceholderText="Search"/>
-      <Button Grid.Column="1" Command="{x:Bind Folder.SynchronizeCommand, Mode=OneWay}">
+      <Button Grid.Column="1"
+              Command="{x:Bind Folder.SynchronizeCommand, Mode=OneWay}">
         <SymbolIcon Symbol="Sync"/>
       </Button>
     </Grid>
-    <Grid Grid.Row="1" Margin="8">
+    <Grid Grid.Row="1"
+          Margin="8">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*"/>
         <ColumnDefinition Width="Auto"/>
@@ -256,6 +438,8 @@
     <Grid Grid.Row="2">
       <controls:MessageListView HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
+                                BorderBrush="{ThemeResource SystemBaseLowColor}"
+                                BorderThickness="1"
                                 ItemsSource="{x:Bind Folder.Messages, Mode=OneWay}"/>
     </Grid>
   </Grid>

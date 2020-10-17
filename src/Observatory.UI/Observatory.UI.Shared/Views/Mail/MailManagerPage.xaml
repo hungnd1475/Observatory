@@ -12,8 +12,10 @@
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
       mc:Ignorable="d">
   <Page.Resources>
-    <Style x:Key="ModeSelectorListViewItemStyle" TargetType="ListViewItem">
+    <Style x:Key="ModeSelectorListViewItemStyle"
+           TargetType="ListViewItem">
       <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
+      <Setter Property="BorderBrush" Value="{ThemeResource SystemControlTransparentRevealBorderBrush}"/>
       <Setter Property="Height" Value="40"/>
       <Setter Property="HorizontalContentAlignment" Value="Center"/>
       <Setter Property="MaxHeight" Value="40"/>
@@ -89,9 +91,11 @@
       <Setter Property="Width" Value="40"/>
     </Style>
 
-    <Style x:Key="NavigationPaneListViewItemStyle" TargetType="ListViewItem">
+    <Style x:Key="NavigationPaneListViewItemStyle"
+           TargetType="ListViewItem">
       <Setter Property="AllowDrop" Value="False"/>
       <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
+      <Setter Property="BorderBrush" Value="{ThemeResource SystemControlTransparentRevealBorderBrush}"/>
       <Setter Property="BorderThickness" Value="0,1"/>
       <Setter Property="HorizontalAlignment" Value="Stretch"/>
       <Setter Property="HorizontalContentAlignment" Value="Left"/>
@@ -127,7 +131,7 @@
 
                   <VisualState x:Name="PointerOver">
                     <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.(media:RevealBrush.State)" Value="PointerOver"/>
+                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="PointerOver"/>
                       <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListLowRevealBackgroundBrush}"/>
                       <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
                     </VisualState.Setters>
@@ -135,7 +139,7 @@
 
                   <VisualState x:Name="Pressed">
                     <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.(media:RevealBrush.State)" Value="Pressed"/>
+                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="Pressed"/>
                       <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListMediumRevealBackgroundBrush}"/>
                       <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
                       <Setter Target="ContentPresenter.FontWeight" Value="SemiBold"/>
@@ -152,7 +156,7 @@
                   <VisualState x:Name="PointerOverSelected">
                     <VisualState.Setters>
                       <Setter Target="SelectionIndicatorRectangle.Visibility" Value="Visible"/>
-                      <Setter Target="ContentPresenterGrid.(media:RevealBrush.State)" Value="PointerOver"/>
+                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="PointerOver"/>
                       <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListLowRevealBackgroundBrush}"/>
                       <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
                       <Setter Target="ContentPresenter.FontWeight" Value="SemiBold"/>
@@ -162,7 +166,7 @@
                   <VisualState x:Name="PressedSelected">
                     <VisualState.Setters>
                       <Setter Target="SelectionIndicatorRectangle.Visibility" Value="Visible"/>
-                      <Setter Target="ContentPresenterGrid.(media:RevealBrush.State)" Value="PointerOver"/>
+                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="Pressed"/>
                       <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListLowRevealBackgroundBrush}"/>
                       <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
                       <Setter Target="ContentPresenter.FontWeight" Value="SemiBold"/>
@@ -178,17 +182,20 @@
       <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
 
-    <DataTemplate x:Key="ModeSelectorItemTemplate" x:DataType="vm:FunctionalityMode">
+    <DataTemplate x:Key="ModeSelectorItemTemplate"
+                  x:DataType="vm:FunctionalityMode">
       <SymbolIcon HorizontalAlignment="Center"
                   VerticalAlignment="Center"
                   Symbol="{x:Bind ui:Converters.FunctionalityModeToIcon((vm:FunctionalityMode))}"/>
     </DataTemplate>
 
-    <Style x:Key="ProfileListViewStyle" TargetType="ListView">
+    <Style x:Key="ProfileListViewStyle"
+           TargetType="ListView">
       <Setter Property="HorizontalAlignment" Value="Stretch"/>
       <Setter Property="ItemContainerStyle">
         <Setter.Value>
-          <Style BasedOn="{StaticResource NavigationPaneListViewItemStyle}" TargetType="ListViewItem">
+          <Style BasedOn="{StaticResource NavigationPaneListViewItemStyle}"
+                 TargetType="ListViewItem">
             <Setter Property="Height" Value="48"/>
           </Style>
         </Setter.Value>
@@ -196,9 +203,12 @@
       <Setter Property="ItemTemplate">
         <Setter.Value>
           <DataTemplate x:DataType="vm:ProfileViewModelBase">
-            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-              <TextBlock FontSize="16" Text="{x:Bind DisplayName, Mode=OneWay}"/>
-              <TextBlock FontWeight="Normal" Text="{x:Bind EmailAddress, Mode=OneWay}"/>
+            <StackPanel Grid.Column="1"
+                        VerticalAlignment="Center">
+              <TextBlock FontSize="16"
+                         Text="{x:Bind DisplayName, Mode=OneWay}"/>
+              <TextBlock FontWeight="Normal"
+                         Text="{x:Bind EmailAddress, Mode=OneWay}"/>
             </StackPanel>
           </DataTemplate>
         </Setter.Value>
@@ -206,10 +216,12 @@
       <Setter Property="VerticalAlignment" Value="Stretch"/>
     </Style>
 
-    <Style x:Key="FolderListViewStyle" TargetType="ListView">
+    <Style x:Key="FolderListViewStyle"
+           TargetType="ListView">
       <Setter Property="ItemContainerStyle">
         <Setter.Value>
-          <Style BasedOn="{StaticResource NavigationPaneListViewItemStyle}" TargetType="ListViewItem">
+          <Style BasedOn="{StaticResource NavigationPaneListViewItemStyle}"
+                 TargetType="ListViewItem">
             <Setter Property="Height" Value="35"/>
             <Setter Property="MinHeight" Value="0"/>
           </Style>
@@ -218,7 +230,8 @@
       <Setter Property="ItemTemplate">
         <Setter.Value>
           <DataTemplate x:DataType="mailvm:MailFolderViewModel">
-            <TextBlock VerticalAlignment="Center" Text="{x:Bind Name, Mode=OneWay}"/>
+            <TextBlock VerticalAlignment="Center"
+                       Text="{x:Bind Name, Mode=OneWay}"/>
           </DataTemplate>
         </Setter.Value>
       </Setter>
@@ -238,7 +251,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto" MaxHeight="240"/>
+            <RowDefinition Height="Auto"
+                           MaxHeight="240"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -262,14 +276,16 @@
                 <ColumnDefinition Width="38"/>
                 <ColumnDefinition Width="*"/>
               </Grid.ColumnDefinitions>
-              <SymbolIcon HorizontalAlignment="Center" Symbol="Add"/>
+              <SymbolIcon HorizontalAlignment="Center"
+                          Symbol="Add"/>
               <TextBlock Grid.Column="1"
                          FontSize="18"
                          FontWeight="SemiBold"
                          Text="New Message"/>
             </Grid>
           </Button>
-          <Grid Grid.Row="2" Height="40">
+          <Grid Grid.Row="2"
+                Height="40">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="40"/>
               <ColumnDefinition Width="*"/>
@@ -367,7 +383,8 @@
             </Button>
           </Grid>
         </Grid>
-        <Grid x:Name="CompactNavigationPane" Visibility="Collapsed">
+        <Grid x:Name="CompactNavigationPane"
+              Visibility="Collapsed">
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -407,7 +424,8 @@
                   ToolTipService.ToolTip="View all folders">
             <FontIcon Glyph="&#xF12B;"/>
           </Button>
-          <StackPanel Grid.Row="5" HorizontalAlignment="Left">
+          <StackPanel Grid.Row="5"
+                      HorizontalAlignment="Left">
             <ListView ItemContainerStyle="{StaticResource ModeSelectorListViewItemStyle}"
                       ItemTemplate="{StaticResource ModeSelectorItemTemplate}"
                       ItemsSource="{x:Bind ViewModel.HostScreen.Modes}"
@@ -500,7 +518,8 @@
                            SelectionMode="None">
               <muxc:TreeView.ItemTemplate>
                 <DataTemplate x:DataType="mailvm:MailFolderViewModel">
-                  <muxc:TreeViewItem IsExpanded="True" ItemsSource="{x:Bind ChildFolders, Mode=OneWay}">
+                  <muxc:TreeViewItem IsExpanded="True"
+                                     ItemsSource="{x:Bind ChildFolders, Mode=OneWay}">
                     <TextBlock Text="{x:Bind Name, Mode=OneWay}"/>
                   </muxc:TreeViewItem>
                 </DataTemplate>

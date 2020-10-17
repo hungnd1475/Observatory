@@ -1,18 +1,23 @@
 ﻿using Observatory.Core.Models;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Observatory.Core.ViewModels.Mail
 {
-    public class MessageSummaryViewModel : ReactiveObject
+    public class MessageSummaryViewModel : ReactiveObject, IDisposable
     {
         private static readonly Regex NEWLINE_PATTERN = new Regex("\\r?\n|\u200B|\u200C|\u200D", RegexOptions.Compiled);
         private static readonly Regex SPACES_PATTERN = new Regex("\\s\\s+", RegexOptions.Compiled);
+
+        private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
         public string Subject { get; private set; }
 
@@ -28,7 +33,8 @@ namespace Observatory.Core.ViewModels.Mail
 
         public bool HasAttachments { get; private set; }
 
-        public bool IsFlagged { get; private set; }
+        [Reactive]
+        public bool IsFlagged { get; set; }
 
         public bool IsDraft { get; private set; }
 
@@ -36,23 +42,26 @@ namespace Observatory.Core.ViewModels.Mail
 
         public int ThreadPosition { get; private set; }
 
+        [ObservableAsProperty]
+        public bool IsTogglingFlag { get; }
+
         public MessageDetailViewModel Detail { get; private set; }
 
-        public ReactiveCommand<Unit, Unit> LoadDetailCommand => throw new NotImplementedException();
+        public ReactiveCommand<Unit, Unit> LoadDetailCommand { get; }
 
-        public ReactiveCommand<Unit, Unit> ArchiveCommand => throw new NotImplementedException();
+        public ReactiveCommand<Unit, Unit> ArchiveCommand { get; }
 
-        public ReactiveCommand<Unit, Unit> DeleteCommand => throw new NotImplementedException();
+        public ReactiveCommand<Unit, Unit> DeleteCommand { get; }
 
-        public ReactiveCommand<Unit, Unit> ToggleFlagCommand => throw new NotImplementedException();
+        public ReactiveCommand<Unit, Unit> ToggleFlagCommand { get; }
 
-        public ReactiveCommand<Unit, Unit> ToggleReadCommand => throw new NotImplementedException();
+        public ReactiveCommand<Unit, Unit> ToggleReadCommand { get; }
 
-        public ReactiveCommand<string, Unit> MoveCommand => throw new NotImplementedException();
+        public ReactiveCommand<string, Unit> MoveCommand { get; }
 
-        public ReactiveCommand<Unit, Unit> MoveToJunkCommand => throw new NotImplementedException();
+        public ReactiveCommand<Unit, Unit> MoveToJunkCommand { get; }
 
-        public ReactiveCommand<Unit, Unit> IgnoreCommand => throw new NotImplementedException();
+        public ReactiveCommand<Unit, Unit> IgnoreCommand { get; }
 
         public MessageSummaryViewModel(MessageSummary state)
         {
@@ -69,6 +78,25 @@ namespace Observatory.Core.ViewModels.Mail
                 ? string.Join(", ", state.ToRecipients.Select(r => r.DisplayName))
                 : state.Sender.DisplayName;
             ReceivedDateTime = state.ReceivedDateTime;
+
+            ToggleFlagCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                await Task.Delay(200);
+                IsFlagged = !IsFlagged;
+            });
+            ToggleFlagCommand.IsExecuting
+                .ToPropertyEx(this, x => x.IsTogglingFlag)
+                .DisposeWith(_disposables);
+
+            ArchiveCommand = ReactiveCommand.CreateFromTask(() =>
+            {
+                return Task.Delay(500);
+            });
+        }
+
+        public void Dispose()
+        {
+            _disposables.Dispose();
         }
     }
 }

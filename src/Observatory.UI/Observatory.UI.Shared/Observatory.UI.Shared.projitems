@@ -19,6 +19,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageListViewItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\OneWayToggleButton.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\Mail\MailFolderView.xaml.cs">
       <DependentUpon>MailFolderView.xaml</DependentUpon>
     </Compile>
