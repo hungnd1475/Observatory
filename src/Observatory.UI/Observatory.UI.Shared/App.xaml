@@ -28,8 +28,11 @@
         <Setter Property="CornerRadius" Value="0"/>
       </Style>
 
-      <Style x:Key="NavigationPaneButtonStyle"
-             TargetType="Button">
+      <Style TargetType="ToolTip">
+        <Setter Property="CornerRadius" Value="0"/>
+      </Style>
+
+      <Style x:Key="NavigationPaneButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
         <Setter Property="BorderBrush" Value="{ThemeResource SystemControlTransparentRevealBorderBrush}"/>
         <Setter Property="Height" Value="40"/>

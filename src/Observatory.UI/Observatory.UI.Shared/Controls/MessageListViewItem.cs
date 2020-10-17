@@ -101,11 +101,6 @@ namespace Observatory.UI.Controls
             Message = null;
         }
 
-        public FontWeight ConvertIsReadToFontWeight(bool isRead)
-        {
-            return isRead ? FontWeights.Normal : FontWeights.SemiBold;
-        }
-
         public string DisplayReceivedDateTime(DateTimeOffset receivedDateTime)
         {
             var now = DateTimeOffset.Now;
@@ -126,21 +121,6 @@ namespace Observatory.UI.Controls
             }
 
             return receivedDateTime.ToString("dd/MM/yyyy hh:mm tt");
-        }
-
-        public Visibility ShouldDisplayFlaggedBackground(bool isFlagged, bool isPointerOver, bool isSelected)
-        {
-            if (isPointerOver || isSelected)
-            {
-                return Visibility.Collapsed;
-            }
-
-            return isFlagged ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        public void ToggleFlag()
-        {
-            Message?.ToggleFlagCommand?.Execute()?.Subscribe();
         }
 
         public void HandlePointerExited(object sender, PointerRoutedEventArgs e)
