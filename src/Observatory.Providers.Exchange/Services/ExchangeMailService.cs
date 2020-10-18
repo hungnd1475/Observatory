@@ -59,7 +59,7 @@ namespace Observatory.Providers.Exchange.Services
 
         public async Task InitializeAsync()
         {
-            using var store = _storeFactory.Invoke(_register.DataFilePath);
+            using var store = _storeFactory.Invoke(_register.DataFilePath, true);
             if (await store.Database.EnsureCreatedAsync())
             {
                 store.Profiles.Add(new Profile()
@@ -81,7 +81,7 @@ namespace Observatory.Providers.Exchange.Services
 
         public async Task SynchronizeFoldersAsync(CancellationToken cancellationToken = default)
         {
-            using var store = _storeFactory.Invoke(_register.DataFilePath);
+            using var store = _storeFactory.Invoke(_register.DataFilePath, true);
             var state = await store.FolderSynchronizationStates.FirstAsync();
             if (state.DeltaLink == null)
             {
@@ -201,7 +201,7 @@ namespace Observatory.Providers.Exchange.Services
 
         public async Task SynchronizeMessagesAsync(CancellationToken cancellationToken = default)
         {
-            using var store = _storeFactory.Invoke(_register.DataFilePath);
+            using var store = _storeFactory.Invoke(_register.DataFilePath, true);
             var state = await store.MessageSynchronizationStates.FirstAsync();
 
             MG.IMessageDeltaRequest request;

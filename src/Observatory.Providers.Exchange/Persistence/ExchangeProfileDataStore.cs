@@ -12,13 +12,13 @@ namespace Observatory.Providers.Exchange.Persistence
 {
     public class ExchangeProfileDataStore : ProfileDataStore
     {
-        public delegate ExchangeProfileDataStore Factory(string path);
+        public delegate ExchangeProfileDataStore Factory(string path, bool trackChanges);
 
         public DbSet<FolderSynchronizationState> FolderSynchronizationStates { get; set; }
         public DbSet<MessageSynchronizationState> MessageSynchronizationStates { get; set; }
 
-        public ExchangeProfileDataStore(string path, ILoggerFactory loggerFactory)
-            : base(path, loggerFactory)
+        public ExchangeProfileDataStore(string path, bool trackChanges, ILoggerFactory loggerFactory)
+            : base(path, trackChanges, loggerFactory)
         {
         }
 

@@ -1,5 +1,6 @@
 ﻿using Observatory.Core.Models;
 using Observatory.Core.Persistence;
+using Observatory.Core.Persistence.Specifications;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,12 @@ namespace Observatory.Core.Providers.Fake
         private readonly IReadOnlyList<MailFolder> _folders;
         private readonly IReadOnlyList<MessageSummary> _messageSummaries;
         private readonly IReadOnlyList<MessageDetail> _messageDetails;
+
+        public ISpecificationQueryable<MailFolder> Folders => new InMemorySpecificationQueryable<MailFolder>(_folders);
+
+        public ISpecificationQueryable<MessageSummary> MessageSummaries => new InMemorySpecificationQueryable<MessageSummary>(_messageSummaries);
+
+        public ISpecificationQueryable<MessageDetail> MessageDetails => new InMemorySpecificationQueryable<MessageDetail>(_messageDetails);
 
         public FakeProfileDataQuery()
         {
@@ -135,21 +142,6 @@ namespace Observatory.Core.Providers.Fake
 
         public void Dispose()
         {
-        }
-
-        public Task<IReadOnlyList<MailFolder>> GetFoldersAsync(Func<IQueryable<MailFolder>, IQueryable<MailFolder>> specificator = null)
-        {
-            return Task.FromResult(_folders);
-        }
-
-        public Task<MessageDetail> GetMessageDetailAsync(string id)
-        {
-            return Task.FromResult(_messageDetails.FirstOrDefault(m => m.Id == id));
-        }
-
-        public Task<IReadOnlyList<MessageSummary>> GetMessageSummariesAsync(Func<IQueryable<MessageSummary>, IQueryable<MessageSummary>> specificator = null)
-        {
-            return Task.FromResult(_messageSummaries);
         }
     }
 }

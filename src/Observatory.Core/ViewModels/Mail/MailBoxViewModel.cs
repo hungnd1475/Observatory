@@ -3,6 +3,7 @@ using DynamicData.Binding;
 using Microsoft.EntityFrameworkCore;
 using Observatory.Core.Models;
 using Observatory.Core.Persistence;
+using Observatory.Core.Persistence.Specifications;
 using Observatory.Core.Services;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -102,7 +103,7 @@ namespace Observatory.Core.ViewModels.Mail
         public async Task RestoreAsync()
         {
             using var query = _queryFactory.Connect();
-            var folders = await query.GetFoldersAsync();
+            var folders = await query.Folders.ToListAsync(Specification.Identity<MailFolder>());
             _sourceFolders.Edit(updater => updater.Load(folders));
 
             Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(30))

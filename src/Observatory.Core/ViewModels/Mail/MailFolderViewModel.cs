@@ -1,6 +1,7 @@
 ﻿using DynamicData;
 using Observatory.Core.Models;
 using Observatory.Core.Persistence;
+using Observatory.Core.Persistence.Specifications;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
@@ -84,7 +85,7 @@ namespace Observatory.Core.ViewModels.Mail
         public async Task RestoreAsync()
         {
             using var query = _queryFactory.Connect();
-            var messages = await query.GetMessageSummariesAsync(messages => messages.Where(m => m.FolderId == _folderId));
+            var messages = await query.MessageSummaries.ToListAsync(Specification.Relay<MessageSummary>(q => q.Where(m => m.FolderId == _folderId)));
             _sourceMessages.AddOrUpdate(messages);
         }
 

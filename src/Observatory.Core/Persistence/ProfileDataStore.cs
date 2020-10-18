@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Logging;
 using Observatory.Core.Models;
 using Observatory.Core.Persistence.Conversion;
+using Observatory.Core.Persistence.Specifications;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,19 +18,28 @@ namespace Observatory.Core.Persistence
         public DbSet<MessageSummary> MessageSummaries { get; set; }
         public DbSet<MessageDetail> MessageDetails { get; set; }
 
-        //IQueryable<MailFolder> IProfileDataQuery.Folders => Folders.AsQueryable();
+        ISpecificationQueryable<MailFolder> IProfileDataQuery.Folders => new EFSpecificationQueryable<MailFolder>(Folders);
 
-        //IQueryable<MessageSummary> IProfileDataQuery.MessageSummaries => MessageSummaries.AsQueryable();
+        ISpecificationQueryable<MessageSummary> IProfileDataQuery.MessageSummaries => new EFSpecificationQueryable<MessageSummary>(MessageSummaries);
 
-        //IQueryable<MessageDetail> IProfileDataQuery.MessageDetails => MessageDetails.AsQueryable();
+        ISpecificationQueryable<MessageDetail> IProfileDataQuery.MessageDetails => new EFSpecificationQueryable<MessageDetail>(MessageDetails);
 
-        public ProfileDataStore(string path, ILoggerFactory loggerFactory)
-            : base(new DbContextOptionsBuilder<ProfileDataStore>()
+        public ProfileDataStore(string path, bool trackChanges, ILoggerFactory loggerFactory)
+            : base(BuildOptions(path, trackChanges, loggerFactory))
+        {
+            ChangeTracker.AutoDetectChangesEnabled = trackChanges;
+        }
+
+        private static DbContextOptions<ProfileDataStore> BuildOptions(string path, bool trackChanges, ILoggerFactory loggerFactory)
+        {
+            return new DbContextOptionsBuilder<ProfileDataStore>()
                   .UseSqlite($@"Filename={path}")
                   .UseLoggerFactory(loggerFactory)
+                  .UseQueryTrackingBehavior(trackChanges ? QueryTrackingBehavior.TrackAll : QueryTrackingBehavior.NoTracking)
+#if DEBUG
                   .EnableSensitiveDataLogging()
-                  .Options)
-        {
+#endif
+                  .Options;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -66,25 +76,6 @@ namespace Observatory.Core.Persistence
 
             modelBuilder.Entity<MessageDetail>()
                 .HasKey(m => m.Id);
-        }
-
-        public async Task<IReadOnlyList<MailFolder>> GetFoldersAsync(Func<IQueryable<MailFolder>, IQueryable<MailFolder>> specificator = null)
-        {
-            var query = specificator == null ? this.Folders : specificator(this.Folders);
-            var result = await query.ToListAsync();
-            return result.AsReadOnly();
-        }
-
-        public async Task<IReadOnlyList<MessageSummary>> GetMessageSummariesAsync(Func<IQueryable<MessageSummary>, IQueryable<MessageSummary>> specificator = null)
-        {
-            var query = specificator == null ? this.MessageSummaries : specificator(this.MessageSummaries);
-            var result = await query.ToListAsync();
-            return result.AsReadOnly();
-        }
-
-        public async Task<MessageDetail> GetMessageDetailAsync(string id)
-        {
-            return await this.MessageDetails.FindAsync(id);
         }
     }
 }

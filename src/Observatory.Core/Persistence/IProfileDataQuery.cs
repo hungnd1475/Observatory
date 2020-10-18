@@ -1,4 +1,5 @@
 ﻿using Observatory.Core.Models;
+using Observatory.Core.Persistence.Specifications;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,24 +14,18 @@ namespace Observatory.Core.Persistence
     public interface IProfileDataQuery : IDisposable
     {
         /// <summary>
-        /// Asynchronously retrieve all folders with an optional specification.
+        /// Gets an instance of <see cref="ISpecificationQueryable{T}"/> that queries <see cref="MailFolder"/>.
         /// </summary>
-        /// <param name="specificator">The specification to retrieve the folders, leave null if all folders are to be retrieved.</param>
-        /// <returns></returns>
-        Task<IReadOnlyList<MailFolder>> GetFoldersAsync(Func<IQueryable<MailFolder>, IQueryable<MailFolder>> specificator = null);
+        ISpecificationQueryable<MailFolder> Folders { get; }
 
         /// <summary>
-        /// Asynchronously retrieve all messages with an optional specification.
+        /// Gets an instance of <see cref="ISpecificationQueryable{T}"/> that queries <see cref="MessageSummary"/>.
         /// </summary>
-        /// <param name="specificator">The specification to retrieve the messages, leave null if all messages are to be retrieved.</param>
-        /// <returns></returns>
-        Task<IReadOnlyList<MessageSummary>> GetMessageSummariesAsync(Func<IQueryable<MessageSummary>, IQueryable<MessageSummary>> specificator = null);
+        ISpecificationQueryable<MessageSummary> MessageSummaries { get; }
 
         /// <summary>
-        /// Asynchronously retrieve a single message detail by its id. 
+        /// Gets an instance of <see cref="ISpecificationQueryable{T}"/> that queries <see cref="MessageDetail"/>.
         /// </summary>
-        /// <param name="id">The id of the message whose detail is to be retrieved.</param>
-        /// <returns></returns>
-        Task<MessageDetail> GetMessageDetailAsync(string id);
+        ISpecificationQueryable<MessageDetail> MessageDetails { get; }
     }
 }

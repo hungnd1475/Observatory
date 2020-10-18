@@ -8,10 +8,10 @@ namespace Observatory.Core.Providers.Fake.Persistence
 {
     public class FakeProfileDataStore : ProfileDataStore
     {
-        public delegate FakeProfileDataStore Factory(string path);
+        public delegate FakeProfileDataStore Factory(string path, bool trackChanges);
 
-        public FakeProfileDataStore(string path, ILoggerFactory loggerFactory) 
-            : base(path, loggerFactory)
+        public FakeProfileDataStore(string path, bool trackChanges, ILoggerFactory loggerFactory) 
+            : base(path, trackChanges, loggerFactory)
         {
         }
     }
