@@ -14,32 +14,28 @@ namespace Observatory.Core.Virtualization
         private readonly Func<IProfileDataQuery, ISpecificationQueryable<T>> _sourceSelector;
         private readonly ISpecification<T> _sourceSpecification;
 
-        public int PageSize { get; }
-
         public SpecificationVirtualizingSource(IProfileDataQueryFactory queryFactory,
             Func<IProfileDataQuery, ISpecificationQueryable<T>> sourceSelector,
-            ISpecification<T> sourceSpecification, int pageSize)
+            ISpecification<T> sourceSpecification)
         {
             _queryFactory = queryFactory;
             _sourceSelector = sourceSelector;
             _sourceSpecification = sourceSpecification;
-            this.PageSize = pageSize;
         }
 
-        public async Task<IReadOnlyList<T>> GetPageAsync(int pageNumber)
+        public T[] GetItems(int startIndex, int maxNumberOfItems)
         {
             using var query = _queryFactory.Connect();
-            var source = _sourceSelector(query);
-            var start = this.PageSize * (pageNumber - 1);
-            var pagingSpecification = _sourceSpecification.Chain(q => q.Skip(start).Take(PageSize));
-            return await source.ToListAsync(pagingSpecification);
+            var source = _sourceSelector.Invoke(query);
+            var pagingSpecification = _sourceSpecification.Chain(q => q.Skip(startIndex).Take(maxNumberOfItems));
+            return source.ToArray(pagingSpecification);
         }
-
-        public async Task<int> GetTotalCountAsync()
+        
+        public int GetTotalCount()
         {
             using var query = _queryFactory.Connect();
-            var source = _sourceSelector(query);
-            return await source.CountAsync(_sourceSpecification);
+            var source = _sourceSelector.Invoke(query);
+            return source.Count(_sourceSpecification);
         }
     }
 }

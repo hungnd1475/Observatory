@@ -9,6 +9,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Observatory.Core.ViewModels.Mail
 {
@@ -24,6 +25,9 @@ namespace Observatory.Core.ViewModels.Mail
 
         [Reactive]
         public MailFolderViewModel SelectedFolder { get; set; }
+
+        [Reactive]
+        public MessageSummaryViewModel SelectedMessage { get; set; }
 
         public string UrlPathSegment { get; } = "mail";
 
@@ -62,6 +66,9 @@ namespace Observatory.Core.ViewModels.Mail
                 .Do(f => SelectedFolder = f)
                 .Subscribe()
                 .DisposeWith(_disposables);
+
+            this.WhenAnyValue(x => x.SelectedMessage)
+                .Subscribe(m => this.Log().Debug($"Selected message: {m?.Subject}"));
         }
 
         public void Dispose()

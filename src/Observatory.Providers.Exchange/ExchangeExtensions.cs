@@ -40,9 +40,9 @@ namespace Observatory.Providers.Exchange
             }
         }
 
-        public static MessageSummary ConvertToSummary(this MG.Message source)
+        public static Message Convert(this MG.Message source)
         {
-            return new MessageSummary()
+            return new Message()
             {
                 Id = source.Id ?? throw new ArgumentNullException(),
                 Subject = source.Subject ?? throw new ArgumentNullException(),
@@ -58,10 +58,12 @@ namespace Observatory.Providers.Exchange
                 FolderId = source.ParentFolderId ?? throw new ArgumentNullException(),
                 BodyPreview = source.BodyPreview ?? throw new ArgumentNullException(),
                 IsFlagged = source.Flag?.Convert() ?? throw new ArgumentNullException(),
+                Body = source.Body?.Content ?? throw new ArgumentNullException(),
+                BodyType = source.Body?.ContentType?.Convert() ?? throw new ArgumentNullException(),
             };
         }
 
-        public static void UpdateFrom(this EntityEntry<MessageSummary> targetEntry, MG.Message source)
+        public static void UpdateFrom(this EntityEntry<Message> targetEntry, MG.Message source)
         {
             targetEntry.UpdateIfChanged(s => s.Subject, source.Subject);
             targetEntry.UpdateIfChanged(s => s.Sender, source.Sender?.Convert());
@@ -76,26 +78,8 @@ namespace Observatory.Providers.Exchange
             targetEntry.UpdateIfChanged(s => s.FolderId, source.ParentFolderId);
             targetEntry.UpdateIfChanged(s => s.BodyPreview, source.BodyPreview);
             targetEntry.UpdateIfChanged(s => s.IsFlagged, source.Flag?.Convert());
-        }
-
-        public static MessageDetail ConvertToDetail(this MG.Message source)
-        {
-            if (source.Body != null)
-            {
-                return new MessageDetail()
-                {
-                    Id = source.Id,
-                    Body = source.Body.Content ?? throw new ArgumentNullException(),
-                    BodyType = source.Body.ContentType?.Convert() ?? throw new ArgumentNullException(),
-                };
-            }
-            return null;
-        }
-
-        public static void UpdateFrom(this EntityEntry<MessageDetail> targetEntry, MG.Message source)
-        {
-            targetEntry.UpdateIfChanged(d => d.Body, source.Body.Content);
-            targetEntry.UpdateIfChanged(d => d.BodyType, source.Body.ContentType?.Convert());
+            targetEntry.UpdateIfChanged(s => s.Body, source.Body?.Content);
+            targetEntry.UpdateIfChanged(s => s.BodyType, source.Body?.ContentType?.Convert());
         }
 
         public static ContentType? Convert(this MG.BodyType bodyType)

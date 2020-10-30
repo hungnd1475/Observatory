@@ -1,8 +1,10 @@
 ﻿using Observatory.Core.ViewModels.Mail;
+using Observatory.UI.Virtualizing;
 using ReactiveUI;
 using Splat;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -19,13 +21,13 @@ namespace Observatory.UI.Controls
 {
     public partial class MessageListViewItem : ListViewItem, IEnableLogger
     {
-        public static readonly DependencyProperty IsPointerOverProperty =
+        public static DependencyProperty IsPointerOverProperty { get; } =
             DependencyProperty.Register(nameof(IsPointerOver), typeof(bool), typeof(MessageListViewItem), new PropertyMetadata(false));
 
-        public static readonly DependencyProperty MessageProperty =
+        public static DependencyProperty MessageProperty { get; } =
             DependencyProperty.Register(nameof(Message), typeof(MessageSummaryViewModel), typeof(MessageListViewItem), new PropertyMetadata(null));
 
-        public static readonly DependencyProperty StateNameProperty =
+        public static DependencyProperty StateNameProperty { get; } =
             DependencyProperty.Register(nameof(StateName), typeof(string), typeof(MessageListViewItem), new PropertyMetadata("Normal"));
 
         private IDisposable _stateSubscription;
@@ -48,37 +50,37 @@ namespace Observatory.UI.Controls
             set { SetValue(StateNameProperty, value); }
         }
 
-        public MessageListViewItem()
-        {
-        }
-
         public void Prepare(MessageSummaryViewModel message)
         {
-            Message = message;
-            _stateSubscription = Observable.CombineLatest(message.WhenAnyValue(x => x.IsFlagged),
-                    this.WhenAnyValue(x => x.IsPointerOver),
-                    this.WhenAnyValue(x => x.IsSelected),
-                    (isFlagged, isPointerOver, isSelected) => (IsFlagged: isFlagged, IsPointerOver: isPointerOver, IsSelected: isSelected))
-                .Select(state =>
-                {
-                    if (state.IsSelected)
+            if (message != null)
+            {
+                Message = message;
+                _stateSubscription = Observable.CombineLatest(
+                        message.WhenAnyValue(x => x.IsFlagged),
+                        this.WhenAnyValue(x => x.IsPointerOver),
+                        this.WhenAnyValue(x => x.IsSelected),
+                        (isFlagged, isPointerOver, isSelected) => (IsFlagged: isFlagged, IsPointerOver: isPointerOver, IsSelected: isSelected))
+                    .Select(state =>
                     {
-                        return "Selected";
-                    }
-                    else if (state.IsPointerOver)
-                    {
-                        return "PointerOver";
-                    }
-                    else if (state.IsFlagged)
-                    {
-                        return "Flagged";
-                    }
-                    else
-                    {
-                        return "Normal";
-                    }
-                })
-                .BindTo(this, x => x.StateName);
+                        if (state.IsSelected)
+                        {
+                            return "Selected";
+                        }
+                        else if (state.IsPointerOver)
+                        {
+                            return "PointerOver";
+                        }
+                        else if (state.IsFlagged)
+                        {
+                            return "Flagged";
+                        }
+                        else
+                        {
+                            return "Normal";
+                        }
+                    })
+                    .BindTo(this, x => x.StateName);
+            }
         }
 
         protected override void OnPointerEntered(PointerRoutedEventArgs e)
@@ -96,30 +98,8 @@ namespace Observatory.UI.Controls
         public void Clear()
         {
             _stateSubscription?.Dispose();
-            this.ClearValue(StateNameProperty);
+            ClearValue(StateNameProperty);
             Message = null;
-        }
-
-        public string DisplayReceivedDateTime(DateTimeOffset receivedDateTime)
-        {
-            var now = DateTimeOffset.Now;
-            if (now.Date == receivedDateTime.Date)
-            {
-                return receivedDateTime.ToString("hh:mm tt");
-            }
-
-            var delta = now.DateTime - receivedDateTime.DateTime;
-            if (delta < TimeSpan.FromDays(7))
-            {
-                return receivedDateTime.ToString("ddd hh:mm tt");
-            }
-
-            if (now.Year == receivedDateTime.Year)
-            {
-                return receivedDateTime.ToString("dd/MM hh:mm tt");
-            }
-
-            return receivedDateTime.ToString("dd/MM/yyyy hh:mm tt");
         }
     }
 }

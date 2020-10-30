@@ -97,7 +97,7 @@
       <Setter Property="BorderBrush" Value="{ThemeResource SystemControlTransparentRevealBorderBrush}"/>
       <Setter Property="BorderThickness" Value="0,1"/>
       <Setter Property="HorizontalAlignment" Value="Stretch"/>
-      <Setter Property="HorizontalContentAlignment" Value="Left"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
       <Setter Property="Padding" Value="0"/>
       <Setter Property="Template">
         <Setter.Value>
@@ -225,8 +225,21 @@
       <Setter Property="ItemTemplate">
         <Setter.Value>
           <DataTemplate x:DataType="mailvm:MailFolderViewModel">
-            <TextBlock VerticalAlignment="Center"
-                       Text="{x:Bind Name, Mode=OneWay}"/>
+            <Grid VerticalAlignment="Center">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+              </Grid.ColumnDefinitions>
+              <TextBlock VerticalAlignment="Center"
+                         Text="{x:Bind Name, Mode=OneWay}"/>
+              <TextBlock Grid.Column="1"
+                         Margin="0,0,20,0"
+                         VerticalAlignment="Center"
+                         FontWeight="Normal"
+                         Text="{x:Bind UnreadCount, Mode=OneWay}"
+                         TextAlignment="Right"
+                         Visibility="{x:Bind ui:Converters.IntegerVisibility(UnreadCount), Mode=OneWay}"/>
+            </Grid>
           </DataTemplate>
         </Setter.Value>
       </Setter>
@@ -331,7 +344,7 @@
           </Button>
           <ListView Grid.Row="5"
                     ItemsSource="{x:Bind ViewModel.SelectedProfile.MailBox.FavoriteFolders, Mode=OneWay, FallbackValue={x:Null}, TargetNullValue={x:Null}}"
-                    SelectedItem="{x:Bind ViewModel.SelectedFolder, Mode=TwoWay}"
+                    SelectedValue="{x:Bind ViewModel.SelectedFolder, Mode=TwoWay}"
                     Style="{StaticResource FolderListViewStyle}"/>
           <Button Grid.Row="6"
                   Padding="0"
@@ -507,15 +520,28 @@
                 <SymbolIcon Symbol="Add"/>
               </Button>
             </Grid>
-            <muxc:TreeView Grid.Row="1"
-                           ItemInvoked="{x:Bind ToggleFolderListPane}"
+            <muxc:TreeView x:Name="FolderTreeView"
+                           Grid.Row="1"
+                           ItemInvoked="{x:Bind SelectFolder}"
                            ItemsSource="{x:Bind ViewModel.SelectedProfile.MailBox.AllFolders, Mode=OneWay}"
-                           SelectionMode="None">
+                           SelectedItem="{x:Bind ViewModel.SelectedFolder, Mode=OneWay}">
               <muxc:TreeView.ItemTemplate>
                 <DataTemplate x:DataType="mailvm:MailFolderViewModel">
-                  <muxc:TreeViewItem IsExpanded="True"
+                  <muxc:TreeViewItem HorizontalContentAlignment="Stretch"
+                                     IsExpanded="True"
                                      ItemsSource="{x:Bind ChildFolders, Mode=OneWay}">
-                    <TextBlock Text="{x:Bind Name, Mode=OneWay}"/>
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
+                      <TextBlock Text="{x:Bind Name, Mode=OneWay}"/>
+                      <TextBlock Grid.Column="1"
+                                 Margin="0,0,15,0"
+                                 Text="{x:Bind UnreadCount, Mode=OneWay}"
+                                 TextAlignment="Right"
+                                 Visibility="{x:Bind ui:Converters.IntegerVisibility(UnreadCount), Mode=OneWay}"/>
+                    </Grid>
                   </muxc:TreeViewItem>
                 </DataTemplate>
               </muxc:TreeView.ItemTemplate>
@@ -527,7 +553,10 @@
             <ColumnDefinition Width="500"/>
             <ColumnDefinition Width="*"/>
           </Grid.ColumnDefinitions>
-          <local:MailFolderView Folder="{x:Bind ViewModel.SelectedFolder, Mode=OneWay}"/>
+          <local:MailFolderView Folder="{x:Bind ViewModel.SelectedFolder, Mode=OneWay}"
+                                SelectedMessage="{x:Bind ViewModel.SelectedMessage, Mode=TwoWay}"/>
+          <local:MessageView Grid.Column="1"
+                             Message="{x:Bind ViewModel.SelectedMessage.Detail, Mode=OneWay}"/>
         </Grid>
       </SplitView>
     </SplitView>

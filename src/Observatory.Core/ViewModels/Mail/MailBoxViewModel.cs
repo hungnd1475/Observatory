@@ -12,6 +12,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -30,7 +31,7 @@ namespace Observatory.Core.ViewModels.Mail
 
         public ReadOnlyObservableCollection<MailFolderViewModel> AllFolders => _allFolders;
         public ReadOnlyObservableCollection<MailFolderViewModel> FavoriteFolders => _favoriteFolders;
-        public ReactiveCommand<Unit, Unit> SynchronizeCommand { get; }
+        public ReactiveCommand<Unit, Unit> Synchronize { get; }
 
         [ObservableAsProperty]
         public bool IsSynchronizing { get; }
@@ -43,30 +44,36 @@ namespace Observatory.Core.ViewModels.Mail
             _queryFactory = queryFactory;
             _mailService = mailService;
 
-            var sharedFoldersConnection = _sourceFolders.Connect()
+            var folderChanges = _sourceFolders.Connect()
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Sort(SortExpressionComparer<MailFolder>.Ascending(f => f.Type).ThenByAscending(f => f.Name))
                 .TransformToTree(f => f.ParentId)
-                .Transform(n => new MailFolderViewModel(n, queryFactory))
+                .Transform(n => new MailFolderViewModel(n, queryFactory, mailService))
                 .Publish();
-            sharedFoldersConnection
+            folderChanges
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Bind(out _allFolders)
                 .Subscribe()
                 .DisposeWith(_disposables);
-            sharedFoldersConnection
+            folderChanges
                 .Filter(f => f.IsFavorite)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Bind(out _favoriteFolders)
                 .Subscribe()
                 .DisposeWith(_disposables);
-            sharedFoldersConnection
+
+            var folderCollection = folderChanges
                 .ToCollection()
+                .Publish();
+            folderCollection
                 .Select(folders => folders.FirstOrDefault(f => f.Type == FolderType.Inbox))
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .ToPropertyEx(this, x => x.Inbox)
                 .DisposeWith(_disposables);
-            sharedFoldersConnection.Connect()
+
+            folderChanges.Connect()
+                .DisposeWith(_disposables);
+            folderCollection.Connect()
                 .DisposeWith(_disposables);
 
             _mailService.FolderChanges
@@ -92,23 +99,37 @@ namespace Observatory.Core.ViewModels.Mail
                 })
                 .DisposeWith(_disposables);
 
-            SynchronizeCommand = ReactiveCommand.CreateFromTask(_mailService.SynchronizeFoldersAsync);
-            SynchronizeCommand.ThrownExceptions
-                .Subscribe(ex => this.Log().Error(ex));
-            SynchronizeCommand.IsExecuting
+            Synchronize = ReactiveCommand.CreateFromTask(_mailService.SynchronizeFoldersAsync);
+            Synchronize.WithLatestFrom(folderCollection, (_, folders) => folders.Where(f => f.IsFavorite))
+                .Subscribe(folders =>
+                {
+                    foreach (var f in _favoriteFolders)
+                    {
+                        f.Synchronize.Execute().Subscribe();
+                    }
+                })
+                .DisposeWith(_disposables);
+            Synchronize.ThrownExceptions
+                .Subscribe(ex => this.Log().Error(ex))
+                .DisposeWith(_disposables);
+            Synchronize.IsExecuting
                 .ToPropertyEx(this, x => x.IsSynchronizing)
                 .DisposeWith(_disposables);
         }
 
-        public async Task RestoreAsync()
+        public void Restore()
         {
-            using var query = _queryFactory.Connect();
-            var folders = await query.Folders.ToListAsync(Specification.Identity<MailFolder>());
-            _sourceFolders.Edit(updater => updater.Load(folders));
+            Observable.Start(() =>
+            {
+                using var query = _queryFactory.Connect();
+                var folders = query.Folders.ToList();
+                _sourceFolders.Edit(updater => updater.Load(folders));
+            }, 
+            RxApp.TaskpoolScheduler);
 
             Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(30))
                 .Select(_ => Unit.Default)
-                .InvokeCommand(SynchronizeCommand)
+                .InvokeCommand(Synchronize)
                 .DisposeWith(_disposables);
         }
 

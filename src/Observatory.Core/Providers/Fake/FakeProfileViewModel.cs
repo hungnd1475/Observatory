@@ -34,9 +34,9 @@ namespace Observatory.Core.Providers.Fake
             DisplayName = state.DisplayName;
         }
 
-        public async Task RestoreAsync()
+        public void Restore()
         {
-            await MailBox.RestoreAsync();
+            MailBox.Restore();
         }
     }
 }

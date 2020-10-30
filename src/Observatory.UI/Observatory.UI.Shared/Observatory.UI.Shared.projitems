@@ -32,10 +32,15 @@
     <Compile Include="$(MSBuildThisFileDirectory)Views\Mail\MailManagerPage.xaml.cs">
       <DependentUpon>MailManagerPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\Mail\MessageView.xaml.cs">
+      <DependentUpon>MessageView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)UIModule.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Virtualizing\VirtualizingList.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Virtualizing\VirtualizingPlaceholder.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="$(MSBuildThisFileDirectory)Views\Mail\MailFolderView.xaml">
@@ -47,6 +52,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="$(MSBuildThisFileDirectory)Views\Mail\MailManagerPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Views\Mail\MessageView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -62,7 +71,6 @@
     <PRIResource Include="$(MSBuildThisFileDirectory)Strings\en\Resources.resw" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Views\Mail\" />
     <Folder Include="$(MSBuildThisFileDirectory)Views\Calendar\" />
   </ItemGroup>
 </Project>

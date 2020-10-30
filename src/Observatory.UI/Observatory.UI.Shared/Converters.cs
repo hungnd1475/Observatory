@@ -1,6 +1,8 @@
 ﻿using Observatory.Core.ViewModels;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -12,6 +14,16 @@ namespace Observatory.UI
         public static Visibility EqualityToVisibility(object x, object y)
         {
             return Equals(x, y) ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public static Visibility InequalityToVisibility(object x, object y)
+        {
+            return !Equals(x, y) ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public static Visibility ObjectNullToVisibility(object x)
+        {
+            return x == null ? Visibility.Collapsed : Visibility.Visible;
         }
 
         public static bool BoolNegation(bool x)
@@ -37,6 +49,24 @@ namespace Observatory.UI
                 FunctionalityMode.Calendar => Symbol.Calendar,
                 _ => throw new NotSupportedException(),
             };
+        }
+
+        public static Visibility IntegerVisibility(int x)
+        {
+            return x == 0 ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        public static Visibility CollectionEmptyToVisibility(object value)
+        {
+            if (value is IEnumerable collection)
+            {
+                foreach (var _ in collection)
+                {
+                    return Visibility.Visible;
+                }
+                return Visibility.Collapsed;
+            }
+            throw new ArgumentException("Argument is not a collection.");
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using DynamicData;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Observatory.Core.Models;
 using Observatory.Core.Services;
 using Observatory.Providers.Exchange.Models;
@@ -7,7 +6,6 @@ using Observatory.Providers.Exchange.Persistence;
 using Splat;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -18,14 +16,14 @@ using MG = Microsoft.Graph;
 
 namespace Observatory.Providers.Exchange.Services
 {
-    public class ExchangeMailService : IMailService
+    public class ExchangeMailService : IMailService, IEnableLogger
     {
         public const string REMOVED_FLAG = "@removed";
         public const string DELTA_LINK = "@odata.deltaLink";
         public const string NEXT_LINK = "@odata.nextLink";
 
         public const string MESSAGES_SELECT_QUERY = "Subject,Sender,ReceivedDateTime,IsRead,Importance," +
-            "HasAttachments,Flag,ToRecipients,CcRecipients," +
+            "HasAttachments,Flag,ToRecipients,CcRecipients,Body," +
             "ConversationId,ConversationIndex,IsDraft,ParentFolderId," +
             "From,BodyPreview";
 
@@ -37,16 +35,12 @@ namespace Observatory.Providers.Exchange.Services
         private readonly MG.GraphServiceClient _client;
         private readonly Subject<IEnumerable<DeltaEntity<MailFolder>>> _folderChanges =
             new Subject<IEnumerable<DeltaEntity<MailFolder>>>();
-        private readonly Subject<IEnumerable<DeltaEntity<MessageSummary>>> _messageSummaryChanges =
-            new Subject<IEnumerable<DeltaEntity<MessageSummary>>>();
-        private readonly Subject<IEnumerable<DeltaEntity<MessageDetail>>> _messageDetailChanges =
-            new Subject<IEnumerable<DeltaEntity<MessageDetail>>>();
+        private readonly Subject<(string FolderId, IEnumerable<DeltaEntity<Message>> Changes)> _messageChanges =
+            new Subject<(string FolderId, IEnumerable<DeltaEntity<Message>> Changes)>();
 
         public IObservable<IEnumerable<DeltaEntity<MailFolder>>> FolderChanges => _folderChanges.AsObservable();
 
-        public IObservable<IEnumerable<DeltaEntity<MessageSummary>>> MessageSummaryChanges => _messageSummaryChanges.AsObservable();
-
-        public IObservable<IEnumerable<DeltaEntity<MessageDetail>>> MessageDetailChanges => _messageDetailChanges.AsObservable();
+        public IObservable<(string FolderId, IEnumerable<DeltaEntity<Message>> Changes)> MessageChanges => _messageChanges.AsObservable();
 
         public ExchangeMailService(ProfileRegister register,
             ExchangeProfileDataStore.Factory storeFactory,
@@ -68,22 +62,19 @@ namespace Observatory.Providers.Exchange.Services
                     DisplayName = _register.EmailAddress,
                     ProviderId = _register.ProviderId,
                 });
-                store.FolderSynchronizationStates.Add(new FolderSynchronizationState());
-                store.MessageSynchronizationStates.Add(new MessageSynchronizationState());
+                store.FolderSynchronizationStates.Add(new FolderSynchronizationState()
+                {
+                    Id = _register.EmailAddress,
+                });
                 await store.SaveChangesAsync();
             }
         }
 
-        public Task<MessageDetail> FetchMessageDetailAsync(string id, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task SynchronizeFoldersAsync(CancellationToken cancellationToken = default)
         {
-            using var store = _storeFactory.Invoke(_register.DataFilePath, true);
-            var state = await store.FolderSynchronizationStates.FirstAsync();
-            if (state.DeltaLink == null)
+            using var store = _storeFactory.Invoke(_register.DataFilePath, false);
+            var syncState = await store.FolderSynchronizationStates.FirstAsync();
+            if (syncState.DeltaLink == null)
             {
                 static async Task<MailFolder> RequestSpecialFolder(MG.IMailFolderRequestBuilder requestBuilder,
                     FolderType type, bool isFavorite)
@@ -93,6 +84,7 @@ namespace Observatory.Providers.Exchange.Services
                         .ConfigureAwait(false);
                     return folder.Convert(type, isFavorite);
                 }
+
                 var specialFolders = await Task.WhenAll(
                     RequestSpecialFolder(_client.Me.MailFolders.Inbox, FolderType.Inbox, true),
                     RequestSpecialFolder(_client.Me.MailFolders.SentItems, FolderType.SentItems, true),
@@ -120,9 +112,13 @@ namespace Observatory.Providers.Exchange.Services
                     }
                     else
                     {
-                        state.DeltaLink = page.GetDeltaLink();
-                        store.Update(state);
+                        syncState.DeltaLink = page.GetDeltaLink();
+                        store.Update(syncState);
                         store.AddRange(folders);
+                        store.AddRange(folders.Select(f => new MessageSynchronizationState()
+                        {
+                            FolderId = f.Id,
+                        }));
                         await store.SaveChangesAsync();
 
                         if (folders.Count > 0 && _folderChanges.HasObservers)
@@ -138,7 +134,7 @@ namespace Observatory.Providers.Exchange.Services
             else
             {
                 MG.IMailFolderDeltaCollectionPage page = new MG.MailFolderDeltaCollectionPage();
-                page.InitializeNextPageRequest(_client, state.DeltaLink);
+                page.InitializeNextPageRequest(_client, syncState.DeltaLink);
 
                 var deltaFolders = new Dictionary<string, MG.MailFolder>();
                 var removedFolders = new List<MailFolder>();
@@ -178,6 +174,7 @@ namespace Observatory.Providers.Exchange.Services
                     }
                     
                     store.AddRange(newFolders);
+                    store.AddRange(newFolders.Select(f => new MessageSynchronizationState() { FolderId = f.Id }));
                     changes.AddRange(newFolders.Select(f => DeltaEntity.Added(f)));
                     changes.AddRange(updatedFolders.Values.Select(f => DeltaEntity.Updated(f)));
                 }
@@ -185,12 +182,14 @@ namespace Observatory.Providers.Exchange.Services
                 if (removedFolders.Count > 0)
                 {
                     store.RemoveRange(removedFolders);
+                    store.RemoveRange(removedFolders.Select(f => new MessageSynchronizationState() { FolderId = f.Id }));
                     changes.AddRange(removedFolders.Select(f => DeltaEntity.Removed(f)));
                 }
 
-                state.DeltaLink = page.GetDeltaLink();
-                store.Update(state);
-                await store.SaveChangesAsync(false);
+                syncState.DeltaLink = page.GetDeltaLink();
+                store.Update(syncState);
+                await store.SaveChangesAsync(false)
+                    .ConfigureAwait(false);
 
                 if (_folderChanges.HasObservers)
                 {
@@ -199,28 +198,29 @@ namespace Observatory.Providers.Exchange.Services
             }
         }
 
-        public async Task SynchronizeMessagesAsync(CancellationToken cancellationToken = default)
+        public async Task SynchronizeMessagesAsync(string folderId, CancellationToken cancellationToken = default)
         {
             using var store = _storeFactory.Invoke(_register.DataFilePath, true);
-            var state = await store.MessageSynchronizationStates.FirstAsync();
+            var syncState = await store.MessageSynchronizationStates.FindAsync(folderId);
 
-            MG.IMessageDeltaRequest request;
+            MG.IMessageDeltaRequest request = null;
             MG.IMessageDeltaCollectionPage page = new MG.MessageDeltaCollectionPage();
 
-            if (state.NextLink != null)
+            if (syncState.NextLink != null)
             {
-                page.InitializeNextPageRequest(_client, state.NextLink);
+                page.InitializeNextPageRequest(_client, syncState.NextLink);
                 request = page.NextPageRequest;
             }
-            else if (state.DeltaLink != null)
+            else if (syncState.DeltaLink != null)
             {
-                page.InitializeNextPageRequest(_client, state.DeltaLink);
+                page.InitializeNextPageRequest(_client, syncState.DeltaLink);
                 request = page.NextPageRequest;
             }
             else
             {
                 var pageSize = 30;
-                request = _client.Me.Messages
+                request = _client.Me.MailFolders[folderId]
+                    .Messages
                     .Delta()
                     .Request()
                     .Select(MESSAGES_SELECT_QUERY)
@@ -236,65 +236,58 @@ namespace Observatory.Providers.Exchange.Services
                 var deltaMessages = page.Where(m => !m.IsRemoved())
                     .ToDictionary(m => m.Id);
                 var removedMessages = page.Where(m => m.IsRemoved())
-                    .Select(m => (Summary: new MessageSummary() { Id = m.Id }, Detail: new MessageDetail() { Id = m.Id }))
-                    .ToList();
+                    .Select(m => new Message() { Id = m.Id })
+                    .ToArray();
 
                 if (deltaMessages.Count > 0)
                 {
-                    var updatedMessages = await store.MessageSummaries
+                    var updatedMessages = await store.Messages
                         .Where(m => deltaMessages.Keys.Contains(m.Id))
-                        .Include(m => m.Detail)
                         .ToDictionaryAsync(m => m.Id);
                     var newMessages = deltaMessages
-                        .Where(m => updatedMessages.Keys.Contains(m.Key))
-                        .Select(m => (Summary: m.Value.ConvertToSummary(), Detail: m.Value.ConvertToDetail()));
+                        .Where(m => !updatedMessages.Keys.Contains(m.Key))
+                        .Select(m => m.Value.Convert())
+                        .ToArray();
 
                     foreach (var m in updatedMessages)
                     {
                         store.Entry(m.Value).UpdateFrom(deltaMessages[m.Key]);
-                        store.Entry(m.Value.Detail).UpdateFrom(deltaMessages[m.Key]);
                     }
 
-                    store.AddRange(newMessages.Select(m => m.Summary));
-                    store.AddRange(newMessages.Select(m => m.Detail));
+                    store.AddRange(newMessages);
                 }
 
-                if (removedMessages.Count > 0)
+                if (removedMessages.Length > 0)
                 {
-                    store.RemoveRange(removedMessages.Select(m => m.Summary));
-                    store.RemoveRange(removedMessages.Select(m => m.Detail));
+                    var folder = await store.Folders.FindAsync(folderId);
+                    if (folder.Type == FolderType.DeletedItems)
+                    {
+                        store.RemoveRange(removedMessages);
+                    }
                 }
 
                 if (page.NextPageRequest != null)
                 {
                     request = page.NextPageRequest;
-                    state.NextLink = page.GetNextLink();
+                    syncState.NextLink = page.GetNextLink();
                 }
                 else
                 {
                     request = null;
-                    state.NextLink = null;
-                    state.DeltaLink = page.GetDeltaLink();
+                    syncState.NextLink = null;
+                    syncState.DeltaLink = page.GetDeltaLink();
                 }
 
                 // save without accepting changes so that we can publish the changes after the save is successful
-                await store.SaveChangesAsync(acceptAllChangesOnSuccess: false);
+                await store.SaveChangesAsync(acceptAllChangesOnSuccess: false)
+                    .ConfigureAwait(false);
 
-                if (_messageSummaryChanges.HasObservers)
+                if (_messageChanges.HasObservers)
                 {
-                    var changes = store.GetChanges<MessageSummary>();
+                    var changes = store.GetChanges<Message>();
                     if (changes.Count > 0)
                     {
-                        _messageSummaryChanges.OnNext(changes);
-                    }
-                }
-
-                if (_messageDetailChanges.HasObservers)
-                {
-                    var changes = store.GetChanges<MessageDetail>();
-                    if (changes.Count > 0)
-                    {
-                        _messageDetailChanges.OnNext(changes);
+                        _messageChanges.OnNext((FolderId: folderId, Changes: changes));
                     }
                 }
 

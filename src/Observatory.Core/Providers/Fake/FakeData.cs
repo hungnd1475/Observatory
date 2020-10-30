@@ -4,16 +4,15 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Observatory.Core.DesignTime
+namespace Observatory.Core.Providers.Fake
 {
-    public static class DesignTimeData
+    public static class FakeData
     {
         public static readonly ProfileRegister[] ProfileRegisters;
         public static readonly FakeProfileProvider[] ProfileProviders;
         public static readonly FakeProfileRegistrationService ProfileRegistrationService;
-        public static readonly DesignTimeIndexedProfileProviders IndexedProfileProviders;
 
-        static DesignTimeData()
+        static FakeData()
         {
             ProfileRegisters = new ProfileRegister[]
             {
@@ -52,11 +51,6 @@ namespace Observatory.Core.DesignTime
                         messageDetails: new List<MessageDetail>()), 
                     new FakeMailService()),
             };
-            IndexedProfileProviders = new DesignTimeIndexedProfileProviders(new Dictionary<string, FakeProfileProvider>()
-            {
-                { ProfileRegisters[0].ProviderId, ProfileProviders[0] },
-                { ProfileRegisters[1].ProviderId, ProfileProviders[1] }
-            });
         }
     }
 }

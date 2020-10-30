@@ -34,8 +34,7 @@ namespace Observatory.Core.Providers.Fake
                 EmailAddress = emailAddress,
                 ProviderId = providerId,
             }, queryFactory, mailService);
-            _viewModel.RestoreAsync()
-                .ContinueWith(_ => { });
+            _viewModel.Restore();
         }
 
         public Task<ProfileRegister> CreateRegisterAsync(string profileDataDirectory)

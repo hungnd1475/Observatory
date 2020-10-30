@@ -1,8 +1,10 @@
 ﻿using Observatory.Core.Models;
+using Observatory.Core.Persistence;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -17,7 +19,9 @@ namespace Observatory.Core.ViewModels.Mail
         private static readonly Regex NEWLINE_PATTERN = new Regex("\\r?\n|\u200B|\u200C|\u200D", RegexOptions.Compiled);
         private static readonly Regex SPACES_PATTERN = new Regex("\\s\\s+", RegexOptions.Compiled);
 
+        private readonly IProfileDataQueryFactory _queryFactory;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly MessageDetailViewModel _detail;
 
         public string Subject { get; private set; }
 
@@ -26,6 +30,8 @@ namespace Observatory.Core.ViewModels.Mail
         public string Correspondents { get; private set; }
 
         public DateTimeOffset ReceivedDateTime { get; private set; }
+
+        public string FormattedReceivedDateTime { get; private set; }
 
         public bool IsRead { get; private set; }
 
@@ -45,7 +51,14 @@ namespace Observatory.Core.ViewModels.Mail
         [ObservableAsProperty]
         public bool IsTogglingFlag { get; }
 
-        public MessageDetailViewModel Detail { get; private set; }
+        public MessageDetailViewModel Detail
+        {
+            get
+            {
+                _detail.LoadIfUninitialized();
+                return _detail;
+            }
+        }
 
         public ReactiveCommand<Unit, Unit> LoadDetailCommand { get; }
 
@@ -63,8 +76,11 @@ namespace Observatory.Core.ViewModels.Mail
 
         public ReactiveCommand<Unit, Unit> IgnoreCommand { get; }
 
-        public MessageSummaryViewModel(MessageSummary state)
+        public MessageSummaryViewModel(MessageSummary state, IProfileDataQueryFactory queryFactory)
         {
+            _queryFactory = queryFactory;
+            _detail = new MessageDetailViewModel(state, queryFactory);
+
             Subject = state.Subject;
             IsRead = state.IsRead;
             Importance = state.Importance;
@@ -78,6 +94,7 @@ namespace Observatory.Core.ViewModels.Mail
                 ? string.Join(", ", state.ToRecipients.Select(r => r.DisplayName))
                 : state.Sender.DisplayName;
             ReceivedDateTime = state.ReceivedDateTime;
+            FormattedReceivedDateTime = FormatReceivedDateTime(state.ReceivedDateTime);
 
             ToggleFlagCommand = ReactiveCommand.CreateFromTask(async () =>
             {
@@ -94,9 +111,28 @@ namespace Observatory.Core.ViewModels.Mail
             });
         }
 
+        public string FormatReceivedDateTime(DateTimeOffset receivedDateTime)
+        {
+            var now = DateTimeOffset.Now;
+            if (now.Date == receivedDateTime.Date)
+            {
+                return receivedDateTime.ToString("t");
+            }
+
+            var delta = now.DateTime - receivedDateTime.DateTime;
+            if (delta < TimeSpan.FromDays(7))
+            {
+                var shortTimeFormatter = CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern;
+                return receivedDateTime.ToString($"ddd {shortTimeFormatter}");
+            }
+
+            return receivedDateTime.ToString("g");
+        }
+
         public void Dispose()
         {
             _disposables.Dispose();
+            _detail.Dispose();
         }
     }
 }

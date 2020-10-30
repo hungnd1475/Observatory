@@ -14,11 +14,8 @@ namespace Observatory.Core.Providers.Fake
         public IObservable<IEnumerable<DeltaEntity<MailFolder>>> FolderChanges { get; } = 
             Observable.Empty<IEnumerable<DeltaEntity<MailFolder>>>();
 
-        public IObservable<IEnumerable<DeltaEntity<MessageSummary>>> MessageSummaryChanges { get; } =
-            Observable.Empty<IEnumerable<DeltaEntity<MessageSummary>>>();
-
-        public IObservable<IEnumerable<DeltaEntity<MessageDetail>>> MessageDetailChanges { get; } =
-            Observable.Empty<IEnumerable<DeltaEntity<MessageDetail>>>();
+        public IObservable<(string FolderId, IEnumerable<DeltaEntity<Message>> Changes)> MessageChanges { get; } =
+            Observable.Empty<(string FolderId, IEnumerable<DeltaEntity<Message>> Changes)>();
 
         public Task SynchronizeFoldersAsync(CancellationToken cancellationToken = default)
         {
@@ -28,6 +25,11 @@ namespace Observatory.Core.Providers.Fake
         public Task SynchronizeMessagesAsync(CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
+        }
+
+        public Task SynchronizeMessagesAsync(string folderId, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
         }
     }
 }

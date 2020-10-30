@@ -21,6 +21,5 @@ namespace Observatory.Core.Models
         public string FolderId { get; set; }
         public string BodyPreview { get; set; }
         public bool IsFlagged { get; set; }
-        public MessageDetail Detail { get; set; }
     }
 }

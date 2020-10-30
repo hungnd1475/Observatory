@@ -22,12 +22,7 @@ namespace Observatory.Core.Services
         /// <summary>
         /// Gets an observable of changes to the message summaries.
         /// </summary>
-        IObservable<IEnumerable<DeltaEntity<MessageSummary>>> MessageSummaryChanges { get; }
-
-        /// <summary>
-        /// Gets an observable of changes to the message details.
-        /// </summary>
-        IObservable<IEnumerable<DeltaEntity<MessageDetail>>> MessageDetailChanges { get; }
+        IObservable<(string FolderId, IEnumerable<DeltaEntity<Message>> Changes)> MessageChanges { get; }
 
         /// <summary>
         /// Synchronizes the mail folders. All changes will be published to <see cref="FolderChanges"/>.
@@ -37,10 +32,11 @@ namespace Observatory.Core.Services
         Task SynchronizeFoldersAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Synchronizes the messages. All changes with be published to <see cref="MessageSummaryChanges"/> and <see cref="MessageDetailChanges"/>.
+        /// Synchronizes the messages for a given folder. All changes with be published to <see cref="MessageChanges"/>.
         /// </summary>
+        /// <param name="folderId">The folder id for which messages are to be synchronized.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        Task SynchronizeMessagesAsync(CancellationToken cancellationToken = default);
+        Task SynchronizeMessagesAsync(string folderId, CancellationToken cancellationToken = default);
     }
 }

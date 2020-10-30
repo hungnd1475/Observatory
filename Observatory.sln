@@ -8,9 +8,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Observatory.Providers.Exchange", "src\Observatory.Providers.Exchange\Observatory.Providers.Exchange.csproj", "{4CBEB736-37DA-45B5-8287-9FD9D64E18B9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{168A3194-82CB-453A-B704-FF4716052A1F}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-	EndProjectSection
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Observatory.UI.Shared", "src\Observatory.UI\Observatory.UI.Shared\Observatory.UI.Shared.shproj", "{6279C845-92F8-4333-AB99-3D213163593C}"
 EndProject
@@ -245,6 +242,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{6279C845-92F8-4333-AB99-3D213163593C} = {19510417-D616-4443-8872-C419CB7BA0D6}
 		{953DA06F-FC94-487E-9B2F-EC99F2F5DC45} = {19510417-D616-4443-8872-C419CB7BA0D6}
+		{19510417-D616-4443-8872-C419CB7BA0D6} = {168A3194-82CB-453A-B704-FF4716052A1F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {21B65BAF-3A61-4CBE-B243-2C4383BD41AB}

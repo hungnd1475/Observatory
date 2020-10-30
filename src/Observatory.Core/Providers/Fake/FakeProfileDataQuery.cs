@@ -55,7 +55,6 @@ namespace Observatory.Core.Providers.Fake
                     },
                     CcRecipients = new List<Recipient>(),
                     FolderId = "folder-01",
-                    Detail = null,
                 },
                 new MessageSummary()
                 {
@@ -77,7 +76,6 @@ namespace Observatory.Core.Providers.Fake
                     },
                     CcRecipients = new List<Recipient>(),
                     FolderId = "folder-01",
-                    Detail = null,
                 },
                 new MessageSummary()
                 {
@@ -99,7 +97,6 @@ namespace Observatory.Core.Providers.Fake
                     },
                     CcRecipients = new List<Recipient>(),
                     FolderId = "folder-01",
-                    Detail = null,
                 },
                 new MessageSummary()
                 {
@@ -125,7 +122,6 @@ namespace Observatory.Core.Providers.Fake
                     },
                     CcRecipients = new List<Recipient>(),
                     FolderId = "folder-01",
-                    Detail = null,
                 },
             }.AsReadOnly();
             _messageDetails = new List<MessageDetail>();

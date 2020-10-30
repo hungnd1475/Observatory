@@ -1,11 +1,10 @@
-﻿using Observatory.Core.Persistence.Specifications;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Observatory.Core.Persistence
+namespace Observatory.Core.Persistence.Specifications
 {
     /// <summary>
     /// Represents a type of <see cref="ISpecificationQueryable{T}"/> that works with an in-memory data source.
@@ -23,23 +22,29 @@ namespace Observatory.Core.Persistence
         {
             _source = source;
         }
-
-        public Task<int> CountAsync(ISpecification<T> specification)
+        
+        public int Count(ISpecification<T> specification)
         {
             var query = specification.Apply(_source.AsQueryable());
-            return Task.FromResult(query.Count());
+            return query.Count();
         }
 
-        public Task<T> FirstOrDefaultAsync(ISpecification<T> specification)
+        public T FirstOrDefault(ISpecification<T> specification)
         {
             var query = specification.Apply(_source.AsQueryable());
-            return Task.FromResult(query.FirstOrDefault());
+            return query.FirstOrDefault();
         }
 
-        public Task<IReadOnlyList<T>> ToListAsync(ISpecification<T> specification)
+        public T[] ToArray(ISpecification<T> specification)
         {
             var query = specification.Apply(_source.AsQueryable());
-            return Task.FromResult<IReadOnlyList<T>>(query.ToList().AsReadOnly());
+            return query.ToArray();
+        }
+
+        public IReadOnlyList<T> ToList(ISpecification<T> specification)
+        {
+            var query = specification.Apply(_source.AsQueryable());
+            return query.ToList().AsReadOnly();
         }
     }
 }

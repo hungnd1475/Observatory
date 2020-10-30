@@ -25,8 +25,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Markup;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
+using MUXC = Microsoft.UI.Xaml.Controls;
 
 namespace Observatory.UI.Views.Mail
 {
@@ -35,11 +34,29 @@ namespace Observatory.UI.Views.Mail
     /// </summary>
     public sealed partial class MailManagerPage : Page, IViewFor<MailManagerViewModel>
     {
-        public static readonly DependencyProperty ViewModelProperty =
+        public static DependencyProperty ViewModelProperty { get; } =
             DependencyProperty.Register(nameof(ViewModel), typeof(MailManagerViewModel), typeof(MailManagerPage), null);
 
-        public static readonly DependencyProperty ProvidersFlyoutProperty =
+        public static DependencyProperty ProvidersFlyoutProperty { get; } =
             DependencyProperty.Register(nameof(ProvidersFlyout), typeof(MenuFlyout), typeof(MailManagerPage), null);
+
+        public MailManagerViewModel ViewModel
+        {
+            get => (MailManagerViewModel)GetValue(ViewModelProperty);
+            set => SetValue(ViewModelProperty, value);
+        }
+
+        object IViewFor.ViewModel
+        {
+            get => ViewModel;
+            set => ViewModel = (MailManagerViewModel)value;
+        }
+
+        public MenuFlyout ProvidersFlyout
+        {
+            get => (MenuFlyout)GetValue(ProvidersFlyoutProperty);
+            set => SetValue(ProvidersFlyoutProperty, value);
+        }
 
         public MailManagerPage()
         {
@@ -110,22 +127,10 @@ namespace Observatory.UI.Views.Mail
             FolderListSplitView.IsPaneOpen = !FolderListSplitView.IsPaneOpen;
         }
 
-        public MailManagerViewModel ViewModel 
+        public void SelectFolder(MUXC.TreeView sender, MUXC.TreeViewItemInvokedEventArgs e)
         {
-            get => (MailManagerViewModel)GetValue(ViewModelProperty);
-            set => SetValue(ViewModelProperty, value);
-        }
-
-        object IViewFor.ViewModel 
-        {
-            get => ViewModel;
-            set => ViewModel = (MailManagerViewModel)value;
-        }
-
-        public MenuFlyout ProvidersFlyout
-        {
-            get => (MenuFlyout)GetValue(ProvidersFlyoutProperty);
-            set => SetValue(ProvidersFlyoutProperty, value);
+            ViewModel.SelectedFolder = e.InvokedItem as MailFolderViewModel;
+            ToggleFolderListPane();
         }
     }
 }

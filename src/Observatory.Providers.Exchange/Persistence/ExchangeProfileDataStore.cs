@@ -26,25 +26,21 @@ namespace Observatory.Providers.Exchange.Persistence
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<FolderSynchronizationState>()
-                .HasKey(e => e.Id);
-            modelBuilder.Entity<FolderSynchronizationState>()
-                .Property(e => e.Id)
-                .ValueGeneratedOnAdd();
-            modelBuilder.Entity<FolderSynchronizationState>()
-                .Property(e => e.TimeLastSync)
-                .HasConversion(new DateTimeOffsetToBytesConverter())
-                .IsRequired(false);
+            modelBuilder.Entity<FolderSynchronizationState>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.TimeLastSync)
+                    .HasConversion(new DateTimeOffsetToBytesConverter())
+                    .IsRequired(false);
+            });
 
-            modelBuilder.Entity<MessageSynchronizationState>()
-                .HasKey(e => e.Id);
-            modelBuilder.Entity<MessageSynchronizationState>()
-                .Property(e => e.Id)
-                .ValueGeneratedOnAdd();
-            modelBuilder.Entity<MessageSynchronizationState>()
-                .Property(e => e.TimeLastSync)
-                .HasConversion(new DateTimeOffsetToBytesConverter())
-                .IsRequired(false);
+            modelBuilder.Entity<MessageSynchronizationState>(entity =>
+            {
+                entity.HasKey(e => e.FolderId);
+                entity.Property(e => e.TimeLastSync)
+                    .HasConversion(new DateTimeOffsetToBytesConverter())
+                    .IsRequired(false);
+            });                
         }
 
         public IReadOnlyCollection<DeltaEntity<T>> GetChanges<T>()

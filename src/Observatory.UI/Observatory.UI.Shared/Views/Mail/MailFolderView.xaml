@@ -187,16 +187,18 @@
           <Setter.Value>
             <ControlTemplate TargetType="controls:MessageListViewItem">
               <Grid x:Name="ContentGrid"
+                    x:DefaultBindMode="OneWay"
                     Background="{TemplateBinding Background}"
                     BorderBrush="{TemplateBinding BorderBrush}"
-                    BorderThickness="{TemplateBinding BorderThickness}">
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    Visibility="{x:Bind ui:Converters.ObjectNullToVisibility(Message)}">
                 <Grid.RowDefinitions>
                   <RowDefinition Height="*"/>
                   <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid>
                   <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="5"/>
+                    <ColumnDefinition Width="4"/>
                     <ColumnDefinition Width="*"/>
                   </Grid.ColumnDefinitions>
                   <Rectangle HorizontalAlignment="Stretch"
@@ -261,7 +263,7 @@
                                Margin="8,0,0,0"
                                FontSize="12"
                                Foreground="{ThemeResource SystemColorGrayTextBrush}"
-                               Text="{x:Bind DisplayReceivedDateTime(Message.ReceivedDateTime), Mode=OneWay}"/>
+                               Text="{x:Bind Message.FormattedReceivedDateTime, Mode=OneWay}"/>
                     <TextBlock Grid.Row="2"
                                d:Text="{Binding Preview}"
                                Foreground="{ThemeResource SystemColorGrayTextBrush}"
@@ -390,7 +392,7 @@
       </Grid.ColumnDefinitions>
       <TextBox PlaceholderText="Search"/>
       <Button Grid.Column="1"
-              Command="{x:Bind Folder.SynchronizeCommand, Mode=OneWay}">
+              Command="{x:Bind Folder.Synchronize, Mode=OneWay}">
         <SymbolIcon Symbol="Sync"/>
       </Button>
     </Grid>
@@ -407,7 +409,8 @@
     <Grid Grid.Row="2">
       <controls:MessageListView HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
-                                ItemsSource="{x:Bind Folder.Messages, Mode=OneWay}"/>
+                                ItemsSource="{x:Bind Messages, Mode=OneWay}"
+                                SelectedValue="{x:Bind SelectedMessage, Mode=TwoWay}"/>
     </Grid>
   </Grid>
 </UserControl>

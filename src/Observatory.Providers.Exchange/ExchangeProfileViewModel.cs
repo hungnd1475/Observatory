@@ -57,25 +57,18 @@ namespace Observatory.Providers.Exchange
                 }));
             _mailService = new ExchangeMailService(register, _storeFactory, _client);
 
-            var queryFactory = new DelegateProfileDataQueryFactory(register.DataFilePath, path => storeFactory.Invoke(path, false));
+            var queryFactory = new RelayProfileDataQueryFactory(register.DataFilePath, path => storeFactory.Invoke(path, false));
             MailBox = new MailBoxViewModel(queryFactory, _mailService);
         }
 
         public async Task RestoreAsync()
         {
-            this.Log().Info($"Initializing {_register.EmailAddress} profile.");
-
             await _mailService.InitializeAsync();
-            await MailBox.RestoreAsync();
+            MailBox.Restore();
 
-            var store = _storeFactory.Invoke(_register.DataFilePath, false);
+            using var store = _storeFactory.Invoke(_register.DataFilePath, false);
             var state = await store.Profiles.FirstAsync();
             DisplayName = state.DisplayName;
-        }
-
-        public void Dispose()
-        {
-            MailBox.Dispose();
         }
     }
 }

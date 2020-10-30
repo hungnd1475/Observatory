@@ -7,7 +7,7 @@ namespace Observatory.Providers.Exchange.Models
 {
     public class FolderSynchronizationState
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
         public string DeltaLink { get; set; }
         public DateTimeOffset? TimeLastSync { get; set; }
     }

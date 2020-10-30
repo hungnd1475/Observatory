@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Observatory.Core.Persistence.Specifications
 {
@@ -53,6 +55,78 @@ namespace Observatory.Core.Persistence.Specifications
         public static ISpecification<T> Chain<T>(this ISpecification<T> previous, Func<IQueryable<T>, IQueryable<T>> specificator)
         {
             return new RelaySpecification<T>(q => specificator(previous.Apply(q)));
+        }
+
+        /// <summary>
+        /// Returns a list of elements with an identity specification.
+        /// </summary>
+        /// <typeparam name="T">The entity type.</typeparam>
+        /// <param name="queryable">The queryable.</param>
+        /// <returns></returns>
+        public static IReadOnlyList<T> ToList<T>(this ISpecificationQueryable<T> queryable)
+        {
+            return queryable.ToList(Identity<T>());
+        }
+
+        /// <summary>
+        /// Returns a list of elements filtered by a given predicate.
+        /// </summary>
+        /// <typeparam name="T">The entity type.</typeparam>
+        /// <param name="queryable">The queryable.</param>
+        /// <param name="predicate">The predicate to filter the elements.</param>
+        /// <returns></returns>
+        public static IReadOnlyList<T> ToList<T>(this ISpecificationQueryable<T> queryable, 
+            Expression<Func<T, bool>> predicate)
+        {
+            return queryable.ToList(Relay<T>(q => q.Where(predicate)));
+        }
+
+        /// <summary>
+        /// Returns the number of all elements.
+        /// </summary>
+        /// <typeparam name="T">The entity type.</typeparam>
+        /// <param name="queryable">The queryable.</param>
+        /// <returns></returns>
+        public static int Count<T>(this ISpecificationQueryable<T> queryable)
+        {
+            return queryable.Count(Identity<T>());
+        }
+
+        /// <summary>
+        /// Returns the number of elements satisfying a given predicate.
+        /// </summary>
+        /// <typeparam name="T">The entity type.</typeparam>
+        /// <param name="queryable">The queryable.</param>
+        /// <param name="predicate">The predicate to filter the elements.</param>
+        /// <returns></returns>
+        public static int Count<T>(this ISpecificationQueryable<T> queryable, 
+            Expression<Func<T, bool>> predicate)
+        {
+            return queryable.Count(Relay<T>(q => q.Where(predicate)));
+        }
+
+        /// <summary>
+        /// Returns the first element.
+        /// </summary>
+        /// <typeparam name="T">The entity type.</typeparam>
+        /// <param name="queryable">The queryable.</param>
+        /// <returns></returns>
+        public static T FirstOrDefault<T>(this ISpecificationQueryable<T> queryable)
+        {
+            return queryable.FirstOrDefault(Identity<T>());
+        }
+
+        /// <summary>
+        /// Returns the first element satisfying a given predicate.
+        /// </summary>
+        /// <typeparam name="T">The entity type.</typeparam>
+        /// <param name="queryable">The queryable.</param>
+        /// <param name="predicate">The predicate to filter the elements.</param>
+        /// <returns></returns>
+        public static T FirstOrDefault<T>(this ISpecificationQueryable<T> queryable, 
+            Expression<Func<T, bool>> predicate)
+        {
+            return queryable.FirstOrDefault(Relay<T>(q => q.Where(predicate)));
         }
     }
 }

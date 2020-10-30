@@ -7,8 +7,7 @@ namespace Observatory.Core.Virtualization
 {
     public interface IVirtualizingSource<T>
     {
-        int PageSize { get; }
-        Task<int> GetTotalCountAsync();
-        Task<IReadOnlyList<T>> GetPageAsync(int pageNumber);
+        int GetTotalCount();
+        T[] GetItems(int startIndex, int maxNumberOfItems);
     }
 }

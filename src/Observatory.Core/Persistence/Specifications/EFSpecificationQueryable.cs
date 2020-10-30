@@ -1,12 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Observatory.Core.Persistence.Specifications;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Observatory.Core.Persistence
+namespace Observatory.Core.Persistence.Specifications
 {
     /// <summary>
     /// Represents a type of <see cref="ISpecificationQueryable{T}"/> that works with Entity Framework Core.
@@ -26,22 +25,28 @@ namespace Observatory.Core.Persistence
             _source = source;
         }
 
-        public async Task<int> CountAsync(ISpecification<T> specification)
+        public int Count(ISpecification<T> specification)
         {
             var query = specification.Apply(_source);
-            return await query.CountAsync();
+            return query.Count();
         }
 
-        public async Task<T> FirstOrDefaultAsync(ISpecification<T> specification)
+        public T FirstOrDefault(ISpecification<T> specification)
         {
             var query = specification.Apply(_source);
-            return await query.FirstOrDefaultAsync();
+            return query.FirstOrDefault();
         }
 
-        public async Task<IReadOnlyList<T>> ToListAsync(ISpecification<T> specification)
+        public T[] ToArray(ISpecification<T> specification)
         {
             var query = specification.Apply(_source);
-            return await query.ToListAsync();
+            return query.ToArray();
+        }
+
+        public IReadOnlyList<T> ToList(ISpecification<T> specification)
+        {
+            var query = specification.Apply(_source);
+            return query.ToList();
         }
     }
 }

@@ -10,7 +10,7 @@ using System.Text;
 
 namespace Observatory.Core.ViewModels
 {
-    public abstract class ProfileViewModelBase : ReactiveObject
+    public abstract class ProfileViewModelBase : ReactiveObject, IDisposable
     {
         protected readonly ProfileRegister _register;
 
@@ -29,6 +29,11 @@ namespace Observatory.Core.ViewModels
         public ProfileViewModelBase(ProfileRegister register)
         {
             _register = register;
+        }
+
+        public virtual void Dispose()
+        {
+            MailBox.Dispose();
         }
     }
 }
