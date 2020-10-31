@@ -13,7 +13,7 @@ namespace Observatory.Core.Virtualization
     /// </summary>
     /// <typeparam name="TSource">The source type.</typeparam>
     /// <typeparam name="TTarget">The target type.</typeparam>
-    public class VirtualizingCacheBlock<TSource, TTarget> : IDisposable, IEnableLogger
+    public class VirtualizingCacheBlock<TSource, TTarget> : IDisposable
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
@@ -65,7 +65,6 @@ namespace Observatory.Core.Virtualization
                     r.IsReceived = true;
 
                     observer.OnNext(new VirtualizingCacheBlockLoadedEvent<TSource, TTarget>(r.EffectiveRange, this));
-                    this.Log().Debug($"Loaded {r.EffectiveRange}.");
                 })
                 .DisposeWith(_disposables);
             }
@@ -77,11 +76,6 @@ namespace Observatory.Core.Virtualization
         /// <param name="index"></param>
         /// <returns></returns>
         public bool ContainsIndex(int index) => Range.Contains(index);
-
-        public override string ToString()
-        {
-            return $"[{Range.FirstIndex}->{Range.LastIndex}, NEW: {{{string.Join(",", Requests.Select(r => r.EffectiveRange))}}}]";
-        }
 
         /// <summary>
         /// Disposes the block, stop observing for new items when they are loaded from source.

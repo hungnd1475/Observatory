@@ -17,7 +17,7 @@ namespace Observatory.Core.Virtualization
     /// </summary>
     /// <typeparam name="TSource">The type of items retrieved from source.</typeparam>
     /// <typeparam name="TTarget">The type of items the cache holds.</typeparam>
-    public class VirtualizingCache<TSource, TTarget> : IDisposable, IEnableLogger
+    public class VirtualizingCache<TSource, TTarget> : IDisposable
     {
         private readonly IVirtualizingSource<TSource> _source;
         private readonly Func<TSource, TTarget> _targetFactory;
@@ -69,7 +69,6 @@ namespace Observatory.Core.Virtualization
                         b.Dispose();
                     }
                     _currentBlocks = newBlocks;
-                    this.Log().Debug($"Tracking new {_currentBlocks.Length} block(s): {string.Join(";", _currentBlocks.AsEnumerable())}");
                 })
                 .DisposeWith(_disposables);
 

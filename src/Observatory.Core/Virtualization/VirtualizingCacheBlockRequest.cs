@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ReactiveUI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
@@ -36,8 +37,7 @@ namespace Observatory.Core.Virtualization
         public bool IsReceived { get; set; }
 
         /// <summary>
-        /// Constructs a <see cref="VirtualizingCacheBlockRequest{TSource, TTarget}"/> that gets items from source,
-        /// hence making effective range the same as full range.
+        /// Constructs an instance of <see cref="VirtualizingCacheBlockRequest{TSource, TTarget}"/>.
         /// </summary>
         /// <param name="range">The full range of the items.</param>
         /// <param name="source">The source where items are fetched from.</param>
@@ -54,7 +54,8 @@ namespace Observatory.Core.Virtualization
                 return source.GetItems(range.FirstIndex, range.Length)
                     .Select(targetFactory)
                     .ToArray();
-            });
+            }, 
+            RxApp.TaskpoolScheduler);
         }
     }
 }
