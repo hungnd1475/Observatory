@@ -30,14 +30,14 @@ namespace Observatory.Core.Virtualization
         public IndexRange Range { get; }
 
         /// <summary>
-        /// Gets the array of items held by the block.
+        /// Gets the array of items the block is holding.
         /// </summary>
         public TTarget[] Items { get; }
 
         /// <summary>
         /// Gets the requests of new items.
         /// </summary>
-        public VirtualizingCacheBlockRequest<TSource, TTarget>[] Requests { get; }
+        public Queue<VirtualizingCacheBlockRequest<TSource, TTarget>> Requests { get; }
 
         /// <summary>
         /// Constructs an instance of <see cref="VirtualizingCacheBlock{TSource, TTarget}"/>.
@@ -47,7 +47,7 @@ namespace Observatory.Core.Virtualization
         /// <param name="requests">The requests for new items.</param>
         /// <param name="observer">The observer.</param>
         public VirtualizingCacheBlock(IndexRange range, TTarget[] items,
-            VirtualizingCacheBlockRequest<TSource, TTarget>[] requests,
+            Queue<VirtualizingCacheBlockRequest<TSource, TTarget>> requests,
             IObserver<VirtualizingCacheBlockLoadedEvent<TSource, TTarget>> observer)
         {
             Range = range;
@@ -56,18 +56,18 @@ namespace Observatory.Core.Virtualization
 
             foreach (var r in requests)
             {
-                r.Start();
                 r.Items.Subscribe(items =>
                 {
                     var sourceIndex = r.EffectiveRange.FirstIndex - r.FullRange.FirstIndex;
                     var destinationIndex = r.EffectiveRange.FirstIndex - Range.FirstIndex;
                     var length = r.EffectiveRange.Length;
                     Array.Copy(items, sourceIndex, Items, destinationIndex, length);
+                    r.IsReceived = true;
 
                     observer.OnNext(new VirtualizingCacheBlockLoadedEvent<TSource, TTarget>(r.EffectiveRange, this));
-                    r.IsReceived = true;
                     this.Log().Debug($"Loaded {r.EffectiveRange}.");
-                }).DisposeWith(_disposables);
+                })
+                .DisposeWith(_disposables);
             }
         }
 
@@ -80,9 +80,8 @@ namespace Observatory.Core.Virtualization
 
         public override string ToString()
         {
-            return $"[{Range.FirstIndex}->{Range.LastIndex}, REQUESTS: {{{string.Join(",", Requests.Select(r => r.FullRange))}}}]";
+            return $"[{Range.FirstIndex}->{Range.LastIndex}, NEW: {{{string.Join(",", Requests.Select(r => r.EffectiveRange))}}}]";
         }
-
 
         /// <summary>
         /// Disposes the block, stop observing for new items when they are loaded from source.

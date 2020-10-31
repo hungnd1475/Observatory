@@ -14,32 +14,26 @@ namespace Observatory.Core.Virtualization
     /// <typeparam name="TTarget">The target type.</typeparam>
     public class VirtualizingCacheBlockRequest<TSource, TTarget>
     {
-        private readonly IConnectableObservable<TTarget[]> _connectableItems;
-
         /// <summary>
-        /// The items to be loaded.
+        /// Gets the items, exposed as an <see cref="IObservable{T}"/> so that the associated <see cref="VirtualizingCacheBlock{TSource, TTarget}"/> 
+        /// can subscribe to observe the result when it finished loading.
         /// </summary>
         public IObservable<TTarget[]> Items { get; }
 
         /// <summary>
-        /// The full range of this items.
+        /// Gets the full range of this request.
         /// </summary>
         public IndexRange FullRange { get; }
 
         /// <summary>
-        /// The effective range.
+        /// Gets or sets the effective range.
         /// </summary>
-        public IndexRange EffectiveRange { get; }
+        public IndexRange EffectiveRange { get; set; }
 
         /// <summary>
-        /// Gets the connection to the items publication.
+        /// Gets or sets whether the associated <see cref="VirtualizingCacheBlock{TSource, TTarget}"/> already received the items.
         /// </summary>
-        public IDisposable ItemsConnection { get; private set; }
-
-        /// <summary>
-        /// Gets or sets whether the <see cref="VirtualizingCacheBlock{TSource, TTarget}"/> already received the items.
-        /// </summary>
-        public bool IsReceived { get; set; } = false;
+        public bool IsReceived { get; set; }
 
         /// <summary>
         /// Constructs a <see cref="VirtualizingCacheBlockRequest{TSource, TTarget}"/> that gets items from source,
@@ -52,44 +46,15 @@ namespace Observatory.Core.Virtualization
             IVirtualizingSource<TSource> source,
             Func<TSource, TTarget> targetFactory)
         {
-            _connectableItems = Observable.Defer(() => Observable.Start(() =>
+            FullRange = range;
+            EffectiveRange = range;
+            IsReceived = false;
+            Items = Observable.Start(() =>
             {
                 return source.GetItems(range.FirstIndex, range.Length)
                     .Select(targetFactory)
                     .ToArray();
-            })).Publish();
-            FullRange = range;
-            EffectiveRange = range;
-            Items = _connectableItems;
-        }
-
-        /// <summary>
-        /// Constructs a <see cref="VirtualizingCacheBlockRequest{TSource, TTarget}"/> that get items from another request,
-        /// with the effective range potentially different from the full range.
-        /// </summary>
-        /// <param name="fullRange">The full range of the items.</param>
-        /// <param name="effectiveRange">The effective range of the items.</param>
-        /// <param name="items">The items from another request.</param>
-        public VirtualizingCacheBlockRequest(IndexRange fullRange,
-            IndexRange effectiveRange,
-            IObservable<TTarget[]> items,
-            IDisposable itemsConnection)
-        {
-            FullRange = fullRange;
-            EffectiveRange = effectiveRange;
-            Items = items;
-            ItemsConnection = itemsConnection;
-        }
-
-        /// <summary>
-        /// Starts fetching items if they originates from this request.
-        /// </summary>
-        public void Start()
-        {
-            if (_connectableItems != null && ItemsConnection == null)
-            {
-                ItemsConnection = _connectableItems.Connect();
-            }
+            });
         }
     }
 }

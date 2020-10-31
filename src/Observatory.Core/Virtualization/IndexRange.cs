@@ -8,7 +8,7 @@ namespace Observatory.Core.Virtualization
     /// <summary>
     /// Represents a range of indices.
     /// </summary>
-    public struct IndexRange
+    public struct IndexRange : IEquatable<IndexRange>
     {
         /// <summary>
         /// Gets the first index of this range.
@@ -93,6 +93,26 @@ namespace Observatory.Core.Virtualization
         }
 
         /// <summary>
+        /// Determines whether this range covers another range.
+        /// </summary>
+        /// <param name="other">The other range to check against.</param>
+        /// <returns></returns>
+        public bool Covers(IndexRange other)
+        {
+            return FirstIndex <= other.FirstIndex && LastIndex >= other.LastIndex;
+        }
+
+        /// <summary>
+        /// Determines if this range and a given range are disjoint.
+        /// </summary>
+        /// <param name="other">The other range.</param>
+        /// <returns></returns>
+        public bool IsDisjoint(IndexRange other)
+        {
+            return FirstIndex > other.LastIndex || LastIndex < other.FirstIndex;
+        }
+
+        /// <summary>
         /// Determines whether a given index is within this range.
         /// </summary>
         /// <param name="index">The index to be checked.</param>
@@ -105,6 +125,36 @@ namespace Observatory.Core.Virtualization
         public override string ToString()
         {
             return $"{FirstIndex}->{LastIndex}";
+        }
+
+        public bool Equals(IndexRange other)
+        {
+            return FirstIndex == other.FirstIndex &&
+                LastIndex == other.LastIndex;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is IndexRange other)
+            {
+                return Equals(other);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(FirstIndex, LastIndex);
+        }
+
+        public static bool operator ==(IndexRange x, IndexRange y)
+        {
+            return x.Equals(y);
+        }
+
+        public static bool operator !=(IndexRange x, IndexRange y)
+        {
+            return !x.Equals(y);
         }
     }
 

@@ -4,6 +4,7 @@ using ReactiveUI.Fody.Helpers;
 using Splat;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -59,6 +60,7 @@ namespace Observatory.Core.Virtualization
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Throttle(TimeSpan.FromMilliseconds(20))
                 .Select(Normalize)
+                .Where(Differs)
                 .Select(UpdateBlocks)
                 .Subscribe(newBlocks =>
                 {
@@ -67,7 +69,7 @@ namespace Observatory.Core.Virtualization
                         b.Dispose();
                     }
                     _currentBlocks = newBlocks;
-                    this.Log().Debug($"Tracking {_currentBlocks.Length} block(s): {string.Join(";", _currentBlocks.AsEnumerable())}");
+                    this.Log().Debug($"Tracking new {_currentBlocks.Length} block(s): {string.Join(";", _currentBlocks.AsEnumerable())}");
                 })
                 .DisposeWith(_disposables);
 
@@ -134,6 +136,34 @@ namespace Observatory.Core.Virtualization
         }
 
         /// <summary>
+        /// Determines if there is any difference between the ranges the cache is tracking and the given <paramref name="ranges"/>.
+        /// </summary>
+        /// <param name="ranges">The other set of ranges.</param>
+        /// <returns>True if there is any difference, otherwise false.</returns>
+        private bool Differs(IndexRange[] ranges)
+        {
+            var currentBlocks = _currentBlocks;
+            int i = 0, j = 0;
+            while (i < currentBlocks.Length && j < ranges.Length)
+            {
+                if (currentBlocks[i].Range.Covers(ranges[j]))
+                {
+                    j += 1;
+                }
+                else if (currentBlocks[i].Range.IsDisjoint(ranges[j]))
+                {
+                    i += 1;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            return j < ranges.Length;
+        }
+
+        /// <summary>
         /// Updates the current array of <see cref="VirtualizingCacheBlock{TSource, TTarget}"/>, figuring out which items are removed 
         /// and which items need to be retrieved from source.
         /// </summary>
@@ -146,11 +176,9 @@ namespace Observatory.Core.Virtualization
             int i = 0, j = 0;
             while (j < newRanges.Length)
             {
-                var requests = new List<VirtualizingCacheBlockRequest<TSource, TTarget>>();
+                var requests = new Queue<VirtualizingCacheBlockRequest<TSource, TTarget>>();
                 var newItems = new TTarget[newRanges[j].Length];
 
-                // keeps track of right-most difference between the old and new ranges,
-                // as long as there is any, keep looking at the next old block
                 IndexRange? newRange = newRanges[j];
                 while (i < oldBlocks.Length && newRange.HasValue)
                 {
@@ -165,30 +193,24 @@ namespace Observatory.Core.Virtualization
                         var length = intersect.Value.Length;
                         Array.Copy(oldBlocks[i].Items, oldDestination, newItems, newDestination, length);
 
-                        foreach (var r in oldBlocks[i].Requests)
+                        while (oldBlocks[i].Requests.Count > 0)
                         {
-                            if (r.IsReceived)
+                            var r = oldBlocks[i].Requests.Dequeue();
+                            if (!r.IsReceived)
                             {
-                                r.ItemsConnection.Dispose();
-                                continue;
-                            }
-
-                            var effectiveRange = r.FullRange.Intersect(intersect.Value);
-                            if (effectiveRange.HasValue)
-                            {
-                                requests.Add(new VirtualizingCacheBlockRequest<TSource, TTarget>(
-                                    r.FullRange, effectiveRange.Value, r.Items, r.ItemsConnection));
-                            }
-                            else
-                            {
-                                r.ItemsConnection.Dispose();
+                                var effectiveRange = r.FullRange.Intersect(intersect.Value);
+                                if (effectiveRange.HasValue)
+                                {
+                                    r.EffectiveRange = effectiveRange.Value;
+                                    requests.Enqueue(r);
+                                }
                             }
                         }
                     }
 
                     if (leftDiff.HasValue)
                     {
-                        requests.Add(new VirtualizingCacheBlockRequest<TSource, TTarget>(leftDiff.Value, _source, _targetFactory));
+                        requests.Enqueue(new VirtualizingCacheBlockRequest<TSource, TTarget>(leftDiff.Value, _source, _targetFactory));
                     }
                     if (rightDiff.HasValue)
                     {
@@ -199,11 +221,11 @@ namespace Observatory.Core.Virtualization
 
                 if (newRange.HasValue)
                 {
-                    requests.Add(new VirtualizingCacheBlockRequest<TSource, TTarget>(newRange.Value, _source, _targetFactory));
+                    requests.Enqueue(new VirtualizingCacheBlockRequest<TSource, TTarget>(newRange.Value, _source, _targetFactory));
                 }
 
                 newBlocks[j] = new VirtualizingCacheBlock<TSource, TTarget>(
-                    newRanges[j], newItems, requests.ToArray(), _cacheObserver);
+                    newRanges[j], newItems, requests, _cacheObserver);
                 j += 1;
             }
             return newBlocks;
