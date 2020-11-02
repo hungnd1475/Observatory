@@ -38,37 +38,30 @@ namespace Observatory.Core.ViewModels.Mail
         public MailManagerViewModel(IProfileRegistrationService profileRegistrationService,
             IIndex<string, IProfileProvider> providers)
         {
-            var sharedProfilesConnection = profileRegistrationService.Connect()
+            var sourceProfiles = profileRegistrationService.Connect()
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .TransformAsync(p => providers[p.ProviderId].CreateViewModelAsync(p))
-                .Publish();
-            sharedProfilesConnection
+                .Publish()
+                .RefCount();
+            sourceProfiles
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Bind(out _profiles)
                 .DisposeMany()
                 .Subscribe(_ => { }, ex => this.Log().Error(ex))
                 .DisposeWith(_disposables);
-            sharedProfilesConnection
+            sourceProfiles
                 .Where(_ => SelectedProfile == null)
                 .ToCollection()
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Do(profiles => SelectedProfile = profiles.FirstOrDefault())
-                .Subscribe()
-                .DisposeWith(_disposables);
-            sharedProfilesConnection
-                .Connect()
+                .Subscribe(profiles => SelectedProfile = profiles.FirstOrDefault())
                 .DisposeWith(_disposables);
 
             this.WhenAnyValue(x => x.SelectedProfile)
                 .Where(p => p != null)
                 .DistinctUntilChanged()
                 .SelectMany(p => p.WhenAnyValue(x => x.MailBox.Inbox))
-                .Do(f => SelectedFolder = f)
-                .Subscribe()
+                .Subscribe(f => SelectedFolder = f)
                 .DisposeWith(_disposables);
-
-            this.WhenAnyValue(x => x.SelectedMessage)
-                .Subscribe(m => this.Log().Debug($"Selected message: {m?.Subject}"));
         }
 
         public void Dispose()

@@ -2,29 +2,25 @@
 using Observatory.Core.ViewModels.Mail;
 using Observatory.UI.Virtualizing;
 using ReactiveUI;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
 namespace Observatory.UI.Views.Mail
 {
-    public sealed partial class MailFolderView : UserControl
+    public sealed partial class MailFolderView : UserControl, IViewFor<MailFolderViewModel>
     {
-        public static DependencyProperty FolderProperty { get; } =
-            DependencyProperty.Register(nameof(Folder), typeof(MailFolderViewModel), typeof(MailFolderView), new PropertyMetadata(null));
+        public static DependencyProperty ViewModelProperty { get; } =
+            DependencyProperty.Register(nameof(ViewModel), typeof(MailFolderViewModel), typeof(MailFolderView), new PropertyMetadata(null));
 
         public static DependencyProperty SelectedMessageProperty { get; } =
             DependencyProperty.Register(nameof(SelectedMessage), typeof(MessageSummaryViewModel), typeof(MailFolderView), new PropertyMetadata(null));
 
-        public static DependencyProperty MessagesProperty { get; } =
-            DependencyProperty.Register(nameof(Messages), 
-                typeof(VirtualizingList<MessageSummary, MessageSummaryViewModel>), 
-                typeof(MailFolderView), new PropertyMetadata(null));
-
-        public MailFolderViewModel Folder
+        public MailFolderViewModel ViewModel
         {
-            get { return (MailFolderViewModel)GetValue(FolderProperty); }
-            set { SetValue(FolderProperty, value); }
+            get { return (MailFolderViewModel)GetValue(ViewModelProperty); }
+            set { SetValue(ViewModelProperty, value); }
         }
 
         public MessageSummaryViewModel SelectedMessage
@@ -33,20 +29,23 @@ namespace Observatory.UI.Views.Mail
             set { SetValue(SelectedMessageProperty, value); }
         }
 
-        public VirtualizingList<MessageSummary, MessageSummaryViewModel> Messages
+        object IViewFor.ViewModel 
         {
-            get { return (VirtualizingList<MessageSummary, MessageSummaryViewModel>)GetValue(MessagesProperty); }
-            set { SetValue(MessagesProperty, value); }
+            get => ViewModel;
+            set => ViewModel = (MailFolderViewModel)value;
         }
 
         public MailFolderView()
         {
             this.InitializeComponent();
-            this.WhenAnyValue(x => x.Folder)
-                .Where(f => f != null)
-                .SelectMany(f => f.WhenAnyValue(x => x.Messages))
-                .Select(m => new VirtualizingList<MessageSummary, MessageSummaryViewModel>(m))
-                .BindTo(this, x => x.Messages);
+            this.WhenActivated(disposables =>
+            {
+                this.OneWayBind(ViewModel, 
+                        vm => vm.Messages, 
+                        v => v._messageList.ItemsSource, 
+                        cache => new VirtualizingList<MessageSummary, MessageSummaryViewModel>(cache))
+                    .DisposeWith(disposables);
+            });
         }
     }
 }

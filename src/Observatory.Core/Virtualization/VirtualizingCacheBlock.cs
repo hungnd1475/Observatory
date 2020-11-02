@@ -48,7 +48,7 @@ namespace Observatory.Core.Virtualization
         /// <param name="observer">The observer.</param>
         public VirtualizingCacheBlock(IndexRange range, TTarget[] items,
             Queue<VirtualizingCacheBlockRequest<TSource, TTarget>> requests,
-            IObserver<VirtualizingCacheBlockLoadedEvent<TSource, TTarget>> observer)
+            IObserver<IVirtualizingCacheChangedEvent> observer)
         {
             Range = range;
             Items = items;

@@ -98,9 +98,9 @@ namespace Observatory.Core.ViewModels.Mail
 
             Synchronize = ReactiveCommand.CreateFromTask(_mailService.SynchronizeFoldersAsync);
             Synchronize.WithLatestFrom(folderCollection, (_, folders) => folders.Where(f => f.IsFavorite))
-                .Subscribe(folders =>
+                .Subscribe(favoriteFolders =>
                 {
-                    foreach (var f in _favoriteFolders)
+                    foreach (var f in favoriteFolders)
                     {
                         f.Synchronize.Execute().Subscribe();
                     }

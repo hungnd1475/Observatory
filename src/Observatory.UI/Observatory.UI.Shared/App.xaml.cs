@@ -6,8 +6,10 @@ using Observatory.Core.Services;
 using Observatory.Providers.Exchange;
 using Observatory.UI.Views;
 using ReactiveUI;
+using Serilog;
 using Splat.Autofac;
 using Splat.Microsoft.Extensions.Logging;
+using Splat.Serilog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -43,7 +45,8 @@ namespace Observatory.UI
         /// </summary>
         public App()
         {
-            ConfigureFilters(Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory);
+            ConfigureSerilog();
+            ConfigureMicrosoftLogging(Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory);
             Container = ConfigureServices(Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory);
 
             this.InitializeComponent();
@@ -58,10 +61,10 @@ namespace Observatory.UI
         protected async override void OnLaunched(LaunchActivatedEventArgs e)
         {
 #if DEBUG
-			if (Debugger.IsAttached)
-			{
-				// this.DebugSettings.EnableFrameRateCounter = true;
-			}
+            if (Debugger.IsAttached)
+            {
+                // this.DebugSettings.EnableFrameRateCounter = true;
+            }
 #endif
 
             var profileRegistration = Container.Resolve<IProfileRegistrationService>();
@@ -127,7 +130,7 @@ namespace Observatory.UI
         /// Configures global logging
         /// </summary>
         /// <param name="factory"></param>
-        static void ConfigureFilters(ILoggerFactory factory)
+        static void ConfigureMicrosoftLogging(ILoggerFactory factory)
         {
             factory
                 .WithFilter(new FilterLoggerSettings
@@ -136,41 +139,52 @@ namespace Observatory.UI
                         { "Windows", LogLevel.Warning },
                         { DbLoggerCategory.Database.Command.Name, LogLevel.Debug },
 
-						// Debug JS interop
-						// { "Uno.Foundation.WebAssemblyRuntime", LogLevel.Debug },
+                        // Debug JS interop
+                        // { "Uno.Foundation.WebAssemblyRuntime", LogLevel.Debug },
 
-						// Generic Xaml events
-						// { "Windows.UI.Xaml", LogLevel.Debug },
-						// { "Windows.UI.Xaml.VisualStateGroup", LogLevel.Debug },
-						// { "Windows.UI.Xaml.StateTriggerBase", LogLevel.Debug },
-						// { "Windows.UI.Xaml.UIElement", LogLevel.Debug },
+                        // Generic Xaml events
+                        // { "Windows.UI.Xaml", LogLevel.Debug },
+                        // { "Windows.UI.Xaml.VisualStateGroup", LogLevel.Debug },
+                        // { "Windows.UI.Xaml.StateTriggerBase", LogLevel.Debug },
+                        // { "Windows.UI.Xaml.UIElement", LogLevel.Debug },
 
-						// Layouter specific messages
-						// { "Windows.UI.Xaml.Controls", LogLevel.Debug },
-						// { "Windows.UI.Xaml.Controls.Layouter", LogLevel.Debug },
-						// { "Windows.UI.Xaml.Controls.Panel", LogLevel.Debug },
-						// { "Windows.Storage", LogLevel.Debug },
+                        // Layouter specific messages
+                        // { "Windows.UI.Xaml.Controls", LogLevel.Debug },
+                        // { "Windows.UI.Xaml.Controls.Layouter", LogLevel.Debug },
+                        // { "Windows.UI.Xaml.Controls.Panel", LogLevel.Debug },
+                        // { "Windows.Storage", LogLevel.Debug },
 
-						// Binding related messages
-						// { "Windows.UI.Xaml.Data", LogLevel.Debug },
+                        // Binding related messages
+                        // { "Windows.UI.Xaml.Data", LogLevel.Debug },
 
-						// DependencyObject memory references tracking
-						// { "ReferenceHolder", LogLevel.Debug },
+                        // DependencyObject memory references tracking
+                        // { "ReferenceHolder", LogLevel.Debug },
 
-						// ListView-related messages
-						// { "Windows.UI.Xaml.Controls.ListViewBase", LogLevel.Debug },
-						// { "Windows.UI.Xaml.Controls.ListView", LogLevel.Debug },
-						// { "Windows.UI.Xaml.Controls.GridView", LogLevel.Debug },
-						// { "Windows.UI.Xaml.Controls.VirtualizingPanelLayout", LogLevel.Debug },
-						// { "Windows.UI.Xaml.Controls.NativeListViewBase", LogLevel.Debug },
-						// { "Windows.UI.Xaml.Controls.ListViewBaseSource", LogLevel.Debug }, //iOS
-						// { "Windows.UI.Xaml.Controls.ListViewBaseInternalContainer", LogLevel.Debug }, //iOS
-						// { "Windows.UI.Xaml.Controls.NativeListViewBaseAdapter", LogLevel.Debug }, //Android
-						// { "Windows.UI.Xaml.Controls.BufferViewCache", LogLevel.Debug }, //Android
-						// { "Windows.UI.Xaml.Controls.VirtualizingPanelGenerator", LogLevel.Debug }, //WASM
-					}
+                        // ListView-related messages
+                        // { "Windows.UI.Xaml.Controls.ListViewBase", LogLevel.Debug },
+                        // { "Windows.UI.Xaml.Controls.ListView", LogLevel.Debug },
+                        // { "Windows.UI.Xaml.Controls.GridView", LogLevel.Debug },
+                        // { "Windows.UI.Xaml.Controls.VirtualizingPanelLayout", LogLevel.Debug },
+                        // { "Windows.UI.Xaml.Controls.NativeListViewBase", LogLevel.Debug },
+                        // { "Windows.UI.Xaml.Controls.ListViewBaseSource", LogLevel.Debug }, //iOS
+                        // { "Windows.UI.Xaml.Controls.ListViewBaseInternalContainer", LogLevel.Debug }, //iOS
+                        // { "Windows.UI.Xaml.Controls.NativeListViewBaseAdapter", LogLevel.Debug }, //Android
+                        // { "Windows.UI.Xaml.Controls.BufferViewCache", LogLevel.Debug }, //Android
+                        // { "Windows.UI.Xaml.Controls.VirtualizingPanelGenerator", LogLevel.Debug }, //WASM
+                    }
                 )
                 .AddSplat();
+        }
+
+        static void ConfigureSerilog()
+        {
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .MinimumLevel.Debug()
+                .WriteTo.Debug()
+                .WriteTo.File(Path.Combine(ApplicationData.Current.LocalFolder.Path, "logs/log-.txt"), 
+                    rollingInterval: RollingInterval.Day)
+                .CreateLogger();
         }
 
         static IContainer ConfigureServices(ILoggerFactory loggerFactory)
@@ -193,6 +207,7 @@ namespace Observatory.UI
             builder.RegisterInstance(resolver);
 
             resolver.InitializeReactiveUI();
+            resolver.UseSerilogFullLogger();
 
             var container = builder.Build();
             resolver.SetLifetimeScope(container);

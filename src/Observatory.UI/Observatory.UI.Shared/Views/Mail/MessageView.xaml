@@ -32,10 +32,10 @@
       <CommandBar.SecondaryCommands>
         <AppBarButton Icon="Read"
                       Label="Mark as read"
-                      Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(Message.IsRead)}"/>
+                      Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.IsRead)}"/>
         <AppBarButton Icon="Mail"
                       Label="Mark as unread"
-                      Visibility="{x:Bind Message.IsRead}"/>
+                      Visibility="{x:Bind ViewModel.IsRead}"/>
         <AppBarButton Icon="MoveToFolder"
                       Label="Move"/>
         <AppBarButton Label="Move to junk">
@@ -72,7 +72,7 @@
         <TextBlock d:Text="Test"
                    FontSize="20"
                    FontWeight="SemiBold"
-                   Text="{x:Bind Message.Subject}"/>
+                   Text="{x:Bind ViewModel.Subject}"/>
         <Grid Grid.Row="1"
               ColumnSpacing="5"
               RowSpacing="2">
@@ -94,7 +94,7 @@
                      VerticalAlignment="Center"
                      d:Text="Gitter notifications &lt;support@gitter.im&gt;"
                      FontWeight="SemiBold"
-                     Text="{x:Bind Message.Sender}"/>
+                     Text="{x:Bind ViewModel.Sender}"/>
           <TextBlock Grid.Row="1"
                      VerticalAlignment="Center"
                      Foreground="{ThemeResource SystemColorGrayTextColor}"
@@ -103,7 +103,7 @@
           <ItemsControl Grid.Row="1"
                         Grid.Column="1"
                         VerticalAlignment="Center"
-                        ItemsSource="{x:Bind Message.ToRecipients}">
+                        ItemsSource="{x:Bind ViewModel.ToRecipients}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
                 <StackPanel Orientation="Horizontal"
@@ -116,12 +116,12 @@
                      Foreground="{ThemeResource SystemColorGrayTextColor}"
                      Text="Cc:"
                      TextAlignment="Right"
-                     Visibility="{x:Bind ui:Converters.CollectionEmptyToVisibility(Message.CcRecipients)}"/>
+                     Visibility="{x:Bind ui:Converters.CollectionEmptyToVisibility(ViewModel.CcRecipients)}"/>
           <ItemsControl Grid.Row="2"
                         Grid.Column="1"
                         VerticalAlignment="Center"
-                        ItemsSource="{x:Bind Message.CcRecipients}"
-                        Visibility="{x:Bind ui:Converters.CollectionEmptyToVisibility(Message.CcRecipients)}">
+                        ItemsSource="{x:Bind ViewModel.CcRecipients}"
+                        Visibility="{x:Bind ui:Converters.CollectionEmptyToVisibility(ViewModel.CcRecipients)}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
                 <StackPanel Orientation="Horizontal"
@@ -134,7 +134,7 @@
                      d:Text="12/02/2020"
                      Foreground="{ThemeResource SystemColorGrayTextColor}"
                      Style="{StaticResource CaptionTextBlockStyle}"
-                     Text="{x:Bind Message.FormattedReceivedDateTime}"/>
+                     Text="{x:Bind ViewModel.FormattedReceivedDateTime}"/>
         </Grid>
       </Grid>
       <WebView x:Name="BodyViewer"

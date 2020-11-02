@@ -392,7 +392,7 @@
       </Grid.ColumnDefinitions>
       <TextBox PlaceholderText="Search"/>
       <Button Grid.Column="1"
-              Command="{x:Bind Folder.Synchronize, Mode=OneWay}">
+              Command="{x:Bind ViewModel.Synchronize, Mode=OneWay}">
         <SymbolIcon Symbol="Sync"/>
       </Button>
     </Grid>
@@ -404,12 +404,12 @@
       </Grid.ColumnDefinitions>
       <TextBlock FontSize="20"
                  FontWeight="SemiBold"
-                 Text="{x:Bind Folder.Name, Mode=OneWay}"/>
+                 Text="{x:Bind ViewModel.Name, Mode=OneWay}"/>
     </Grid>
     <Grid Grid.Row="2">
-      <controls:MessageListView HorizontalAlignment="Stretch"
+      <controls:MessageListView x:Name="_messageList"
+                                HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
-                                ItemsSource="{x:Bind Messages, Mode=OneWay}"
                                 SelectedValue="{x:Bind SelectedMessage, Mode=TwoWay}"/>
     </Grid>
   </Grid>

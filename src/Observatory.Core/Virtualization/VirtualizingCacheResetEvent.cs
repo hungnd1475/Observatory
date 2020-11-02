@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Observatory.Core.Virtualization
 {
-    public interface IVirtualizingCacheChangedEvent
+    public struct VirtualizingCacheResetEvent : IVirtualizingCacheChangedEvent
     {
     }
 }

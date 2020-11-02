@@ -13,7 +13,7 @@ using Windows.UI.Xaml.Data;
 
 namespace Observatory.UI.Virtualizing
 {
-    public class VirtualizingList<TSource, TTarget> : INotifyPropertyChanged, IList, INotifyCollectionChanged, IItemsRangeInfo
+    public class VirtualizingList<TSource, TTarget> : INotifyPropertyChanged, IList, INotifyCollectionChanged, IItemsRangeInfo, IEnableLogger
     {
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         public event PropertyChangedEventHandler PropertyChanged;
@@ -26,13 +26,22 @@ namespace Observatory.UI.Virtualizing
         {
             _cache = cache;
             _cache.CacheChanged
-                .Subscribe(x =>
+                .Subscribe(@event =>
                 {
-                    foreach (var index in x.Range)
+                    switch (@event)
                     {
-                        CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(
-                            NotifyCollectionChangedAction.Replace, x.Block[index],
-                            new VirtualizingPlaceholder(index), index));
+                        case VirtualizingCacheBlockLoadedEvent<TSource, TTarget> load:
+                            foreach (var index in load.Range)
+                            {
+                                CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(
+                                    NotifyCollectionChangedAction.Replace, load.Block[index],
+                                    new VirtualizingPlaceholder(index), index));
+                            }
+                            break;
+                        case VirtualizingCacheResetEvent _:
+                            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(
+                                NotifyCollectionChangedAction.Reset));
+                            break;
                     }
                 })
                 .DisposeWith(_disposables);

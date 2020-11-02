@@ -29,10 +29,6 @@ namespace Observatory.Core.ViewModels.Mail
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly ReadOnlyObservableCollection<MailFolderViewModel> _childFolders;
 
-        //private readonly SourceCache<MessageSummary, string> _sourceMessages =
-        //    new SourceCache<MessageSummary, string>(m => m.Id);
-        //private readonly ReadOnlyObservableCollection<MessageSummaryViewModel> _messages;
-
         [Reactive]
         public string Name { get; private set; }
 
@@ -48,15 +44,6 @@ namespace Observatory.Core.ViewModels.Mail
         public bool IsFavorite { get; private set; }
 
         public ReadOnlyObservableCollection<MailFolderViewModel> ChildFolders => _childFolders;
-
-        //public ReadOnlyObservableCollection<MessageSummaryViewModel> Messages
-        //{
-        //    get
-        //    {
-        //        LoadMessages();
-        //        return _messages;
-        //    }
-        //}
 
         [Reactive]
         public VirtualizingCache<MessageSummary, MessageSummaryViewModel> Messages { get; private set; }
@@ -91,40 +78,6 @@ namespace Observatory.Core.ViewModels.Mail
                 .Subscribe()
                 .DisposeWith(_disposables);
 
-            //_sourceMessages.Connect(m => m.FolderId == _folderId)
-            //    .ObserveOn(RxApp.TaskpoolScheduler)
-            //    .Transform(m => new MessageSummaryViewModel(m, _queryFactory))
-            //    .Sort(SortExpressionComparer<MessageSummaryViewModel>.Descending(m => m.ReceivedDateTime))
-            //    .ObserveOn(RxApp.MainThreadScheduler)
-            //    .Bind(out _messages)
-            //    .DisposeMany()
-            //    .Subscribe()
-            //    .DisposeWith(_disposables);
-
-            //_mailService.MessageChanges
-            //    .ObserveOn(RxApp.TaskpoolScheduler)
-            //    .Where(d => d.FolderId == _folderId)
-            //    .Select(d => d.Changes)
-            //    .Subscribe(changes =>
-            //    {
-            //        _sourceMessages.Edit(updater =>
-            //        {
-            //            foreach (var c in changes)
-            //            {
-            //                switch (c.State)
-            //                {
-            //                    case DeltaState.Add:
-            //                    case DeltaState.Update:
-            //                        updater.AddOrUpdate(c.Entity.Summary());
-            //                        break;
-            //                    case DeltaState.Remove:
-            //                        updater.RemoveKey(c.Entity.Id);
-            //                        break;
-            //                }
-            //            }
-            //        });
-            //    });
-
             Messages = new VirtualizingCache<MessageSummary, MessageSummaryViewModel>(
                 new SpecificationVirtualizingSource<MessageSummary>(_queryFactory,
                     query => query.MessageSummaries,
@@ -134,13 +87,6 @@ namespace Observatory.Core.ViewModels.Mail
                     .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray()),
                 state => new MessageSummaryViewModel(state, _queryFactory),
                 SortExpressionComparer<MessageSummaryViewModel>.Descending(m => m.ReceivedDateTime));
-
-            _mailService.MessageChanges
-                .ObserveOn(RxApp.TaskpoolScheduler)
-                .Where(d => d.FolderId == _folderId)
-                .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray())
-                .Subscribe(changes => Messages.OnSourceChanged(changes))
-                .DisposeWith(_disposables);
 
             _mailService.MessageChanges
                 .Where(d => d.FolderId == _folderId)
@@ -168,29 +114,6 @@ namespace Observatory.Core.ViewModels.Mail
             Type = node.Item.Type;
             IsFavorite = node.Item.IsFavorite;
         }
-
-        //private void LoadMessages()
-        //{
-        //    if (!_isRestored)
-        //    {
-        //        _isRestored = true;
-
-        //        Observable.Start(() =>
-        //        {
-        //            using var query = _queryFactory.Connect();
-        //            var messages = query.MessageSummaries.ToList(m => m.FolderId == _folderId);
-        //            _sourceMessages.Edit(updater => updater.Load(messages));
-        //        }, RxApp.TaskpoolScheduler);
-
-        //        CountMessages()
-        //            .ObserveOn(RxApp.MainThreadScheduler)
-        //            .Subscribe(x =>
-        //            {
-        //                UnreadCount = x.UnreadCount;
-        //                TotalCount = x.TotalCount;
-        //            });
-        //    }
-        //}
 
         private IObservable<(int UnreadCount, int TotalCount)> CountMessages()
         {
