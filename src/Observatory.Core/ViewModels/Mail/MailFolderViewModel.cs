@@ -129,7 +129,11 @@ namespace Observatory.Core.ViewModels.Mail
                 new SpecificationVirtualizingSource<MessageSummary>(_queryFactory,
                     query => query.MessageSummaries,
                     new RelaySpecification<MessageSummary>(q => q.Where(m => m.FolderId == _folderId).OrderByDescending(m => m.ReceivedDateTime))),
-                state => new MessageSummaryViewModel(state, _queryFactory));
+                _mailService.MessageChanges
+                    .Where(d => d.FolderId == _folderId)
+                    .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray()),
+                state => new MessageSummaryViewModel(state, _queryFactory),
+                SortExpressionComparer<MessageSummaryViewModel>.Descending(m => m.ReceivedDateTime));
 
             _mailService.MessageChanges
                 .ObserveOn(RxApp.TaskpoolScheduler)

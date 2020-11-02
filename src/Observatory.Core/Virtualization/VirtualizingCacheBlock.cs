@@ -83,6 +83,13 @@ namespace Observatory.Core.Virtualization
         public void Dispose()
         {
             _disposables.Dispose();
+            if (typeof(IDisposable).IsAssignableFrom(typeof(TTarget)))
+            {
+                foreach (var i in Items.Cast<IDisposable>().Where(i => i != null))
+                {
+                    i.Dispose();
+                }
+            }
         }
     }
 }

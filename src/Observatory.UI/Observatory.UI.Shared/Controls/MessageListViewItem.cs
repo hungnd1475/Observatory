@@ -1,20 +1,10 @@
 ﻿using Observatory.Core.ViewModels.Mail;
-using Observatory.UI.Virtualizing;
 using ReactiveUI;
 using Splat;
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Reactive;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Text;
-using Uno.Extensions.ValueType;
-using Windows.UI.Core;
-using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 
 namespace Observatory.UI.Controls

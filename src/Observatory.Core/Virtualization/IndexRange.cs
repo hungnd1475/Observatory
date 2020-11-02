@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace Observatory.Core.Virtualization
     /// <summary>
     /// Represents a range of indices.
     /// </summary>
-    public struct IndexRange : IEquatable<IndexRange>
+    public struct IndexRange : IEquatable<IndexRange>, IEnumerable<int>
     {
         /// <summary>
         /// Gets the first index of this range.
@@ -146,6 +147,16 @@ namespace Observatory.Core.Virtualization
         {
             return HashCode.Combine(FirstIndex, LastIndex);
         }
+
+        public IEnumerator<int> GetEnumerator()
+        {
+            for (var i = FirstIndex; i <= LastIndex; i++)
+            {
+                yield return i;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public static bool operator ==(IndexRange x, IndexRange y)
         {

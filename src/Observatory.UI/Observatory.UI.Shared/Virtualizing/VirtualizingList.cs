@@ -1,6 +1,4 @@
-﻿using Observatory.Core.Models;
-using Observatory.Core.ViewModels.Mail;
-using Observatory.Core.Virtualization;
+﻿using Observatory.Core.Virtualization;
 using ReactiveUI;
 using Splat;
 using System;
@@ -15,7 +13,7 @@ using Windows.UI.Xaml.Data;
 
 namespace Observatory.UI.Virtualizing
 {
-    public class VirtualizingList<TSource, TTarget> : INotifyPropertyChanged, IList, INotifyCollectionChanged, IItemsRangeInfo, IEnableLogger
+    public class VirtualizingList<TSource, TTarget> : INotifyPropertyChanged, IList, INotifyCollectionChanged, IItemsRangeInfo
     {
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         public event PropertyChangedEventHandler PropertyChanged;
@@ -30,14 +28,12 @@ namespace Observatory.UI.Virtualizing
             _cache.CacheChanged
                 .Subscribe(x =>
                 {
-                    for (var index = x.Range.FirstIndex; index <= x.Range.LastIndex; index++)
+                    foreach (var index in x.Range)
                     {
                         CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(
                             NotifyCollectionChangedAction.Replace, x.Block[index],
-                            new VirtualizingPlaceholder(index),
-                            index));
+                            new VirtualizingPlaceholder(index), index));
                     }
-                    this.Log().Debug($"Replaced {x.Range.Length} items starting from {x.Range.FirstIndex}.");
                 })
                 .DisposeWith(_disposables);
             _cache.CountChanged

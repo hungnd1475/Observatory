@@ -1,6 +1,5 @@
 ﻿using DynamicData;
 using DynamicData.Binding;
-using Microsoft.EntityFrameworkCore;
 using Observatory.Core.Models;
 using Observatory.Core.Persistence;
 using Observatory.Core.Persistence.Specifications;
@@ -12,10 +11,8 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
 
 namespace Observatory.Core.ViewModels.Mail
 {
@@ -124,7 +121,7 @@ namespace Observatory.Core.ViewModels.Mail
                 using var query = _queryFactory.Connect();
                 var folders = query.Folders.ToList();
                 _sourceFolders.Edit(updater => updater.Load(folders));
-            }, 
+            },
             RxApp.TaskpoolScheduler);
 
             Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(30))

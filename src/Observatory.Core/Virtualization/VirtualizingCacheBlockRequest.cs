@@ -13,7 +13,7 @@ namespace Observatory.Core.Virtualization
     /// </summary>
     /// <typeparam name="TSource">The source type.</typeparam>
     /// <typeparam name="TTarget">The target type.</typeparam>
-    public class VirtualizingCacheBlockRequest<TSource, TTarget>
+    public class VirtualizingCacheBlockRequest<TSource, TTarget> : IDisposable
     {
         /// <summary>
         /// Gets the items, exposed as an <see cref="IObservable{T}"/> so that the associated <see cref="VirtualizingCacheBlock{TSource, TTarget}"/> 
@@ -56,6 +56,20 @@ namespace Observatory.Core.Virtualization
                     .ToArray();
             }, 
             RxApp.TaskpoolScheduler);
+        }
+
+        public void Dispose()
+        {
+            if (typeof(IDisposable).IsAssignableFrom(typeof(TTarget)))
+            {
+                Items.Subscribe(items =>
+                {
+                    foreach (var i in items.Cast<IDisposable>())
+                    {
+                        i.Dispose();
+                    }
+                });
+            }
         }
     }
 }

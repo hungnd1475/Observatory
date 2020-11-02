@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -21,11 +22,17 @@ namespace Observatory.Core.Virtualization
     {
         private readonly IVirtualizingSource<TSource> _source;
         private readonly Func<TSource, TTarget> _targetFactory;
+        private readonly IComparer<TTarget> _targetComparer;
+
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
-        private readonly Subject<IndexRange[]> _rangesChangedSubject = new Subject<IndexRange[]>();
+        private readonly Subject<IndexRange[]> _rangesObserver = new Subject<IndexRange[]>();
         private readonly ScheduledSubject<VirtualizingCacheBlockLoadedEvent<TSource, TTarget>> _cacheObserver = 
             new ScheduledSubject<VirtualizingCacheBlockLoadedEvent<TSource, TTarget>>(RxApp.MainThreadScheduler);
         private readonly BehaviorSubject<int> _countObserver = new BehaviorSubject<int>(0);
+
+        /// <summary>
+        /// Stores the current blocks the cache is keeping track of.
+        /// </summary>
         private VirtualizingCacheBlock<TSource, TTarget>[] _currentBlocks = new VirtualizingCacheBlock<TSource, TTarget>[0];
 
         /// <summary>
@@ -51,12 +58,15 @@ namespace Observatory.Core.Virtualization
         /// <param name="source">The source where items are retrieved from.</param>
         /// <param name="targetFactory">The factory function transforming <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.</param>
         public VirtualizingCache(IVirtualizingSource<TSource> source,
-            Func<TSource, TTarget> targetFactory)
+            IObservable<IEnumerable<DeltaEntity<TSource>>> sourceObserver,
+            Func<TSource, TTarget> targetFactory,
+            IComparer<TTarget> targetComparer)
         {
             _source = source;
             _targetFactory = targetFactory;
+            _targetComparer = targetComparer;
 
-            _rangesChangedSubject
+            _rangesObserver
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Throttle(TimeSpan.FromMilliseconds(20))
                 .Select(Normalize)
@@ -84,7 +94,7 @@ namespace Observatory.Core.Virtualization
         /// <param name="newRanges">The ranges of items that need to be displayed.</param>
         public void UpdateRanges(IndexRange[] newRanges)
         {
-            _rangesChangedSubject.OnNext(newRanges);
+            _rangesObserver.OnNext(newRanges);
         }
 
         /// <summary>
@@ -132,6 +142,10 @@ namespace Observatory.Core.Virtualization
         public void Dispose()
         {
             _disposables.Dispose();
+            foreach (var b in _currentBlocks)
+            {
+                b.Dispose();
+            }
         }
 
         /// <summary>
@@ -149,13 +163,24 @@ namespace Observatory.Core.Virtualization
                 {
                     j += 1;
                 }
-                else if (currentBlocks[i].Range.IsDisjoint(ranges[j]))
+                else 
                 {
-                    i += 1;
-                }
-                else
-                {
-                    return true;
+                    var (leftDiff, rightDiff) = currentBlocks[i].Range.Diff(ranges[j]);
+                    if (leftDiff.HasValue)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        if (rightDiff.HasValue && rightDiff.Value != ranges[j])
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            i += 1;
+                        }
+                    }
                 }
             }
 
@@ -163,8 +188,8 @@ namespace Observatory.Core.Virtualization
         }
 
         /// <summary>
-        /// Updates the current array of <see cref="VirtualizingCacheBlock{TSource, TTarget}"/>, figuring out which items are removed 
-        /// and which items need to be retrieved from source.
+        /// Updates the current array of <see cref="VirtualizingCacheBlock{TSource, TTarget}"/>, figuring out which items 
+        /// stay which items need to be retrieved from source.
         /// </summary>
         /// <param name="newRanges">The new ranges that the new blocks need to keep track of.</param>
         /// <returns>A new array of <see cref="VirtualizingCacheBlock{TSource, TTarget}"/>.</returns>
@@ -178,12 +203,12 @@ namespace Observatory.Core.Virtualization
                 var requests = new Queue<VirtualizingCacheBlockRequest<TSource, TTarget>>();
                 var newItems = new TTarget[newRanges[j].Length];
 
-                IndexRange? newRange = newRanges[j];
-                while (i < oldBlocks.Length && newRange.HasValue)
+                IndexRange? leftDiff = null, rightDiff = newRanges[j];
+                while (i < oldBlocks.Length && rightDiff.HasValue)
                 {
                     var oldRange = oldBlocks[i].Range;
-                    var intersect = oldRange.Intersect(newRange.Value);
-                    var (leftDiff, rightDiff) = oldRange.Diff(newRange.Value);
+                    var intersect = oldRange.Intersect(rightDiff.Value);
+                    (leftDiff, rightDiff) = oldRange.Diff(rightDiff.Value);
 
                     if (intersect.HasValue)
                     {
@@ -195,14 +220,15 @@ namespace Observatory.Core.Virtualization
                         while (oldBlocks[i].Requests.Count > 0)
                         {
                             var r = oldBlocks[i].Requests.Dequeue();
-                            if (!r.IsReceived)
+                            var effectiveRange = r.FullRange.Intersect(intersect.Value);
+                            if (!r.IsReceived && effectiveRange.HasValue)
                             {
-                                var effectiveRange = r.FullRange.Intersect(intersect.Value);
-                                if (effectiveRange.HasValue)
-                                {
-                                    r.EffectiveRange = effectiveRange.Value;
-                                    requests.Enqueue(r);
-                                }
+                                r.EffectiveRange = effectiveRange.Value;
+                                requests.Enqueue(r);
+                            }
+                            else
+                            {
+                                r.Dispose();
                             }
                         }
                     }
@@ -215,18 +241,23 @@ namespace Observatory.Core.Virtualization
                     {
                         i += 1;
                     }
-                    newRange = rightDiff;
                 }
 
-                if (newRange.HasValue)
+                if (rightDiff.HasValue)
                 {
-                    requests.Enqueue(new VirtualizingCacheBlockRequest<TSource, TTarget>(newRange.Value, _source, _targetFactory));
+                    requests.Enqueue(new VirtualizingCacheBlockRequest<TSource, TTarget>(rightDiff.Value, _source, _targetFactory));
                 }
 
                 newBlocks[j] = new VirtualizingCacheBlock<TSource, TTarget>(
                     newRanges[j], newItems, requests, _cacheObserver);
                 j += 1;
             }
+
+            foreach (var b in oldBlocks)
+            {
+                b.Dispose();
+            }
+
             return newBlocks;
         }
 
