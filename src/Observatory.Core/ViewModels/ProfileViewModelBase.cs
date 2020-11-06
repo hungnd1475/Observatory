@@ -16,7 +16,7 @@ namespace Observatory.Core.ViewModels
 
         public string EmailAddress => _register.EmailAddress;
         [Reactive] public string DisplayName { get; set; }
-        
+
         public abstract MailBoxViewModel MailBox { get; }
         public abstract CalendarViewModel Calendar { get; }
 

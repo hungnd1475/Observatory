@@ -75,7 +75,7 @@ namespace Observatory.Core.Persistence.Specifications
         /// <param name="queryable">The queryable.</param>
         /// <param name="predicate">The predicate to filter the elements.</param>
         /// <returns></returns>
-        public static IReadOnlyList<T> ToList<T>(this ISpecificationQueryable<T> queryable, 
+        public static IReadOnlyList<T> ToList<T>(this ISpecificationQueryable<T> queryable,
             Expression<Func<T, bool>> predicate)
         {
             return queryable.ToList(Relay<T>(q => q.Where(predicate)));
@@ -99,7 +99,7 @@ namespace Observatory.Core.Persistence.Specifications
         /// <param name="queryable">The queryable.</param>
         /// <param name="predicate">The predicate to filter the elements.</param>
         /// <returns></returns>
-        public static int Count<T>(this ISpecificationQueryable<T> queryable, 
+        public static int Count<T>(this ISpecificationQueryable<T> queryable,
             Expression<Func<T, bool>> predicate)
         {
             return queryable.Count(Relay<T>(q => q.Where(predicate)));
@@ -123,7 +123,7 @@ namespace Observatory.Core.Persistence.Specifications
         /// <param name="queryable">The queryable.</param>
         /// <param name="predicate">The predicate to filter the elements.</param>
         /// <returns></returns>
-        public static T FirstOrDefault<T>(this ISpecificationQueryable<T> queryable, 
+        public static T FirstOrDefault<T>(this ISpecificationQueryable<T> queryable,
             Expression<Func<T, bool>> predicate)
         {
             return queryable.FirstOrDefault(Relay<T>(q => q.Where(predicate)));

@@ -51,9 +51,9 @@ namespace Observatory.Core.Persistence
             modelBuilder.Entity<MailFolder>()
                 .HasKey(f => f.Id);
 
-            modelBuilder.Entity<Message>(entity => 
+            modelBuilder.Entity<Message>(entity =>
             {
-                entity.HasKey(m => m.Id);
+                entity.HasKey(m => new { m.Id, m.FolderId });
                 entity.Property(m => m.ReceivedDateTime)
                     .HasConversion(new DateTimeOffsetToBytesConverter());
                 entity.Property(m => m.Sender)
@@ -103,10 +103,11 @@ namespace Observatory.Core.Persistence
                 entity.ToQuery(() => Messages.Select(m => new MessageDetail()
                 {
                     Id = m.Id,
+                    FolderId = m.FolderId,
                     Body = m.Body,
                     BodyType = m.BodyType
                 }));
-            });                
+            });
         }
     }
 }

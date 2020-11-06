@@ -1,4 +1,5 @@
-﻿using Observatory.Core.Virtualization;
+﻿using Observatory.Core.Services;
+using Observatory.Core.Virtualization;
 using ReactiveUI;
 using Splat;
 using System;
@@ -13,39 +14,114 @@ using Windows.UI.Xaml.Data;
 
 namespace Observatory.UI.Virtualizing
 {
-    public class VirtualizingList<TSource, TTarget> : INotifyPropertyChanged, IList, INotifyCollectionChanged, IItemsRangeInfo, IEnableLogger
+    public class VirtualizingList<TSource, TTarget> : IList, INotifyCollectionChanged, IItemsRangeInfo, IEnableLogger, 
+        IVirtualizingCacheEventProcessor<TSource, IEnumerable<NotifyCollectionChangedEventArgs>>
     {
         public event NotifyCollectionChangedEventHandler CollectionChanged;
-        public event PropertyChangedEventHandler PropertyChanged;
 
-        private readonly VirtualizingCache<TSource, TTarget> _cache;
+        private readonly Func<TSource, TTarget> _targetFactory;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
-        private int _count;
+        private readonly VirtualizingCache<TSource> _sourceCache;
+        private readonly Dictionary<int, TTarget> _targetCache = new Dictionary<int, TTarget>();
 
-        public VirtualizingList(VirtualizingCache<TSource, TTarget> cache)
+        public VirtualizingList(VirtualizingCache<TSource> sourceCache,
+            Func<TSource, TTarget> targetFactory)
         {
-            _cache = cache;
-            _cache.CacheChanged
-                .Subscribe(@event =>
+            _sourceCache = sourceCache;
+            _targetFactory = targetFactory;
+
+            foreach (var b in _sourceCache.CurrentBlocks)
+            {
+                foreach (var index in b.Range)
                 {
-                    switch (@event)
+                    _targetCache.Add(index, targetFactory.Invoke(b[index]));
+                }
+            }
+
+            _sourceCache.WhenCacheChanged
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Select(e => e.Process(this))
+                //.Select(sourceEvent =>
+                //{
+                //    var targetEvents = new List<NotifyCollectionChangedEventArgs>();
+                //    switch (sourceEvent)
+                //    {
+                //        case VirtualizingCacheItemsLoadedEvent<TSource> e:
+                //            foreach (var index in e.Range)
+                //            {
+                //                if (_targetCache.ContainsKey(index))
+                //                {
+                //                    (_targetCache[index] as IDisposable)?.Dispose();
+                //                }
+                //                _targetCache[index] = targetFactory.Invoke(e.Block[index]);
+
+                //                targetEvents.Add(new NotifyCollectionChangedEventArgs(
+                //                    NotifyCollectionChangedAction.Replace, e.Block[index],
+                //                    new VirtualizingPlaceholder(index), index));
+                //            }
+                //            break;
+                //        case VirtualizingCacheInitializedEvent<TSource> _:
+                //            targetEvents.Add(new NotifyCollectionChangedEventArgs(
+                //                NotifyCollectionChangedAction.Reset));
+                //            break;
+                //        case VirtualizingCacheRangesUpdatedEvent<TSource> e:
+                //            foreach (var index in e.RemovedRanges.SelectMany(r => r))
+                //            {
+                //                if (_targetCache.ContainsKey(index))
+                //                {
+                //                    (_targetCache[index] as IDisposable)?.Dispose();
+                //                    _targetCache.Remove(index);
+                //                }
+                //            }
+                //            break;
+                //        case VirtualizingCacheSourceUpdatedEvent<TSource> e:
+                //            foreach (var c in e.Changes)
+                //            {
+                //                switch (c.Change.State)
+                //                {
+                //                    case DeltaState.Add:
+                //                        targetEvents.Add(new NotifyCollectionChangedEventArgs(
+                //                            NotifyCollectionChangedAction.Add, (object)null, c.Index));
+                //                        break;
+                //                    case DeltaState.Update:
+                //                        if (c.PreviousIndex != c.Index)
+                //                        {
+                //                            targetEvents.Add(new NotifyCollectionChangedEventArgs(
+                //                                NotifyCollectionChangedAction.Move, 
+                //                                new VirtualizingPlaceholder(c.Index),
+                //                                c.Index,
+                //                                c.PreviousIndex.Value));
+                //                        }
+                //                        else
+                //                        {
+                //                            targetEvents.Add(new NotifyCollectionChangedEventArgs(
+                //                                NotifyCollectionChangedAction.Replace,
+                //                                null,
+                //                                new VirtualizingPlaceholder(c.Index),
+                //                                c.Index));
+                //                        }
+                //                        break;
+                //                    case DeltaState.Remove:
+                //                        targetEvents.Add(new NotifyCollectionChangedEventArgs(
+                //                            NotifyCollectionChangedAction.Remove,
+                //                            new VirtualizingPlaceholder(c.Index), c.Index));
+                //                        break;
+                //                }
+                //            }
+                //            break;
+                //    }
+                //    return targetEvents;
+                //})
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(targetEvents =>
+                {
+                    foreach (var e in targetEvents)
                     {
-                        case VirtualizingCacheBlockLoadedEvent<TSource, TTarget> load:
-                            foreach (var index in load.Range)
-                            {
-                                CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(
-                                    NotifyCollectionChangedAction.Replace, load.Block[index],
-                                    new VirtualizingPlaceholder(index), index));
-                            }
-                            break;
-                        case VirtualizingCacheResetEvent _:
-                            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(
-                                NotifyCollectionChangedAction.Reset));
-                            break;
+                        CollectionChanged?.Invoke(this, e);
                     }
                 })
                 .DisposeWith(_disposables);
-            _cache.CountChanged
+            _sourceCache.WhenCountChanged
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(count => Count = count)
                 .DisposeWith(_disposables);
@@ -53,10 +129,95 @@ namespace Observatory.UI.Virtualizing
 
         public void RangesChanged(ItemIndexRange visibleRange, IReadOnlyList<ItemIndexRange> trackedItems)
         {
-            _cache.UpdateRanges(trackedItems.Select(i => new IndexRange(i.FirstIndex, i.LastIndex)).ToArray());
+            _sourceCache.UpdateRanges(trackedItems.Select(i => new IndexRange(i.FirstIndex, i.LastIndex)).ToArray());
         }
 
-        #region IList Implementation
+        private int IndexOf(TTarget item)
+        {
+            foreach (var entry in _targetCache)
+            {
+                if (ReferenceEquals(entry.Value, item))
+                {
+                    return entry.Key;
+                }
+            }
+            return -1;
+        }
+
+        public void Dispose()
+        {
+            foreach (var index in _targetCache.Keys)
+            {
+                (_targetCache[index] as IDisposable)?.Dispose();
+            }
+            _targetCache.Clear();
+            _disposables.Dispose();
+        }
+
+        #region ++ IVirtualizingCacheEventProcessor ++
+
+        public IEnumerable<NotifyCollectionChangedEventArgs> Process(VirtualizingCacheInitializedEvent<TSource> e)
+        {
+            yield return new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
+        }
+
+        public IEnumerable<NotifyCollectionChangedEventArgs> Process(VirtualizingCacheItemsLoadedEvent<TSource> e)
+        {
+            foreach (var index in e.Range)
+            {
+                if (_targetCache.ContainsKey(index))
+                {
+                    (_targetCache[index] as IDisposable)?.Dispose();
+                }
+                _targetCache[index] = _targetFactory.Invoke(e.Block[index]);
+            }
+
+            return e.Range.Select(index => new NotifyCollectionChangedEventArgs(
+                NotifyCollectionChangedAction.Replace, e.Block[index],
+                new VirtualizingPlaceholder(index), index)).ToList();
+        }
+
+        public IEnumerable<NotifyCollectionChangedEventArgs> Process(VirtualizingCacheRangesUpdatedEvent<TSource> e)
+        {
+            foreach (var index in e.RemovedRanges.SelectMany(r => r))
+            {
+                if (_targetCache.ContainsKey(index))
+                {
+                    (_targetCache[index] as IDisposable)?.Dispose();
+                    _targetCache.Remove(index);
+                }
+            }
+            return Enumerable.Empty<NotifyCollectionChangedEventArgs>();
+        }
+
+        public IEnumerable<NotifyCollectionChangedEventArgs> Process(VirtualizingCacheSourceUpdatedEvent<TSource> e)
+        {
+            return e.Changes.Select(c => c.Change.State switch
+            {
+                DeltaState.Add => new NotifyCollectionChangedEventArgs(
+                    NotifyCollectionChangedAction.Add, (object)null, c.Index),
+                DeltaState.Update => c.PreviousIndex.Value != c.Index
+                    ? new NotifyCollectionChangedEventArgs(
+                        NotifyCollectionChangedAction.Move,
+                        new VirtualizingPlaceholder(c.Index),
+                        c.Index,
+                        c.PreviousIndex.Value)
+                    : new NotifyCollectionChangedEventArgs(
+                        NotifyCollectionChangedAction.Replace,
+                        null,
+                        new VirtualizingPlaceholder(c.Index),
+                        c.Index),
+                DeltaState.Remove => new NotifyCollectionChangedEventArgs(
+                    NotifyCollectionChangedAction.Remove,
+                    new VirtualizingPlaceholder(c.Index), c.Index),
+                _ => throw new NotSupportedException(),
+            })
+            .ToList();
+        }
+
+        #endregion
+
+        #region ++ IList ++
 
         public bool IsReadOnly => false;
 
@@ -68,29 +229,15 @@ namespace Observatory.UI.Virtualizing
 
         public object this[int index]
         {
-            get => _cache[index];
+            get => _targetCache.ContainsKey(index) ? _targetCache[index] : default;
             set => throw new NotSupportedException();
         }
 
-        public int Count
-        {
-            get => _count;
-            private set
-            {
-                _count = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
-            }
-        }
+        public int Count { get; private set; }
 
         public IEnumerator GetEnumerator()
         {
             throw new NotImplementedException();
-        }
-
-        public void Dispose()
-        {
-            _cache.Dispose();
-            _disposables.Dispose();
         }
 
         public int Add(object value)
@@ -108,7 +255,7 @@ namespace Observatory.UI.Virtualizing
             return value switch
             {
                 VirtualizingPlaceholder x => x.Index,
-                TTarget x => _cache.IndexOf(x),
+                TTarget x => IndexOf(x),
                 _ => -1,
             };
         }

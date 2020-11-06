@@ -2,10 +2,12 @@
 using Observatory.Core.ViewModels.Mail;
 using Observatory.UI.Virtualizing;
 using ReactiveUI;
-using System.Reactive.Disposables;
+using System.Reactive;
 using System.Reactive.Linq;
+using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using System.Reactive.Disposables;
 
 namespace Observatory.UI.Views.Mail
 {
@@ -40,10 +42,15 @@ namespace Observatory.UI.Views.Mail
             this.InitializeComponent();
             this.WhenActivated(disposables =>
             {
-                this.OneWayBind(ViewModel, 
-                        vm => vm.Messages, 
-                        v => v._messageList.ItemsSource, 
-                        cache => new VirtualizingList<MessageSummary, MessageSummaryViewModel>(cache))
+                this.WhenAnyValue(x => x.ViewModel)
+                    .Where(vm => vm != null)
+                    .SelectMany(vm => vm.WhenAnyValue(x => x.Messages).Select(messages => (ViewModel: vm, Messages: messages)))
+                    .Select(x => new VirtualizingList<MessageSummary, MessageSummaryViewModel>(x.Messages, x.ViewModel.Transform))
+                    .Subscribe(source =>
+                    {
+                        (_messageList.ItemsSource as VirtualizingList<MessageSummary, MessageSummaryViewModel>)?.Dispose();
+                        _messageList.ItemsSource = source;
+                    })
                     .DisposeWith(disposables);
             });
         }

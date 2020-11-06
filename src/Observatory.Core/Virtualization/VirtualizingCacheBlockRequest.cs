@@ -11,15 +11,14 @@ namespace Observatory.Core.Virtualization
     /// <summary>
     /// Represents a request for items of a subrange in a <see cref="VirtualizingCacheBlock{TSource, TTarget}"/>.
     /// </summary>
-    /// <typeparam name="TSource">The source type.</typeparam>
-    /// <typeparam name="TTarget">The target type.</typeparam>
-    public class VirtualizingCacheBlockRequest<TSource, TTarget> : IDisposable
+    /// <typeparam name="T">The source type.</typeparam>
+    public class VirtualizingCacheBlockRequest<T>
     {
         /// <summary>
-        /// Gets the items, exposed as an <see cref="IObservable{T}"/> so that the associated <see cref="VirtualizingCacheBlock{TSource, TTarget}"/> 
+        /// Gets the items, exposed as an <see cref="IObservable{T}"/> so that the owner <see cref="VirtualizingCacheBlock{T}"/> 
         /// can subscribe to observe the result when it finished loading.
         /// </summary>
-        public IObservable<TTarget[]> Items { get; }
+        public IObservable<T[]> WhenItemsLoaded { get; }
 
         /// <summary>
         /// Gets the full range of this request.
@@ -29,47 +28,41 @@ namespace Observatory.Core.Virtualization
         /// <summary>
         /// Gets or sets the effective range.
         /// </summary>
-        public IndexRange EffectiveRange { get; set; }
+        public IndexRange EffectiveRange { get; }
 
         /// <summary>
-        /// Gets or sets whether the associated <see cref="VirtualizingCacheBlock{TSource, TTarget}"/> already received the items.
+        /// Gets whether the request is disposed.
         /// </summary>
         public bool IsReceived { get; set; }
 
         /// <summary>
-        /// Constructs an instance of <see cref="VirtualizingCacheBlockRequest{TSource, TTarget}"/>.
+        /// Constructs an instance of <see cref="VirtualizingCacheBlockRequest{T}"/> that retrieves items from source.
         /// </summary>
         /// <param name="range">The full range of the items.</param>
         /// <param name="source">The source where items are fetched from.</param>
-        /// <param name="targetFactory">The factory function transforming <see cref="TSource"/> to <see cref="TTarget"/>.</param>
         public VirtualizingCacheBlockRequest(IndexRange range,
-            IVirtualizingSource<TSource> source,
-            Func<TSource, TTarget> targetFactory)
+            IVirtualizingSource<T> source)
         {
             FullRange = range;
             EffectiveRange = range;
             IsReceived = false;
-            Items = Observable.Start(() =>
-            {
-                return source.GetItems(range.FirstIndex, range.Length)
-                    .Select(targetFactory)
-                    .ToArray();
-            }, 
-            RxApp.TaskpoolScheduler);
+            WhenItemsLoaded = Observable.Start(() => source.GetItems(range.FirstIndex, range.Length).ToArray(), RxApp.TaskpoolScheduler);
         }
 
-        public void Dispose()
+        /// <summary>
+        /// Constructs an instance of <see cref="VirtualizingCacheBlockRequest{T}"/> that gets items from another request.
+        /// </summary>
+        /// <param name="fullRange"></param>
+        /// <param name="effectiveRange"></param>
+        /// <param name="whenItemsLoaded"></param>
+        public VirtualizingCacheBlockRequest(IndexRange fullRange,
+            IndexRange effectiveRange,
+            IObservable<T[]> whenItemsLoaded)
         {
-            if (typeof(IDisposable).IsAssignableFrom(typeof(TTarget)))
-            {
-                Items.Subscribe(items =>
-                {
-                    foreach (var i in items.Cast<IDisposable>())
-                    {
-                        i.Dispose();
-                    }
-                });
-            }
+            FullRange = fullRange;
+            EffectiveRange = effectiveRange;
+            IsReceived = false;
+            WhenItemsLoaded = whenItemsLoaded;
         }
     }
 }

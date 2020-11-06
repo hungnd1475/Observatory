@@ -29,5 +29,10 @@ namespace Observatory.Core.Virtualization
         {
             return _totalCount;
         }
+
+        public int IndexOf(T entity)
+        {
+            return 0;
+        }
     }
 }

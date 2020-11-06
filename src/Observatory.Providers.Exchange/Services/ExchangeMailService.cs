@@ -172,7 +172,7 @@ namespace Observatory.Providers.Exchange.Services
                     {
                         store.Entry(f.Value).UpdateFrom(deltaFolders[f.Key]);
                     }
-                    
+
                     store.AddRange(newFolders);
                     store.AddRange(newFolders.Select(f => new MessageSynchronizationState() { FolderId = f.Id }));
                     changes.AddRange(newFolders.Select(f => DeltaEntity.Added(f)));
@@ -226,7 +226,7 @@ namespace Observatory.Providers.Exchange.Services
                     .Select(MESSAGES_SELECT_QUERY)
                     .Header(PREFER_HEADER, $"{MAX_PAGE_SIZE}={pageSize}")
                     .OrderBy("ReceivedDateTime desc")
-                    .Filter($"ReceivedDateTime ge {DateTimeOffset.UtcNow.AddDays(-7):yyyy-MM-dd}");
+                    .Filter($"ReceivedDateTime ge {DateTimeOffset.UtcNow.AddMonths(-1):yyyy-MM-dd}");
             }
 
             while (!cancellationToken.IsCancellationRequested && request != null)
@@ -235,14 +235,14 @@ namespace Observatory.Providers.Exchange.Services
                     .ConfigureAwait(false);
                 var deltaMessages = page.Where(m => !m.IsRemoved())
                     .ToDictionary(m => m.Id);
-                var removedMessages = page.Where(m => m.IsRemoved())
-                    .Select(m => new Message() { Id = m.Id })
+                var removedIds = page.Where(m => m.IsRemoved())
+                    .Select(m => m.Id)
                     .ToArray();
 
                 if (deltaMessages.Count > 0)
                 {
                     var updatedMessages = await store.Messages
-                        .Where(m => deltaMessages.Keys.Contains(m.Id))
+                        .Where(m => m.FolderId == folderId && deltaMessages.Keys.Contains(m.Id))
                         .ToDictionaryAsync(m => m.Id);
                     var newMessages = deltaMessages
                         .Where(m => !updatedMessages.Keys.Contains(m.Key))
@@ -257,13 +257,12 @@ namespace Observatory.Providers.Exchange.Services
                     store.AddRange(newMessages);
                 }
 
-                if (removedMessages.Length > 0)
+                if (removedIds.Length > 0)
                 {
-                    var folder = await store.Folders.FindAsync(folderId);
-                    if (folder.Type == FolderType.DeletedItems)
-                    {
-                        store.RemoveRange(removedMessages);
-                    }
+                    var removedMessages = await store.Messages
+                        .Where(m => m.FolderId == folderId && removedIds.Contains(m.Id))
+                        .ToListAsync();
+                    store.RemoveRange(removedMessages);
                 }
 
                 if (page.NextPageRequest != null)

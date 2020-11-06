@@ -86,11 +86,11 @@ namespace Observatory.Core.ViewModels.Mail
             Importance = state.Importance;
             HasAttachments = state.HasAttachments;
             IsDraft = state.IsDraft;
-            Preview = state.BodyPreview != null 
-                ? SPACES_PATTERN.Replace(NEWLINE_PATTERN.Replace(state.BodyPreview, " "), " ") 
+            Preview = state.BodyPreview != null
+                ? SPACES_PATTERN.Replace(NEWLINE_PATTERN.Replace(state.BodyPreview, " "), " ")
                 : null;
             IsFlagged = state.IsFlagged;
-            Correspondents = state.IsDraft 
+            Correspondents = state.IsDraft
                 ? string.Join(", ", state.ToRecipients.Select(r => r.DisplayName))
                 : state.Sender.DisplayName;
             ReceivedDateTime = state.ReceivedDateTime;

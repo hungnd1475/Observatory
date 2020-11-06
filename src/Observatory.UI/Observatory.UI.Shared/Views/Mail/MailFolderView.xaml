@@ -191,7 +191,11 @@
                     Background="{TemplateBinding Background}"
                     BorderBrush="{TemplateBinding BorderBrush}"
                     BorderThickness="{TemplateBinding BorderThickness}"
-                    Visibility="{x:Bind ui:Converters.ObjectNullToVisibility(Message)}">
+                    RenderTransformOrigin="0.5,0"
+                    Visibility="{x:Bind ui:Converters.ObjectNullToVisibility(Message), Mode=OneWay}">
+                <Grid.RenderTransform>
+                  <ScaleTransform ScaleY="1"/>
+                </Grid.RenderTransform>
                 <Grid.RowDefinitions>
                   <RowDefinition Height="*"/>
                   <RowDefinition Height="Auto"/>
@@ -368,6 +372,22 @@
                         <Setter Target="ImportanceIcon.Foreground" Value="{ThemeResource HighImportanceIconColor}"/>
                         <Setter Target="ImportanceIcon.Visibility" Value="Visible"/>
                       </VisualState.Setters>
+                    </VisualState>
+                  </VisualStateGroup>
+
+                  <VisualStateGroup>
+                    <VisualState>
+                      <VisualState.StateTriggers>
+                        <triggers:IsNotEqualStateTrigger Value="{Binding Message, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                                                         To="{x:Null}"/>
+                      </VisualState.StateTriggers>
+                      <VisualState.Storyboard>
+                        <Storyboard Storyboard.TargetName="ContentGrid"
+                                    Storyboard.TargetProperty="RenderTransform.ScaleY">
+                          <DoubleAnimation From="0"
+                                           Duration="0:0:1"/>
+                        </Storyboard>
+                      </VisualState.Storyboard>
                     </VisualState>
                   </VisualStateGroup>
                 </VisualStateManager.VisualStateGroups>

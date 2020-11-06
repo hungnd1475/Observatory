@@ -46,7 +46,7 @@ namespace Observatory.Core.ViewModels.Mail
         public ReadOnlyObservableCollection<MailFolderViewModel> ChildFolders => _childFolders;
 
         [Reactive]
-        public VirtualizingCache<MessageSummary, MessageSummaryViewModel> Messages { get; private set; }
+        public VirtualizingCache<MessageSummary> Messages { get; private set; }
 
         public ReactiveCommand<Unit, Unit> Synchronize { get; }
 
@@ -78,16 +78,6 @@ namespace Observatory.Core.ViewModels.Mail
                 .Subscribe()
                 .DisposeWith(_disposables);
 
-            Messages = new VirtualizingCache<MessageSummary, MessageSummaryViewModel>(
-                new SpecificationVirtualizingSource<MessageSummary>(_queryFactory,
-                    query => query.MessageSummaries,
-                    new RelaySpecification<MessageSummary>(q => q.Where(m => m.FolderId == _folderId).OrderByDescending(m => m.ReceivedDateTime))),
-                _mailService.MessageChanges
-                    .Where(d => d.FolderId == _folderId)
-                    .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray()),
-                state => new MessageSummaryViewModel(state, _queryFactory),
-                SortExpressionComparer<MessageSummaryViewModel>.Descending(m => m.ReceivedDateTime));
-
             _mailService.MessageChanges
                 .Where(d => d.FolderId == _folderId)
                 .SelectMany(_ => CountMessages())
@@ -98,6 +88,13 @@ namespace Observatory.Core.ViewModels.Mail
                     TotalCount = x.TotalCount;
                 })
                 .DisposeWith(_disposables);
+
+            Messages = new VirtualizingCache<MessageSummary>(
+                new MessageVirtualizingSource(_queryFactory, _folderId),
+                _mailService.MessageChanges
+                    .Where(d => d.FolderId == _folderId)
+                    .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray()),
+                new MessageSummaryEqualityComparer());
 
             Synchronize = ReactiveCommand.CreateFromObservable(() => Observable
                 .StartAsync((token) => _mailService.SynchronizeMessagesAsync(_folderId, token))
@@ -115,6 +112,11 @@ namespace Observatory.Core.ViewModels.Mail
             IsFavorite = node.Item.IsFavorite;
         }
 
+        public MessageSummaryViewModel Transform(MessageSummary state)
+        {
+            return new MessageSummaryViewModel(state, _queryFactory);
+        }
+
         private IObservable<(int UnreadCount, int TotalCount)> CountMessages()
         {
             return Observable.Start(() =>
@@ -129,6 +131,19 @@ namespace Observatory.Core.ViewModels.Mail
         public void Dispose()
         {
             _disposables.Dispose();
+        }
+    }
+
+    public class MessageSummaryEqualityComparer : IEqualityComparer<MessageSummary>
+    {
+        public bool Equals(MessageSummary x, MessageSummary y)
+        {
+            return x.Id == y.Id;
+        }
+
+        public int GetHashCode(MessageSummary obj)
+        {
+            return obj.GetHashCode();
         }
     }
 }

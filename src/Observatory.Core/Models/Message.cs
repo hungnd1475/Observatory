@@ -40,12 +40,13 @@ namespace Observatory.Core.Models
             Subject = Subject,
             ThreadId = ThreadId,
             ThreadPosition = ThreadPosition,
-            ToRecipients = ToRecipients
+            ToRecipients = ToRecipients,
         };
 
         public MessageDetail Detail() => new MessageDetail()
         {
             Id = Id,
+            FolderId = FolderId,
             Body = Body,
             BodyType = BodyType,
         };

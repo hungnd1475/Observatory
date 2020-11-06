@@ -23,7 +23,7 @@ namespace Observatory.Core.Providers.Fake
 
         public FakeProfileDataQuery()
         {
-            _folders = new List<MailFolder>() 
+            _folders = new List<MailFolder>()
             {
                 new MailFolder() { Id = "folder-01", Name = "Inbox", IsFavorite = true, Type = FolderType.Inbox },
                 new MailFolder() { Id = "folder-02", Name = "Drafts", IsFavorite = true, Type = FolderType.Drafts },
@@ -103,10 +103,10 @@ namespace Observatory.Core.Providers.Fake
                     Id = "message-04",
                     Subject = "Practice Coding with Tree Coordinates",
                     BodyPreview = "Hi Hung, Improve your skills with this challenge recommended for you:",
-                    Sender = new Recipient() 
-                    { 
-                        DisplayName = "no-reply=hackerrankmail.com@postmaster.hackerrankmail.com", 
-                        EmailAddress = "no-reply=hackerrankmail.com@postmaster.hackerrankmail.com" 
+                    Sender = new Recipient()
+                    {
+                        DisplayName = "no-reply=hackerrankmail.com@postmaster.hackerrankmail.com",
+                        EmailAddress = "no-reply=hackerrankmail.com@postmaster.hackerrankmail.com"
                     },
                     ReceivedDateTime = new DateTimeOffset(2020, 9, 27, 11, 0, 0, TimeSpan.FromHours(10)),
                     IsRead = true,
@@ -127,7 +127,7 @@ namespace Observatory.Core.Providers.Fake
             _messageDetails = new List<MessageDetail>();
         }
 
-        public FakeProfileDataQuery(IReadOnlyList<MailFolder> folders, 
+        public FakeProfileDataQuery(IReadOnlyList<MailFolder> folders,
             IReadOnlyList<MessageSummary> messageSummaries,
             IReadOnlyList<MessageDetail> messageDetails)
         {

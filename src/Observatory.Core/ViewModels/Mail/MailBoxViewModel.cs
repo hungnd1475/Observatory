@@ -97,15 +97,15 @@ namespace Observatory.Core.ViewModels.Mail
                 .DisposeWith(_disposables);
 
             Synchronize = ReactiveCommand.CreateFromTask(_mailService.SynchronizeFoldersAsync);
-            Synchronize.WithLatestFrom(folderCollection, (_, folders) => folders.Where(f => f.IsFavorite))
-                .Subscribe(favoriteFolders =>
-                {
-                    foreach (var f in favoriteFolders)
-                    {
-                        f.Synchronize.Execute().Subscribe();
-                    }
-                })
-                .DisposeWith(_disposables);
+            //Synchronize.WithLatestFrom(folderCollection, (_, folders) => folders.Where(f => f.IsFavorite))
+            //    .Subscribe(favoriteFolders =>
+            //    {
+            //        foreach (var f in favoriteFolders)
+            //        {
+            //            f.Synchronize.Execute().Subscribe();
+            //        }
+            //    })
+            //    .DisposeWith(_disposables);
             Synchronize.ThrownExceptions
                 .Subscribe(ex => this.Log().Error(ex))
                 .DisposeWith(_disposables);
