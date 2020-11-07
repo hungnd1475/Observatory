@@ -8,11 +8,19 @@ using System.Text;
 
 namespace Observatory.Core.Virtualization
 {
+    /// <summary>
+    /// Represents a specialized <see cref="IVirtualizingSource{T}"/> that queries messages in a mail folder.
+    /// </summary>
     public class MessageVirtualizingSource : IVirtualizingSource<MessageSummary>
     {
         private readonly IProfileDataQueryFactory _queryFactory;
         private readonly string _folderId;
 
+        /// <summary>
+        /// Constructs in an instance of <see cref="MessageVirtualizingSource"/>.
+        /// </summary>
+        /// <param name="queryFactory">The query factory.</param>
+        /// <param name="folderId">The folder's id where messages are queried.</param>
         public MessageVirtualizingSource(
             IProfileDataQueryFactory queryFactory,
             string folderId)

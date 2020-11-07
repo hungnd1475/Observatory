@@ -54,8 +54,8 @@ namespace Observatory.Core.Virtualization
         /// <returns></returns>
         public bool TryUnion(IndexRange other, ref IndexRange result)
         {
-            if (other.FirstIndex >= FirstIndex && other.FirstIndex <= LastIndex ||
-                FirstIndex >= other.FirstIndex && FirstIndex <= other.LastIndex)
+            if (other.FirstIndex >= FirstIndex && other.FirstIndex <= LastIndex + 1 ||
+                FirstIndex >= other.FirstIndex && FirstIndex <= other.LastIndex + 1)
             {
                 var firstIndex = Math.Min(FirstIndex, other.FirstIndex);
                 var lastIndex = Math.Max(LastIndex, other.LastIndex);
@@ -175,42 +175,6 @@ namespace Observatory.Core.Virtualization
         public static bool operator !=(IndexRange x, IndexRange y)
         {
             return !x.Equals(y);
-        }
-    }
-
-    public static class IndexRangeExtensions
-    {
-        /// <summary>
-        /// Sorts then compacts a given list of ranges.
-        /// </summary>
-        /// <param name="ranges">The ranges.</param>
-        /// <returns></returns>
-        public static IndexRange[] Normalize(this IndexRange[] ranges)
-        {
-            var sortedRanges = ranges.OrderBy(r => r.FirstIndex).ToList();
-            var normalizedRanges = new List<IndexRange>();
-            if (sortedRanges.Count > 0)
-            {
-                var anchor = sortedRanges[0];
-                var index = 1;
-
-                while (true)
-                {
-                    if (index >= sortedRanges.Count)
-                    {
-                        normalizedRanges.Add(anchor);
-                        break;
-                    }
-
-                    var current = sortedRanges[index++];
-                    if (!anchor.TryUnion(current, ref anchor))
-                    {
-                        normalizedRanges.Add(anchor);
-                        anchor = current;
-                    }
-                }
-            }
-            return normalizedRanges.ToArray();
         }
     }
 }

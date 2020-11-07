@@ -15,7 +15,7 @@ namespace Observatory.Core.Virtualization
     public class VirtualizingCacheBlockRequest<T>
     {
         /// <summary>
-        /// Gets the items, exposed as an <see cref="IObservable{T}"/> so that the owner <see cref="VirtualizingCacheBlock{T}"/> 
+        /// Gets the items, exposed as an <see cref="IObservable{T}"/> so that the owning <see cref="VirtualizingCacheBlock{T}"/> 
         /// can subscribe to observe the result when it finished loading.
         /// </summary>
         public IObservable<T[]> WhenItemsLoaded { get; }
@@ -38,8 +38,8 @@ namespace Observatory.Core.Virtualization
         /// <summary>
         /// Constructs an instance of <see cref="VirtualizingCacheBlockRequest{T}"/> that retrieves items from source.
         /// </summary>
-        /// <param name="range">The full range of the items.</param>
-        /// <param name="source">The source where items are fetched from.</param>
+        /// <param name="range">The range of items to be retrieved.</param>
+        /// <param name="source">The source where items are retrieved from.</param>
         public VirtualizingCacheBlockRequest(IndexRange range,
             IVirtualizingSource<T> source)
         {
@@ -52,17 +52,17 @@ namespace Observatory.Core.Virtualization
         /// <summary>
         /// Constructs an instance of <see cref="VirtualizingCacheBlockRequest{T}"/> that gets items from another request.
         /// </summary>
-        /// <param name="fullRange"></param>
-        /// <param name="effectiveRange"></param>
-        /// <param name="whenItemsLoaded"></param>
+        /// <param name="fullRange">The full range of the retrieved items.</param>
+        /// <param name="effectiveRange">The effective range that the owning <see cref="VirtualizingCacheBlock{T}"/> needs.</param>
+        /// <param name="source">The source of items transfered from another request.</param>
         public VirtualizingCacheBlockRequest(IndexRange fullRange,
             IndexRange effectiveRange,
-            IObservable<T[]> whenItemsLoaded)
+            IObservable<T[]> source)
         {
             FullRange = fullRange;
             EffectiveRange = effectiveRange;
             IsReceived = false;
-            WhenItemsLoaded = whenItemsLoaded;
+            WhenItemsLoaded = source;
         }
     }
 }
