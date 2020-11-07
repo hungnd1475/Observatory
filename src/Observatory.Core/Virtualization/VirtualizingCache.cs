@@ -64,8 +64,6 @@ namespace Observatory.Core.Virtualization
                         {
                             b.Subscribe(_cacheObserver);
                         }
-
-                        this.Log().Debug($"Tracking {CurrentBlocks.Length} blocks: {string.Join(",", CurrentBlocks.Select(b => b.Range))}");
                     }
                 })
                 .DisposeWith(_disposables);
@@ -77,7 +75,7 @@ namespace Observatory.Core.Virtualization
                     DeltaState.Add => new VirtualizingCacheSourceChange<T>(c, source.IndexOf(c.Entity), -1),
                     DeltaState.Update => new VirtualizingCacheSourceChange<T>(c, source.IndexOf(c.Entity), IndexOf(c.Entity, itemComparer)),
                     DeltaState.Remove => new VirtualizingCacheSourceChange<T>(c, IndexOf(c.Entity, itemComparer), -1),
-                    _ => throw new NotSupportedException(),
+                    _ => throw new NotSupportedException($"{c.State} is not supported."),
                 }).ToList().AsEnumerable())
                 .Subscribe(changes =>
                 {
@@ -91,7 +89,8 @@ namespace Observatory.Core.Virtualization
                     {
                         b.Subscribe(_cacheObserver);
                     }
-                });
+                })
+                .DisposeWith(_disposables);
 
             Observable.Start(() => source.GetTotalCount(), RxApp.TaskpoolScheduler)
                 .Subscribe(totalCount =>
@@ -177,7 +176,7 @@ namespace Observatory.Core.Virtualization
                 }
                 else
                 {
-                    var (leftDiff, rightDiff) = currentBlocks[i].Range.Diff(newRanges[j]);
+                    var (leftDiff, rightDiff) = currentBlocks[i].Range.Difference(newRanges[j]);
                     if (leftDiff.HasValue)
                     {
                         return true;
@@ -214,7 +213,7 @@ namespace Observatory.Core.Virtualization
                 IndexRange? leftDiff, rightDiff = currentBlocks[i].Range;
                 while (j < newRanges.Length && rightDiff.HasValue)
                 {
-                    (leftDiff, rightDiff) = newRanges[j].Diff(rightDiff.Value);
+                    (leftDiff, rightDiff) = newRanges[j].Difference(rightDiff.Value);
                     if (leftDiff.HasValue)
                     {
                         removedRanges.Add(leftDiff.Value);
@@ -261,7 +260,7 @@ namespace Observatory.Core.Virtualization
                 {
                     var oldRange = oldBlocks[i].Range;
                     var intersect = oldRange.Intersect(rightDiff.Value);
-                    (leftDiff, rightDiff) = oldRange.Diff(rightDiff.Value);
+                    (leftDiff, rightDiff) = oldRange.Difference(rightDiff.Value);
 
                     if (intersect.HasValue)
                     {

@@ -8,7 +8,7 @@ namespace Observatory.Core.Virtualization
     /// Defines a contract for implementing an event processor that processes instances of <see cref="IVirtualizingCacheEvent{T}"/>.
     /// </summary>
     /// <typeparam name="T">The type of the items held by the cache that produces instances of <see cref="IVirtualizingCacheEvent{T}"/>.</typeparam>
-    /// <typeparam name="R">The type of result returned after being processed.</typeparam>
+    /// <typeparam name="R">The type of result returned after event is processed.</typeparam>
     public interface IVirtualizingCacheEventProcessor<T, R>
     {
         R Process(VirtualizingCacheInitializedEvent<T> e);

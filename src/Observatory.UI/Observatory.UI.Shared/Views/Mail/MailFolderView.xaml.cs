@@ -44,7 +44,7 @@ namespace Observatory.UI.Views.Mail
             {
                 this.WhenAnyValue(x => x.ViewModel)
                     .Where(vm => vm != null)
-                    .SelectMany(vm => vm.WhenAnyValue(x => x.Messages).Select(messages => (ViewModel: vm, Messages: messages)))
+                    .SelectMany(vm => vm.WhenAnyValue(x => x.Messages).Where(m => m != null).Select(messages => (ViewModel: vm, Messages: messages)))
                     .Select(x => new VirtualizingList<MessageSummary, MessageSummaryViewModel>(x.Messages, x.ViewModel.Transform))
                     .Subscribe(source =>
                     {

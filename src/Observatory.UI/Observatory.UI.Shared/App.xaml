@@ -7,10 +7,6 @@
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls"/>
-        <ResourceDictionary>
-          <CornerRadius x:Key="OverlayCornerRadius">0</CornerRadius>
-          <CornerRadius x:Key="ControlCornerRadius">0</CornerRadius>
-        </ResourceDictionary>
       </ResourceDictionary.MergedDictionaries>
 
       <converters:BoolNegationConverter x:Key="BoolNegationConverter"/>
@@ -28,7 +24,7 @@
       <x:String x:Key="ReplyAllGlyph">M 1.3548265,2.7888114 1.1067798,3.0368581 -0.42835346,1.5017247 1.1067798,-0.03340869 1.3548265,0.21463791 0.07147374,1.5011834 c 0.42676714,0.4302202 0.8553885,0.8585991 1.28335276,1.287628 z M 3.1710803,1.325336 q 0.3527775,0 0.6752382,0.1322916 0.3224607,0.1322915 0.5732634,0.3830943 0.2508028,0.2508028 0.3830943,0.5732634 0.1322916,0.3224607 0.1322916,0.6752382 0,0.3665579 -0.1378037,0.6890186 Q 4.6593604,4.0979467 4.4195819,4.3377252 4.1798035,4.5775037 3.8573428,4.7153074 3.5376381,4.8531111 3.1710803,4.8531111 V 4.5003336 q 0.2921438,0 0.5484587,-0.110243 0.256315,-0.112999 0.4464841,-0.3031682 0.1929252,-0.1929252 0.3031682,-0.4492401 0.112999,-0.2563149 0.112999,-0.5484588 0,-0.2921438 -0.112999,-0.5484587 Q 4.3589483,2.2844499 4.1660231,2.0942807 3.975854,1.9013555 3.719539,1.7911126 3.4632241,1.6781135 3.1710803,1.6781135 H 1.305218 L 2.4131598,2.7888114 2.1651131,3.0368581 0.62997984,1.5017247 2.1651131,-0.03340869 2.4131598,0.21463791 1.305218,1.325336 Z</x:String>
 
       <!--  Styles  -->
-      <!--<Style TargetType="Button">
+      <Style TargetType="Button">
         <Setter Property="CornerRadius" Value="0"/>
       </Style>
 
@@ -42,7 +38,15 @@
 
       <Style TargetType="FlyoutPresenter">
         <Setter Property="CornerRadius" Value="0"/>
-      </Style>-->
+      </Style>
+
+      <Style TargetType="CommandBarFlyoutCommandBar">
+        <Setter Property="CornerRadius" Value="0"/>
+      </Style>
+
+      <Style TargetType="CommandBarOverflowPresenter">
+        <Setter Property="CornerRadius" Value="0"/>
+      </Style>
 
       <Style x:Key="NavigationPaneButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>

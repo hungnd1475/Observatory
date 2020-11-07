@@ -14,7 +14,7 @@ namespace Observatory.Core.Virtualization
         /// Given an instance of <see cref="IVirtualizingCacheEventProcessor{T, R}"/>, processes the event and returns the result.
         /// </summary>
         /// <typeparam name="R">The type of result.</typeparam>
-        /// <param name="processor">The processor that know how to processes the event.</param>
+        /// <param name="processor">The processor that knows how to process the event.</param>
         /// <returns></returns>
         R Process<R>(IVirtualizingCacheEventProcessor<T, R> processor);
     }

@@ -40,7 +40,6 @@
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)UIModule.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Virtualizing\VirtualizingList.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Virtualizing\VirtualizingListBlock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Virtualizing\VirtualizingPlaceholder.cs" />
   </ItemGroup>
   <ItemGroup>

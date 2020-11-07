@@ -23,7 +23,7 @@ namespace Observatory.UI.Controls
         protected override void PrepareContainerForItemOverride(DependencyObject element, object item)
         {
             base.PrepareContainerForItemOverride(element, item);
-            ((MessageListViewItem)element).Prepare((MessageSummaryViewModel)item);
+            ((MessageListViewItem)element).Prepare(item as MessageSummaryViewModel);
         }
     }
 }

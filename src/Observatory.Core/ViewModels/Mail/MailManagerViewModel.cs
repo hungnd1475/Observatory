@@ -62,6 +62,16 @@ namespace Observatory.Core.ViewModels.Mail
                 .SelectMany(p => p.WhenAnyValue(x => x.MailBox.Inbox))
                 .Subscribe(f => SelectedFolder = f)
                 .DisposeWith(_disposables);
+
+            this.WhenAnyValue(x => x.SelectedFolder)
+                .DistinctUntilChanged()
+                .Buffer(2, 1)
+                .Select(x => (Previous: x[0], Current: x[1]))
+                .Subscribe(x =>
+                {
+                    x.Previous?.ClearMessages();
+                    x.Current?.InitializeMessages();
+                });
         }
 
         public void Dispose()

@@ -89,13 +89,6 @@ namespace Observatory.Core.ViewModels.Mail
                 })
                 .DisposeWith(_disposables);
 
-            Messages = new VirtualizingCache<MessageSummary>(
-                new MessageVirtualizingSource(_queryFactory, _folderId),
-                _mailService.MessageChanges
-                    .Where(d => d.FolderId == _folderId)
-                    .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray()),
-                new MessageSummaryEqualityComparer());
-
             Synchronize = ReactiveCommand.CreateFromObservable(() => Observable
                 .StartAsync((token) => _mailService.SynchronizeMessagesAsync(_folderId, token))
                 .TakeUntil(CancelSynchronization));
@@ -126,6 +119,22 @@ namespace Observatory.Core.ViewModels.Mail
                 var totalCount = query.MessageSummaries.Count(m => m.FolderId == _folderId);
                 return (UnreadCount: unreadCount, TotalCount: totalCount);
             }, RxApp.TaskpoolScheduler);
+        }
+
+        public void InitializeMessages()
+        {
+            Messages = new VirtualizingCache<MessageSummary>(
+                new MessageVirtualizingSource(_queryFactory, _folderId),
+                _mailService.MessageChanges
+                    .Where(d => d.FolderId == _folderId)
+                    .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray()),
+                new MessageSummaryEqualityComparer());
+        }
+
+        public void ClearMessages()
+        {
+            Messages?.Dispose();
+            Messages = null;
         }
 
         public void Dispose()

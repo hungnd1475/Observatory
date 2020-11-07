@@ -2,6 +2,7 @@
 using Observatory.Core.Persistence;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using Splat;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -21,7 +22,7 @@ namespace Observatory.Core.ViewModels.Mail
 
         private readonly IProfileDataQueryFactory _queryFactory;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
-        private readonly MessageDetailViewModel _detail;
+        private readonly Lazy<MessageDetailViewModel> _detail;
 
         public string Subject { get; private set; }
 
@@ -51,14 +52,7 @@ namespace Observatory.Core.ViewModels.Mail
         [ObservableAsProperty]
         public bool IsTogglingFlag { get; }
 
-        public MessageDetailViewModel Detail
-        {
-            get
-            {
-                _detail.LoadIfUninitialized();
-                return _detail;
-            }
-        }
+        public MessageDetailViewModel Detail => _detail.Value;
 
         public ReactiveCommand<Unit, Unit> LoadDetailCommand { get; }
 
@@ -79,7 +73,7 @@ namespace Observatory.Core.ViewModels.Mail
         public MessageSummaryViewModel(MessageSummary state, IProfileDataQueryFactory queryFactory)
         {
             _queryFactory = queryFactory;
-            _detail = new MessageDetailViewModel(state, queryFactory);
+            _detail = new Lazy<MessageDetailViewModel>(() => new MessageDetailViewModel(state, queryFactory));
 
             Subject = state.Subject;
             IsRead = state.IsRead;
@@ -132,7 +126,10 @@ namespace Observatory.Core.ViewModels.Mail
         public void Dispose()
         {
             _disposables.Dispose();
-            _detail.Dispose();
+            if (_detail.IsValueCreated)
+            {
+                _detail.Value.Dispose();
+            }
         }
     }
 }

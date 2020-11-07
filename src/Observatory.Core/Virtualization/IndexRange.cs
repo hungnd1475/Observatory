@@ -70,7 +70,7 @@ namespace Observatory.Core.Virtualization
         /// </summary>
         /// <param name="other">The other range.</param>
         /// <returns></returns>
-        public (IndexRange? Left, IndexRange? Right) Diff(IndexRange other)
+        public (IndexRange? Left, IndexRange? Right) Difference(IndexRange other)
         {
             IndexRange? left = null, right = null;
             if (FirstIndex > other.FirstIndex)

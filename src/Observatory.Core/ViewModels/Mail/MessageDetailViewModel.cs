@@ -94,29 +94,24 @@ namespace Observatory.Core.ViewModels.Mail
             FormattedReceivedDateTime = FormatReceivedDateTime(summary.ReceivedDateTime);
             Body = "";
             BodyType = ContentType.Html;
-        }
+            IsLoading = true;
 
-        public void LoadIfUninitialized()
-        {
-            if (_loadSubscription == null)
+            Observable.Start(() =>
             {
-                IsLoading = true;
-                _loadSubscription = Observable.Start(() =>
+                using var query = _queryFactory.Connect();
+                return query.MessageDetails.FirstOrDefault(m => m.Id == _id && m.FolderId == _folderId);
+            }, RxApp.TaskpoolScheduler)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(r =>
+            {
+                if (r != null)
                 {
-                    using var query = _queryFactory.Connect();
-                    return query.MessageDetails.FirstOrDefault(m => m.Id == _id && m.FolderId == _folderId);
-                }, RxApp.TaskpoolScheduler)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(r =>
-                {
-                    if (r != null)
-                    {
-                        Body = r.Body;
-                        BodyType = r.BodyType;
-                    }
-                    IsLoading = false;
-                });
-            }
+                    Body = r.Body;
+                    BodyType = r.BodyType;
+                }
+                IsLoading = false;
+            })
+            .DisposeWith(_disposables);
         }
 
         private string FormatRecipient(Recipient recipient, bool isFull)
