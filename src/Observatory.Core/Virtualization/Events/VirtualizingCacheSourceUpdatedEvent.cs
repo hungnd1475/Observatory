@@ -17,12 +17,19 @@ namespace Observatory.Core.Virtualization
         public IEnumerable<VirtualizingCacheSourceChange<T>> Changes { get; }
 
         /// <summary>
+        /// Gets the new total number of items in the source.
+        /// </summary>
+        public int TotalCount { get; }
+
+        /// <summary>
         /// Constructs an instance of <see cref="VirtualizingCacheSourceUpdatedEvent{T}"/>.
         /// </summary>
         /// <param name="changes"></param>
-        public VirtualizingCacheSourceUpdatedEvent(IEnumerable<VirtualizingCacheSourceChange<T>> changes)
+        public VirtualizingCacheSourceUpdatedEvent(IEnumerable<VirtualizingCacheSourceChange<T>> changes,
+            int totalCount)
         {
             Changes = changes;
+            TotalCount = totalCount;
         }
 
         public R Process<R>(IVirtualizingCacheEventProcessor<T, R> processor)

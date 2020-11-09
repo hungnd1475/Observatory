@@ -11,17 +11,17 @@ namespace Observatory.Core.Virtualization
     public class VirtualizingCacheRangesUpdatedEvent<T> : IVirtualizingCacheEvent<T>
     {
         /// <summary>
-        /// Gets the ranges that are no longer needed.
+        /// Gets the ranges and items that are discarded.
         /// </summary>
-        public IndexRange[] RemovedRanges { get; }
+        public (IndexRange Range, T[] Items)[] Removals { get; }
 
         /// <summary>
         /// Constructs an instance of <see cref="VirtualizingCacheRangesUpdatedEvent{T}"/>.
         /// </summary>
-        /// <param name="removedRanges"></param>
-        public VirtualizingCacheRangesUpdatedEvent(IndexRange[] removedRanges)
+        /// <param name="removals"></param>
+        public VirtualizingCacheRangesUpdatedEvent((IndexRange, T[])[] removals)
         {
-            RemovedRanges = removedRanges;
+            Removals = removals;
         }
 
         public R Process<R>(IVirtualizingCacheEventProcessor<T, R> processor)

@@ -132,6 +132,22 @@ namespace Observatory.Core.Virtualization
             return index >= FirstIndex && index <= LastIndex;
         }
 
+        /// <summary>
+        /// Slices an array described by the range based on a given subrange.
+        /// </summary>
+        /// <typeparam name="T">The type of items in the array.</typeparam>
+        /// <param name="array">The array to be sliced.</param>
+        /// <param name="subrange">The subrange.</param>
+        /// <returns>A <see cref="Span{T}"/> holding the slice.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public Span<T> Slice<T>(T[] array, IndexRange subrange)
+        {
+            if (!Covers(subrange)) throw new ArgumentOutOfRangeException(nameof(subrange));
+            if (array.Length != Length) throw new ArgumentException("The given array does not have a matched length.");
+
+            return array.AsSpan(subrange.FirstIndex - FirstIndex, subrange.Length);
+        }
+
         public override string ToString()
         {
             return $"{FirstIndex}->{LastIndex}";

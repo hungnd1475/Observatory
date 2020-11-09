@@ -6,7 +6,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -14,29 +13,23 @@ using Windows.UI.Xaml.Data;
 
 namespace Observatory.UI.Virtualizing
 {
-    public class VirtualizingList<TSource, TTarget> : IList, INotifyCollectionChanged, IItemsRangeInfo, IEnableLogger, 
+    public class VirtualizingList<TSource, TTarget> : IList, INotifyCollectionChanged, IItemsRangeInfo, IEnableLogger,
         IVirtualizingCacheEventProcessor<TSource, IEnumerable<NotifyCollectionChangedEventArgs>>
+        where TSource : class
+        where TTarget : class
     {
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
         private readonly Func<TSource, TTarget> _targetFactory;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly VirtualizingCache<TSource> _sourceCache;
-        private readonly Dictionary<int, TTarget> _targetCache = new Dictionary<int, TTarget>();
+        private readonly Dictionary<TSource, TTarget> _targetCache = new Dictionary<TSource, TTarget>();
 
         public VirtualizingList(VirtualizingCache<TSource> sourceCache,
             Func<TSource, TTarget> targetFactory)
         {
             _sourceCache = sourceCache;
             _targetFactory = targetFactory;
-
-            foreach (var b in _sourceCache.CurrentBlocks)
-            {
-                foreach (var index in b.Range)
-                {
-                    _targetCache.Add(index, targetFactory.Invoke(b[index]));
-                }
-            }
 
             _sourceCache.WhenCacheChanged
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -49,10 +42,6 @@ namespace Observatory.UI.Virtualizing
                         CollectionChanged?.Invoke(this, e);
                     }
                 })
-                .DisposeWith(_disposables);
-            _sourceCache.WhenCountChanged
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(count => Count = count)
                 .DisposeWith(_disposables);
         }
 
@@ -67,7 +56,7 @@ namespace Observatory.UI.Virtualizing
             {
                 if (ReferenceEquals(entry.Value, item))
                 {
-                    return entry.Key;
+                    return _sourceCache.IndexOf(entry.Key);
                 }
             }
             return -1;
@@ -87,40 +76,47 @@ namespace Observatory.UI.Virtualizing
 
         public IEnumerable<NotifyCollectionChangedEventArgs> Process(VirtualizingCacheInitializedEvent<TSource> e)
         {
+            Count = e.TotalCount;
             yield return new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
         }
 
         public IEnumerable<NotifyCollectionChangedEventArgs> Process(VirtualizingCacheItemsLoadedEvent<TSource> e)
         {
+            var events = new List<NotifyCollectionChangedEventArgs>(e.Range.Length);
+            var count = 0;
             foreach (var index in e.Range)
             {
-                if (_targetCache.ContainsKey(index))
-                {
-                    (_targetCache[index] as IDisposable)?.Dispose();
-                }
-                _targetCache[index] = _targetFactory.Invoke(e.Block[index]);
+                count += 1;
+                var source = e.Block[index];
+                var target = _targetFactory(source);
+                _targetCache[source] = target;
+                events.Add(new NotifyCollectionChangedEventArgs(
+                    NotifyCollectionChangedAction.Replace, target,
+                    new VirtualizingPlaceholder(index), index));
             }
-
-            return e.Range.Select(index => new NotifyCollectionChangedEventArgs(
-                NotifyCollectionChangedAction.Replace, e.Block[index],
-                new VirtualizingPlaceholder(index), index)).ToList();
+            this.Log().Debug($"Loaded {count} items.");
+            return events;
         }
 
         public IEnumerable<NotifyCollectionChangedEventArgs> Process(VirtualizingCacheRangesUpdatedEvent<TSource> e)
         {
-            foreach (var index in e.RemovedRanges.SelectMany(r => r))
+            var count = 0;
+            foreach (var source in e.Removals.SelectMany(r => r.Items))
             {
-                if (_targetCache.ContainsKey(index))
+                if (_targetCache.ContainsKey(source))
                 {
-                    (_targetCache[index] as IDisposable)?.Dispose();
-                    _targetCache.Remove(index);
+                    count += 1;
+                    (_targetCache[source] as IDisposable)?.Dispose();
+                    _targetCache.Remove(source);
                 }
             }
+            this.Log().Debug($"Disposed {count} items.");
             return Enumerable.Empty<NotifyCollectionChangedEventArgs>();
         }
 
         public IEnumerable<NotifyCollectionChangedEventArgs> Process(VirtualizingCacheSourceUpdatedEvent<TSource> e)
         {
+            Count = e.TotalCount;
             return e.Changes.Select(c => c.Change.State switch
             {
                 DeltaState.Add => new NotifyCollectionChangedEventArgs(
@@ -158,7 +154,11 @@ namespace Observatory.UI.Virtualizing
 
         public object this[int index]
         {
-            get => _targetCache.ContainsKey(index) ? _targetCache[index] : default;
+            get
+            {
+                var source = _sourceCache[index];
+                return source != null ? _targetCache[source] : null;
+            }
             set => throw new NotSupportedException();
         }
 

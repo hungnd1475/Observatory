@@ -10,6 +10,20 @@ namespace Observatory.Core.Virtualization
     /// <typeparam name="T">The type of items the cache holds.</typeparam>
     public class VirtualizingCacheInitializedEvent<T> : IVirtualizingCacheEvent<T>
     {
+        /// <summary>
+        /// Gets the total number of items in the source.
+        /// </summary>
+        public int TotalCount { get; }
+
+        /// <summary>
+        /// Constructs an instance of <see cref="VirtualizingCacheInitializedEvent{T}"/>.
+        /// </summary>
+        /// <param name="totalCount">The total number of items in the source.</param>
+        public VirtualizingCacheInitializedEvent(int totalCount)
+        {
+            TotalCount = totalCount;
+        }
+
         public TResult Process<TResult>(IVirtualizingCacheEventProcessor<T, TResult> processor)
         {
             return processor.Process(this);
