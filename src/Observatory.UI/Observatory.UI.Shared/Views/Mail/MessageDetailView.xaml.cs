@@ -23,10 +23,10 @@ using Windows.UI.Xaml.Navigation;
 
 namespace Observatory.UI.Views.Mail
 {
-    public sealed partial class MessageView : UserControl, IViewFor<MessageDetailViewModel>
+    public sealed partial class MessageDetailView : UserControl, IViewFor<MessageDetailViewModel>
     {
         public static DependencyProperty ViewModelProperty { get; } =
-            DependencyProperty.Register(nameof(ViewModel), typeof(MessageDetailViewModel), typeof(MessageView), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(ViewModel), typeof(MessageDetailViewModel), typeof(MessageDetailView), new PropertyMetadata(null));
 
         public MessageDetailViewModel ViewModel
         {
@@ -40,7 +40,7 @@ namespace Observatory.UI.Views.Mail
             set => ViewModel = (MessageDetailViewModel)value;
         }
 
-        public MessageView()
+        public MessageDetailView()
         {
             this.InitializeComponent();
             this.WhenActivated(disposables =>

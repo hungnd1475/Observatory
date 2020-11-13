@@ -1,21 +1,19 @@
 ﻿using Observatory.Core.Models;
 using Observatory.Core.Persistence;
+using Observatory.Core.Virtualization;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using Splat;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Observatory.Core.ViewModels.Mail
 {
-    public class MessageSummaryViewModel : ReactiveObject, IDisposable
+    public class MessageSummaryViewModel : ReactiveObject, IVirtualizable<MessageSummary>, IDisposable
     {
         private static readonly Regex NEWLINE_PATTERN = new Regex("\\r?\n|\u200B|\u200C|\u200D", RegexOptions.Compiled);
         private static readonly Regex SPACES_PATTERN = new Regex("\\s\\s+", RegexOptions.Compiled);
@@ -24,29 +22,40 @@ namespace Observatory.Core.ViewModels.Mail
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly Lazy<MessageDetailViewModel> _detail;
 
+        [Reactive]
         public string Subject { get; private set; }
 
+        [Reactive]
         public string Preview { get; private set; }
 
+        [Reactive]
         public string Correspondents { get; private set; }
 
+        [Reactive]
         public DateTimeOffset ReceivedDateTime { get; private set; }
 
+        [Reactive]
         public string FormattedReceivedDateTime { get; private set; }
 
+        [Reactive]
         public bool IsRead { get; private set; }
 
+        [Reactive]
         public Importance Importance { get; private set; }
 
+        [Reactive]
         public bool HasAttachments { get; private set; }
 
         [Reactive]
         public bool IsFlagged { get; set; }
 
+        [Reactive]
         public bool IsDraft { get; private set; }
 
+        [Reactive]
         public string ThreadId { get; private set; }
 
+        [Reactive]
         public int ThreadPosition { get; private set; }
 
         [ObservableAsProperty]
@@ -74,7 +83,25 @@ namespace Observatory.Core.ViewModels.Mail
         {
             _queryFactory = queryFactory;
             _detail = new Lazy<MessageDetailViewModel>(() => new MessageDetailViewModel(state, queryFactory));
+            Refresh(state);
 
+            ToggleFlagCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                await Task.Delay(200);
+                IsFlagged = !IsFlagged;
+            });
+            ToggleFlagCommand.IsExecuting
+                .ToPropertyEx(this, x => x.IsTogglingFlag)
+                .DisposeWith(_disposables);
+
+            ArchiveCommand = ReactiveCommand.CreateFromTask(() =>
+            {
+                return Task.Delay(500);
+            });
+        }
+
+        public void Refresh(MessageSummary state)
+        {
             Subject = state.Subject;
             IsRead = state.IsRead;
             Importance = state.Importance;
@@ -90,19 +117,10 @@ namespace Observatory.Core.ViewModels.Mail
             ReceivedDateTime = state.ReceivedDateTime;
             FormattedReceivedDateTime = FormatReceivedDateTime(state.ReceivedDateTime);
 
-            ToggleFlagCommand = ReactiveCommand.CreateFromTask(async () =>
+            if (_detail.IsValueCreated)
             {
-                await Task.Delay(200);
-                IsFlagged = !IsFlagged;
-            });
-            ToggleFlagCommand.IsExecuting
-                .ToPropertyEx(this, x => x.IsTogglingFlag)
-                .DisposeWith(_disposables);
-
-            ArchiveCommand = ReactiveCommand.CreateFromTask(() =>
-            {
-                return Task.Delay(500);
-            });
+                _detail.Value.Refresh(state);
+            }
         }
 
         public string FormatReceivedDateTime(DateTimeOffset receivedDateTime)

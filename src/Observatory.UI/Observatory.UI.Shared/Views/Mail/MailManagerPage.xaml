@@ -553,10 +553,10 @@
             <ColumnDefinition Width="500"/>
             <ColumnDefinition Width="*"/>
           </Grid.ColumnDefinitions>
-          <local:MailFolderView ViewModel="{x:Bind ViewModel.SelectedFolder, Mode=OneWay}"
-                                SelectedMessage="{x:Bind ViewModel.SelectedMessage, Mode=TwoWay}"/>
-          <local:MessageView Grid.Column="1"
-                             ViewModel="{x:Bind ViewModel.SelectedMessage.Detail, Mode=OneWay}"/>
+          <local:MailFolderView SelectedMessage="{x:Bind ViewModel.SelectedMessage, Mode=TwoWay}"
+                                ViewModel="{x:Bind ViewModel.SelectedFolder, Mode=OneWay}"/>
+          <local:MessageDetailView Grid.Column="1"
+                                   ViewModel="{x:Bind ViewModel.SelectedMessage.Detail, Mode=OneWay}"/>
         </Grid>
       </SplitView>
     </SplitView>

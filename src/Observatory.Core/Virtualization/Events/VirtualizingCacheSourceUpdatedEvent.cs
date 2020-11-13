@@ -10,11 +10,17 @@ namespace Observatory.Core.Virtualization
     /// </summary>
     /// <typeparam name="T">The type of items the cache holds.</typeparam>
     public class VirtualizingCacheSourceUpdatedEvent<T> : IVirtualizingCacheEvent<T>
+        where T : class
     {
+        /// <summary>
+        /// Gets the items that are discarded from the cache.
+        /// </summary>
+        public IReadOnlyList<T> DiscardedItems { get; }
+
         /// <summary>
         /// Gets the changes happened to the source.
         /// </summary>
-        public IEnumerable<VirtualizingCacheSourceChange<T>> Changes { get; }
+        public IReadOnlyList<VirtualizingCacheSourceChange<T>> Changes { get; }
 
         /// <summary>
         /// Gets the new total number of items in the source.
@@ -25,9 +31,10 @@ namespace Observatory.Core.Virtualization
         /// Constructs an instance of <see cref="VirtualizingCacheSourceUpdatedEvent{T}"/>.
         /// </summary>
         /// <param name="changes"></param>
-        public VirtualizingCacheSourceUpdatedEvent(IEnumerable<VirtualizingCacheSourceChange<T>> changes,
-            int totalCount)
+        public VirtualizingCacheSourceUpdatedEvent(IReadOnlyList<T> discardedItems,
+            IReadOnlyList<VirtualizingCacheSourceChange<T>> changes, int totalCount)
         {
+            DiscardedItems = discardedItems;
             Changes = changes;
             TotalCount = totalCount;
         }

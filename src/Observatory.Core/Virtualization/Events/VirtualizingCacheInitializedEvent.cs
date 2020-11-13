@@ -9,6 +9,7 @@ namespace Observatory.Core.Virtualization
     /// </summary>
     /// <typeparam name="T">The type of items the cache holds.</typeparam>
     public class VirtualizingCacheInitializedEvent<T> : IVirtualizingCacheEvent<T>
+        where T : class
     {
         /// <summary>
         /// Gets the total number of items in the source.

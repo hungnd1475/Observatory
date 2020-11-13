@@ -140,6 +140,7 @@ namespace Observatory.Core.Virtualization
         /// <param name="subrange">The subrange.</param>
         /// <returns>A <see cref="Span{T}"/> holding the slice.</returns>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         public Span<T> Slice<T>(T[] array, IndexRange subrange)
         {
             if (!Covers(subrange)) throw new ArgumentOutOfRangeException(nameof(subrange));

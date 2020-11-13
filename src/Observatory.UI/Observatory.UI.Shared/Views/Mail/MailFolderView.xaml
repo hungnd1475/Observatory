@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="using:Observatory.UI.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="using:Observatory.UI.Views.Mail"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:models="using:Observatory.Core.Models"
              xmlns:triggers="using:Microsoft.Toolkit.Uwp.UI.Triggers"
@@ -186,8 +187,9 @@
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="controls:MessageListViewItem">
-              <Grid x:Name="ContentGrid"
-                    x:DefaultBindMode="OneWay"
+              <local:MessageSummaryView IsSelected="{TemplateBinding IsSelected}"
+                                        ViewModel="{TemplateBinding ViewModel}"/>
+              <!--<Grid x:Name="ContentGrid"
                     Background="{TemplateBinding Background}"
                     BorderBrush="{TemplateBinding BorderBrush}"
                     BorderThickness="{TemplateBinding BorderThickness}"
@@ -196,7 +198,7 @@
                   <RowDefinition Height="*"/>
                   <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Grid>
+                <Grid x:DefaultBindMode="OneWay">
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="4"/>
                     <ColumnDefinition Width="*"/>
@@ -204,7 +206,7 @@
                   <Rectangle HorizontalAlignment="Stretch"
                              VerticalAlignment="Stretch"
                              Fill="{ThemeResource UnreadColor}"
-                             Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(Message.IsRead), Mode=OneWay}"/>
+                             Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(Message.IsRead)}"/>
                   <Grid Grid.Column="1"
                         Margin="12,8,20,8">
                     <Grid.RowDefinitions>
@@ -218,16 +220,16 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="CorrespondentsText"
                                FontSize="16"
-                               Text="{x:Bind Message.Correspondents, Mode=OneWay}"/>
+                               Text="{x:Bind Message.Correspondents}"/>
                     <StackPanel Grid.Column="1"
                                 HorizontalAlignment="Right"
                                 d:Visibility="Collapsed"
                                 Orientation="Horizontal"
                                 Spacing="3"
-                                Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(IsPointerOver), Mode=OneWay}">
+                                Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(IsPointerOver)}">
                       <FontIcon FontSize="16"
                                 Glyph="&#xE16C;"
-                                Visibility="{x:Bind Message.HasAttachments, Mode=OneWay}"/>
+                                Visibility="{x:Bind Message.HasAttachments}"/>
                       <FontIcon x:Name="ImportanceIcon"
                                 FontSize="16"
                                 Visibility="Collapsed"/>
@@ -235,14 +237,14 @@
                                 FontSize="16"
                                 Foreground="{ThemeResource UnflagIconColor}"
                                 Glyph="&#xE129;"
-                                Visibility="{x:Bind Message.IsFlagged, Mode=OneWay}"/>
+                                Visibility="{x:Bind Message.IsFlagged}"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1"
                                 HorizontalAlignment="Right"
                                 d:Visibility="Visible"
                                 Orientation="Horizontal"
                                 Spacing="3"
-                                Visibility="{x:Bind IsPointerOver, Mode=OneWay}">
+                                Visibility="{x:Bind IsPointerOver}">
                       <Button Command="{x:Bind Message.ArchiveCommand}"
                               Style="{StaticResource MessageListViewItemArchiveButtonStyle}"
                               ToolTipService.ToolTip="Archive this item"/>
@@ -250,24 +252,24 @@
                               Style="{StaticResource MessageListViewItemDeleteButtonStyle}"
                               ToolTipService.ToolTip="Delete this item"/>
                       <controls:OneWayToggleButton x:Name="ToggleFlagButton"
-                                                   Command="{x:Bind Message.ToggleFlagCommand, Mode=OneWay}"
-                                                   IsChecked="{x:Bind Message.IsFlagged, Mode=OneWay}"
+                                                   Command="{x:Bind Message.ToggleFlagCommand}"
+                                                   IsChecked="{x:Bind Message.IsFlagged}"
                                                    Style="{StaticResource MessageListViewItemToggleFlagButtonStyle}"
                                                    ToolTipService.ToolTip="Set flag on this item"/>
                     </StackPanel>
                     <TextBlock x:Name="SubjectText"
                                Grid.Row="1"
-                               Text="{x:Bind Message.Subject, Mode=OneWay}"/>
+                               Text="{x:Bind Message.Subject}"/>
                     <TextBlock Grid.Row="1"
                                Grid.Column="1"
                                Margin="8,0,0,0"
                                FontSize="12"
                                Foreground="{ThemeResource SystemColorGrayTextBrush}"
-                               Text="{x:Bind Message.FormattedReceivedDateTime, Mode=OneWay}"
+                               Text="{x:Bind Message.FormattedReceivedDateTime}"
                                TextAlignment="Right"/>
                     <TextBlock Grid.Row="2"
                                Foreground="{ThemeResource SystemColorGrayTextBrush}"
-                               Text="{x:Bind Message.Preview, Mode=OneWay}"/>
+                               Text="{x:Bind Message.Preview}"/>
                   </Grid>
                 </Grid>
                 <Rectangle Grid.Row="1"
@@ -383,7 +385,7 @@
                     </VisualState>
                   </VisualStateGroup>
                 </VisualStateManager.VisualStateGroups>
-              </Grid>
+              </Grid>-->
             </ControlTemplate>
           </Setter.Value>
         </Setter>

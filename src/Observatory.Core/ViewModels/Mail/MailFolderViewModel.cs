@@ -145,14 +145,7 @@ namespace Observatory.Core.ViewModels.Mail
 
     public class MessageSummaryEqualityComparer : IEqualityComparer<MessageSummary>
     {
-        public bool Equals(MessageSummary x, MessageSummary y)
-        {
-            return x.Id == y.Id;
-        }
-
-        public int GetHashCode(MessageSummary obj)
-        {
-            return obj.GetHashCode();
-        }
+        public bool Equals(MessageSummary x, MessageSummary y) => x.Id == y.Id;
+        public int GetHashCode(MessageSummary obj) => obj.Id.GetHashCode();
     }
 }

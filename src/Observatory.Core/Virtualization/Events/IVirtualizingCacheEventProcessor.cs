@@ -10,6 +10,7 @@ namespace Observatory.Core.Virtualization
     /// <typeparam name="T">The type of the items held by the cache that produces instances of <see cref="IVirtualizingCacheEvent{T}"/>.</typeparam>
     /// <typeparam name="R">The type of result returned after event is processed.</typeparam>
     public interface IVirtualizingCacheEventProcessor<T, R>
+        where T : class
     {
         R Process(VirtualizingCacheInitializedEvent<T> e);
         R Process(VirtualizingCacheItemsLoadedEvent<T> e);

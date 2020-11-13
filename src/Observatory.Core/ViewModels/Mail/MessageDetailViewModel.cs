@@ -19,30 +19,40 @@ namespace Observatory.Core.ViewModels.Mail
     {
         private readonly string _id, _folderId;
         private readonly IProfileDataQueryFactory _queryFactory;
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private IDisposable _loadSubscription = null;
 
-        public string Subject { get; }
+        [Reactive]
+        public string Subject { get; private set; }
 
-        public string Sender { get; }
+        [Reactive]
+        public string Sender { get; private set; }
 
-        public DateTimeOffset ReceivedDateTime { get; }
+        [Reactive]
+        public DateTimeOffset ReceivedDateTime { get; private set; }
 
-        public string FormattedReceivedDateTime { get; }
+        [Reactive]
+        public string FormattedReceivedDateTime { get; private set; }
 
-        public bool IsRead { get; }
+        [Reactive]
+        public bool IsRead { get; private set; }
 
-        public Importance Importance { get; }
+        [Reactive]
+        public Importance Importance { get; private set; }
 
-        public bool HasAttachments { get; }
+        [Reactive]
+        public bool HasAttachments { get; private set; }
 
-        public IReadOnlyList<string> CcRecipients { get; }
+        [Reactive]
+        public IReadOnlyList<string> CcRecipients { get; private set; }
 
-        public IReadOnlyList<string> ToRecipients { get; }
+        [Reactive]
+        public IReadOnlyList<string> ToRecipients { get; private set; }
 
-        public bool IsDraft { get; }
+        [Reactive]
+        public bool IsDraft { get; private set; }
 
-        public bool IsFlagged { get; }
+        [Reactive]
+        public bool IsFlagged { get; private set; }
 
         [Reactive]
         public string Body { get; private set; }
@@ -70,7 +80,29 @@ namespace Observatory.Core.ViewModels.Mail
             _id = summary.Id;
             _folderId = summary.FolderId;
             _queryFactory = queryFactory;
+            Refresh(summary);
+        }
 
+        public void Refresh(MessageSummary summary)
+        {
+            _loadSubscription?.Dispose();
+            _loadSubscription = Observable.Start(() =>
+            {
+                using var query = _queryFactory.Connect();
+                return query.MessageDetails.FirstOrDefault(m => m.Id == _id && m.FolderId == _folderId);
+            }, RxApp.TaskpoolScheduler)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(r =>
+            {
+                if (r != null)
+                {
+                    Body = r.Body;
+                    BodyType = r.BodyType;
+                }
+                IsLoading = false;
+            });
+
+            IsLoading = true;
             Subject = summary.Subject;
             IsRead = summary.IsRead;
             Importance = summary.Importance;
@@ -95,23 +127,6 @@ namespace Observatory.Core.ViewModels.Mail
             Body = "";
             BodyType = ContentType.Html;
             IsLoading = true;
-
-            Observable.Start(() =>
-            {
-                using var query = _queryFactory.Connect();
-                return query.MessageDetails.FirstOrDefault(m => m.Id == _id && m.FolderId == _folderId);
-            }, RxApp.TaskpoolScheduler)
-            .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(r =>
-            {
-                if (r != null)
-                {
-                    Body = r.Body;
-                    BodyType = r.BodyType;
-                }
-                IsLoading = false;
-            })
-            .DisposeWith(_disposables);
         }
 
         private string FormatRecipient(Recipient recipient, bool isFull)
@@ -143,7 +158,6 @@ namespace Observatory.Core.ViewModels.Mail
 
         public void Dispose()
         {
-            _disposables.Dispose();
             _loadSubscription?.Dispose();
         }
     }

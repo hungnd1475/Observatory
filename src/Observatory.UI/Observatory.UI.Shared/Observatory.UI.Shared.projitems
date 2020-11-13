@@ -24,7 +24,6 @@
       <DependentUpon>MailFolderView.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageListView.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageListViewItemButton.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converters.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\Calendar\CalendarManagerPage.xaml.cs">
       <DependentUpon>CalendarManagerPage.xaml</DependentUpon>
@@ -32,8 +31,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Views\Mail\MailManagerPage.xaml.cs">
       <DependentUpon>MailManagerPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)Views\Mail\MessageView.xaml.cs">
-      <DependentUpon>MessageView.xaml</DependentUpon>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\Mail\MessageDetailView.xaml.cs">
+      <DependentUpon>MessageDetailView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\Mail\MessageSummaryView.xaml.cs">
+      <DependentUpon>MessageSummaryView.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -55,7 +57,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="$(MSBuildThisFileDirectory)Views\Mail\MessageView.xaml">
+    <Page Include="$(MSBuildThisFileDirectory)Views\Mail\MessageDetailView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Views\Mail\MessageSummaryView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

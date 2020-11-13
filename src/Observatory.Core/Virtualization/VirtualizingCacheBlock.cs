@@ -14,6 +14,7 @@ namespace Observatory.Core.Virtualization
     /// </summary>
     /// <typeparam name="T">The source type.</typeparam>
     public class VirtualizingCacheBlock<T>
+        where T : class
     {
         private readonly CompositeDisposable _requestSubscriptions = new CompositeDisposable();
         private readonly T[] _items;
