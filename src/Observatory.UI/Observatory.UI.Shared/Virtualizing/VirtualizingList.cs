@@ -14,10 +14,15 @@ using Windows.UI.Xaml.Data;
 
 namespace Observatory.UI.Virtualizing
 {
+    /// <summary>
+    /// Represents a virtualizing list that implements <see cref="IItemsRangeInfo"/>.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the items retrieved from source.</typeparam>
+    /// <typeparam name="TTarget">The type of items displayed on the UI.</typeparam>
     public class VirtualizingList<TSource, TTarget> : IList, INotifyCollectionChanged, IItemsRangeInfo, IEnableLogger,
         IVirtualizingCacheEventProcessor<TSource, IEnumerable<NotifyCollectionChangedEventArgs>>
         where TSource : class
-        where TTarget : class, IVirtualizable<TSource>
+        where TTarget : class, IVirtualizingTarget<TSource>
     {
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
@@ -26,6 +31,11 @@ namespace Observatory.UI.Virtualizing
         private readonly VirtualizingCache<TSource> _sourceCache;
         private readonly Dictionary<TSource, TTarget> _targetCache;
 
+        /// <summary>
+        /// Constructs an instance of <see cref="VirtualizingList{TSource, TTarget}"/>.
+        /// </summary>
+        /// <param name="sourceCache">The cache.</param>
+        /// <param name="targetFactory">The factory function transforming <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.</param>
         public VirtualizingList(VirtualizingCache<TSource> sourceCache,
             Func<TSource, TTarget> targetFactory)
         {
@@ -47,6 +57,11 @@ namespace Observatory.UI.Virtualizing
                 .DisposeWith(_disposables);
         }
 
+        /// <summary>
+        /// Called by the UI to update the ranges of items displayed.
+        /// </summary>
+        /// <param name="visibleRange"></param>
+        /// <param name="trackedItems"></param>
         public void RangesChanged(ItemIndexRange visibleRange, IReadOnlyList<ItemIndexRange> trackedItems)
         {
             _sourceCache.UpdateRanges(trackedItems.Select(i => new IndexRange(i.FirstIndex, i.LastIndex)).ToArray());
@@ -173,23 +188,7 @@ namespace Observatory.UI.Virtualizing
             }
 
             Count = e.TotalCount;
-            //yield return new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
             return events;
-            //return e.Changes.Select(c => c.State switch
-            //{
-            //    DeltaState.Add => new NotifyCollectionChangedEventArgs(
-            //        NotifyCollectionChangedAction.Add, _targetCache[c.CurrentItem], c.CurrentIndex.Value),
-            //    DeltaState.Update => new NotifyCollectionChangedEventArgs(
-            //        NotifyCollectionChangedAction.Reset,
-            //        _targetCache[c.CurrentItem], 
-            //        c.CurrentIndex.Value),
-            //    DeltaState.Remove => new NotifyCollectionChangedEventArgs(
-            //        NotifyCollectionChangedAction.Remove,
-            //        new VirtualizingPlaceholder(c.PreviousIndex.Value), 
-            //        c.PreviousIndex.Value),
-            //    _ => throw new NotSupportedException(),
-            //})
-            //.ToList();
         }
 
         #endregion

@@ -15,9 +15,6 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Observatory.Core.ViewModels.Mail
 {
@@ -82,6 +79,14 @@ namespace Observatory.Core.ViewModels.Mail
                 .Where(d => d.FolderId == _folderId)
                 .SelectMany(_ => CountMessages())
                 .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(x =>
+                {
+                    UnreadCount = x.UnreadCount;
+                    TotalCount = x.TotalCount;
+                })
+                .DisposeWith(_disposables);
+
+            CountMessages()
                 .Subscribe(x =>
                 {
                     UnreadCount = x.UnreadCount;
