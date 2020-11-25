@@ -22,29 +22,29 @@ namespace Observatory.Core.Persistence.Specifications
         {
             _source = source;
         }
-        
-        public int Count(ISpecification<T> specification)
+
+        public int Count<TResult>(ISpecification<T, TResult> specification)
         {
             var query = specification.Apply(_source.AsQueryable());
             return query.Count();
         }
 
-        public T FirstOrDefault(ISpecification<T> specification)
+        public TResult FirstOrDefault<TResult>(ISpecification<T, TResult> specification)
         {
             var query = specification.Apply(_source.AsQueryable());
             return query.FirstOrDefault();
         }
 
-        public T[] ToArray(ISpecification<T> specification)
+        public TResult[] ToArray<TResult>(ISpecification<T, TResult> specification)
         {
             var query = specification.Apply(_source.AsQueryable());
             return query.ToArray();
         }
 
-        public IReadOnlyList<T> ToList(ISpecification<T> specification)
+        public List<TResult> ToList<TResult>(ISpecification<T, TResult> specification)
         {
             var query = specification.Apply(_source.AsQueryable());
-            return query.ToList().AsReadOnly();
+            return query.ToList();
         }
     }
 }

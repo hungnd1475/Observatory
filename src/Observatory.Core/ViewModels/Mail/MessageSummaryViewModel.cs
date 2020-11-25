@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Observatory.Core.ViewModels.Mail
 {
-    public class MessageSummaryViewModel : ReactiveObject, IVirtualizingTarget<MessageSummary>, IDisposable
+    public class MessageSummaryViewModel : ReactiveObject, IVirtualizableTarget<MessageSummary>, IDisposable
     {
         private static readonly Regex NEWLINE_PATTERN = new Regex("\\r?\n|\u200B|\u200C|\u200D", RegexOptions.Compiled);
         private static readonly Regex SPACES_PATTERN = new Regex("\\s\\s+", RegexOptions.Compiled);
@@ -21,6 +21,8 @@ namespace Observatory.Core.ViewModels.Mail
         private readonly IProfileDataQueryFactory _queryFactory;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly Lazy<MessageDetailViewModel> _detail;
+
+        public string Id { get; }
 
         [Reactive]
         public string Subject { get; private set; }
@@ -83,6 +85,8 @@ namespace Observatory.Core.ViewModels.Mail
         {
             _queryFactory = queryFactory;
             _detail = new Lazy<MessageDetailViewModel>(() => new MessageDetailViewModel(state, queryFactory));
+
+            Id = state.Id;
             Refresh(state);
 
             ToggleFlagCommand = ReactiveCommand.CreateFromTask(async () =>

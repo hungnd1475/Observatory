@@ -12,31 +12,31 @@ namespace Observatory.Core.Persistence.Specifications
     public interface ISpecificationQueryable<T>
     {
         /// <summary>
-        /// Returns a list of elements satisfying a given <see cref="ISpecification{T}"/>.
+        /// Returns a list of elements satisfying a given <see cref="ISpecification{TSource, TTarget}"/>.
         /// </summary>
         /// <param name="specification">The specification.</param>
         /// <returns></returns>
-        IReadOnlyList<T> ToList(ISpecification<T> specification);
+        List<TResult> ToList<TResult>(ISpecification<T, TResult> specification);
 
         /// <summary>
-        /// Returns an array of elements satisfying a given <see cref="ISpecification{T}"/>.
+        /// Returns an array of elements satisfying a given <see cref="ISpecification{TSource, TTarget}"/>.
         /// </summary>
         /// <param name="specification">The specification.</param>
         /// <returns></returns>
-        T[] ToArray(ISpecification<T> specification);
+        TResult[] ToArray<TResult>(ISpecification<T, TResult> specification);
 
         /// <summary>
-        /// Returns the first element satisfying a given <see cref=" ISpecification{T}"/>.
+        /// Returns the first element satisfying a given <see cref="ISpecification{TSource, TTarget}"/>.
         /// </summary>
         /// <param name="specification">The specification.</param>
         /// <returns></returns>
-        T FirstOrDefault(ISpecification<T> specification);
+        TResult FirstOrDefault<TResult>(ISpecification<T, TResult> specification);
 
         /// <summary>
-        /// Returns the number of elements satisfying a given <see cref="ISpecification{T}"/>.
+        /// Returns the number of elements satisfying a given <see cref="ISpecification{TSource, TTarget}"/>.
         /// </summary>
         /// <param name="specification"></param>
         /// <returns></returns>
-        int Count(ISpecification<T> specification);
+        int Count<TResult>(ISpecification<T, TResult> specification);
     }
 }

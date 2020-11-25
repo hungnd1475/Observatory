@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 namespace Observatory.Core.Virtualization
 {
     /// <summary>
-    /// Defines a contract for querying a data source by a <see cref="VirtualizingCache{T}"/>.
+    /// Defines a contract for querying a data source by a <see cref="VirtualizingCache{TEntity, TKey}"/>.
     /// </summary>
-    /// <typeparam name="T">The type of items retrieved by the source.</typeparam>
-    public interface IVirtualizingSource<T>
+    /// <typeparam name="TEntity">The type of items retrieved by the source.</typeparam>
+    /// <typeparam name="TKey">THe type of item's keys.</typeparam>
+    public interface IVirtualizingSource<TEntity, TKey>
     {
         /// <summary>
         /// Returns the total number of items in the source.
@@ -23,7 +24,7 @@ namespace Observatory.Core.Virtualization
         /// </summary>
         /// <param name="entity">The item to get the position.</param>
         /// <returns></returns>
-        int IndexOf(T entity);
+        int IndexOf(TEntity entity);
 
         /// <summary>
         /// Returns a range of items starting at a given position.
@@ -31,6 +32,12 @@ namespace Observatory.Core.Virtualization
         /// <param name="startIndex">The starting position.</param>
         /// <param name="maxNumberOfItems">The maximum number of items to retrieved.</param>
         /// <returns></returns>
-        T[] GetItems(int startIndex, int maxNumberOfItems);
+        TEntity[] GetItems(int startIndex, int maxNumberOfItems);
+
+        /// <summary>
+        /// Gets all keys from source.
+        /// </summary>
+        /// <returns></returns>
+        List<TKey> GetAllKeys();
     }
 }

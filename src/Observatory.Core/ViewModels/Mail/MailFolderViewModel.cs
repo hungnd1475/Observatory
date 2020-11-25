@@ -43,7 +43,7 @@ namespace Observatory.Core.ViewModels.Mail
         public ReadOnlyObservableCollection<MailFolderViewModel> ChildFolders => _childFolders;
 
         [Reactive]
-        public VirtualizingCache<MessageSummary> Messages { get; private set; }
+        public VirtualizingCache<MessageSummary, string> Messages { get; private set; }
 
         public ReactiveCommand<Unit, Unit> Synchronize { get; }
 
@@ -87,6 +87,7 @@ namespace Observatory.Core.ViewModels.Mail
                 .DisposeWith(_disposables);
 
             CountMessages()
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x =>
                 {
                     UnreadCount = x.UnreadCount;
@@ -128,12 +129,12 @@ namespace Observatory.Core.ViewModels.Mail
 
         public void InitializeMessages()
         {
-            Messages = new VirtualizingCache<MessageSummary>(
+            Messages = new VirtualizingCache<MessageSummary, string>(
                 new MessageVirtualizingSource(_queryFactory, _folderId),
+                m => m.Id,
                 _mailService.MessageChanges
                     .Where(d => d.FolderId == _folderId)
-                    .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray()),
-                new MessageSummaryEqualityComparer());
+                    .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray()));
         }
 
         public void ClearMessages()

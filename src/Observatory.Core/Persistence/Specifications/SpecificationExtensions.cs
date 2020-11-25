@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Observatory.Core.Persistence.Specifications
 {
@@ -13,48 +11,54 @@ namespace Observatory.Core.Persistence.Specifications
     public static class Specification
     {
         /// <summary>
-        /// Creates a new instance of <see cref="ISpecification{T}"/> by relaying a given specificator function.
+        /// Creates a new instance of <see cref="ISpecification{TSource, TTarget}"/> by relaying to a given specificator function.
         /// </summary>
-        /// <typeparam name="T">The type of the entity.</typeparam>
         /// <param name="specificator">The specificator function.</param>
         /// <returns></returns>
-        public static ISpecification<T> Relay<T>(Func<IQueryable<T>, IQueryable<T>> specificator)
+        public static ISpecification<TSource, TTarget> Relay<TSource, TTarget>(Func<IQueryable<TSource>, IQueryable<TTarget>> specificator)
         {
-            return new RelaySpecification<T>(specificator);
+            return new RelaySpecification<TSource, TTarget>(specificator);
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="ISpecification{T}"/> that returns the exact source queryable.
+        /// Creates a new instance of <see cref="ISpecification{TSource, TTarget}"/> by relaying to a given specificator function.
         /// </summary>
-        /// <typeparam name="T">The type of the entity.</typeparam>
+        /// <param name="specificator">The specificator function.</param>
         /// <returns></returns>
-        public static ISpecification<T> Identity<T>()
+        public static ISpecification<T, T> Relay<T>(Func<IQueryable<T>, IQueryable<T>> specificator) => Relay<T, T>(specificator);
+
+        /// <summary>
+        /// Creates a new instance of <see cref="ISpecification{TSource, TTarget}"/> that returns the exact source queryable.
+        /// </summary>
+        /// <returns></returns>
+        public static ISpecification<T, T> Identity<T>()
         {
             return new IdentitySpecification<T>();
         }
 
         /// <summary>
-        /// Chains with a given instance of <see cref="ISpecification{T}"/> to produce a new instance of <see cref="ISpecification{T}"/>.
+        /// Chains with a given instance of <see cref="ISpecification{TSource, TTarget}"/> to produce a new 
+        /// instance of <see cref="ISpecification{TSource, TTarget}"/>.
         /// </summary>
-        /// <typeparam name="T">The type of the entity.</typeparam>
-        /// <param name="previous">The previous <see cref="ISpecification{T}"/>.</param>
-        /// <param name="next">The next <see cref="ISpecification{T}"/>.</param>
+        /// <param name="previous">The previous specification to be chained.</param>
+        /// <param name="next">The next specification to chain.</param>
         /// <returns></returns>
-        public static ISpecification<T> Chain<T>(this ISpecification<T> previous, ISpecification<T> next)
+        public static ISpecification<TSource, TTarget> Chain<TSource, TIntermediate, TTarget>(this ISpecification<TSource, TIntermediate> previous,
+            ISpecification<TIntermediate, TTarget> next)
         {
-            return new RelaySpecification<T>(q => next.Apply(previous.Apply(q)));
+            return new RelaySpecification<TSource, TTarget>(q => next.Apply(previous.Apply(q)));
         }
 
         /// <summary>
-        /// Chains with a given specificator function to produce a new instance of <see cref="ISpecification{T}"/>.
+        /// Chains with a given specificator function to produce a new instance of <see cref="ISpecification{TSource, TTarget}"/>.
         /// </summary>
-        /// <typeparam name="T">The type of the entity.</typeparam>
-        /// <param name="previous">The previous <see cref="ISpecification{T}"/>.</param>
+        /// <param name="previous">The previous specification to be chained.</param>
         /// <param name="specificator">The specificator function.</param>
         /// <returns></returns>
-        public static ISpecification<T> Chain<T>(this ISpecification<T> previous, Func<IQueryable<T>, IQueryable<T>> specificator)
+        public static ISpecification<TSource, TTarget> Chain<TSource, TIntermediate, TTarget>(this ISpecification<TSource, TIntermediate> previous,
+            Func<IQueryable<TIntermediate>, IQueryable<TTarget>> specificator)
         {
-            return new RelaySpecification<T>(q => specificator(previous.Apply(q)));
+            return new RelaySpecification<TSource, TTarget>(q => specificator(previous.Apply(q)));
         }
 
         /// <summary>
@@ -63,7 +67,7 @@ namespace Observatory.Core.Persistence.Specifications
         /// <typeparam name="T">The entity type.</typeparam>
         /// <param name="queryable">The queryable.</param>
         /// <returns></returns>
-        public static IReadOnlyList<T> ToList<T>(this ISpecificationQueryable<T> queryable)
+        public static List<T> ToList<T>(this ISpecificationQueryable<T> queryable)
         {
             return queryable.ToList(Identity<T>());
         }
@@ -75,10 +79,10 @@ namespace Observatory.Core.Persistence.Specifications
         /// <param name="queryable">The queryable.</param>
         /// <param name="predicate">The predicate to filter the elements.</param>
         /// <returns></returns>
-        public static IReadOnlyList<T> ToList<T>(this ISpecificationQueryable<T> queryable,
+        public static List<T> ToList<T>(this ISpecificationQueryable<T> queryable,
             Expression<Func<T, bool>> predicate)
         {
-            return queryable.ToList(Relay<T>(q => q.Where(predicate)));
+            return queryable.ToList(Relay<T, T>(q => q.Where(predicate)));
         }
 
         /// <summary>
@@ -102,7 +106,7 @@ namespace Observatory.Core.Persistence.Specifications
         public static int Count<T>(this ISpecificationQueryable<T> queryable,
             Expression<Func<T, bool>> predicate)
         {
-            return queryable.Count(Relay<T>(q => q.Where(predicate)));
+            return queryable.Count(Relay<T, T>(q => q.Where(predicate)));
         }
 
         /// <summary>
@@ -126,7 +130,7 @@ namespace Observatory.Core.Persistence.Specifications
         public static T FirstOrDefault<T>(this ISpecificationQueryable<T> queryable,
             Expression<Func<T, bool>> predicate)
         {
-            return queryable.FirstOrDefault(Relay<T>(q => q.Where(predicate)));
+            return queryable.FirstOrDefault(Relay<T, T>(q => q.Where(predicate)));
         }
     }
 }

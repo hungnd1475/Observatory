@@ -19,29 +19,34 @@ namespace Observatory.UI.Virtualizing
     /// </summary>
     /// <typeparam name="TSource">The type of the items retrieved from source.</typeparam>
     /// <typeparam name="TTarget">The type of items displayed on the UI.</typeparam>
-    public class VirtualizingList<TSource, TTarget> : IList, INotifyCollectionChanged, IItemsRangeInfo, IEnableLogger,
+    /// <typeparam name="TKey">The type of key of both <typeparamref name="TSource"/> and <typeparamref name="TTarget"/>.</typeparam>
+    public class VirtualizingList<TSource, TTarget, TKey> : IList, INotifyCollectionChanged, IItemsRangeInfo, IEnableLogger,
         IVirtualizingCacheEventProcessor<TSource, IEnumerable<NotifyCollectionChangedEventArgs>>
         where TSource : class
-        where TTarget : class, IVirtualizingTarget<TSource>
+        where TTarget : class, IVirtualizableTarget<TSource>
+        where TKey : IEquatable<TKey>
     {
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
-        private readonly Func<TSource, TTarget> _targetFactory;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
-        private readonly VirtualizingCache<TSource> _sourceCache;
-        private readonly Dictionary<TSource, TTarget> _targetCache;
+        private readonly VirtualizingCache<TSource, TKey> _sourceCache;
+        private readonly Dictionary<TKey, TTarget> _targetCache;
+        private readonly Func<TSource, TTarget> _targetFactory;
+        private readonly Func<TTarget, TKey> _keySelector;
 
         /// <summary>
         /// Constructs an instance of <see cref="VirtualizingList{TSource, TTarget}"/>.
         /// </summary>
         /// <param name="sourceCache">The cache.</param>
         /// <param name="targetFactory">The factory function transforming <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.</param>
-        public VirtualizingList(VirtualizingCache<TSource> sourceCache,
-            Func<TSource, TTarget> targetFactory)
+        public VirtualizingList(VirtualizingCache<TSource, TKey> sourceCache,
+            Func<TSource, TTarget> targetFactory,
+            Func<TTarget, TKey> keySelector)
         {
             _sourceCache = sourceCache;
-            _targetCache = new Dictionary<TSource, TTarget>(sourceCache.ItemComparer);
+            _targetCache = new Dictionary<TKey, TTarget>();
             _targetFactory = targetFactory;
+            _keySelector = keySelector;
 
             _sourceCache.WhenCacheChanged
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -55,6 +60,8 @@ namespace Observatory.UI.Virtualizing
                     }
                 })
                 .DisposeWith(_disposables);
+
+            _sourceCache.Initialize();
         }
 
         /// <summary>
@@ -69,14 +76,8 @@ namespace Observatory.UI.Virtualizing
 
         private int IndexOf(TTarget item)
         {
-            foreach (var entry in _targetCache)
-            {
-                if (ReferenceEquals(entry.Value, item))
-                {
-                    return _sourceCache.IndexOf(entry.Key, _sourceCache.ItemComparer);
-                }
-            }
-            return -1;
+            var key = _keySelector(item);
+            return _sourceCache.IndexOf(key);
         }
 
         public void Dispose()
@@ -104,7 +105,7 @@ namespace Observatory.UI.Virtualizing
             {
                 var source = e.Block[index];
                 var target = _targetFactory(source);
-                _targetCache[source] = target;
+                _targetCache[_sourceCache.KeyOf(source)] = target;
                 events.Add(new NotifyCollectionChangedEventArgs(
                     NotifyCollectionChangedAction.Replace, target,
                     new VirtualizingPlaceholder(index), index));
@@ -114,12 +115,13 @@ namespace Observatory.UI.Virtualizing
 
         public IEnumerable<NotifyCollectionChangedEventArgs> Process(VirtualizingCacheRangesUpdatedEvent<TSource> e)
         {
-            foreach (var source in e.DiscardedItems)
+            foreach (var source in e.DiscardedItems.Where(i => i != null))
             {
-                if (_targetCache.ContainsKey(source))
+                var key = _sourceCache.KeyOf(source);
+                if (_targetCache.ContainsKey(key))
                 {
-                    (_targetCache[source] as IDisposable)?.Dispose();
-                    _targetCache.Remove(source);
+                    (_targetCache[key] as IDisposable)?.Dispose();
+                    _targetCache.Remove(key);
                 }
             }
             return Enumerable.Empty<NotifyCollectionChangedEventArgs>();
@@ -130,60 +132,68 @@ namespace Observatory.UI.Virtualizing
             var events = new List<NotifyCollectionChangedEventArgs>(e.Changes.Count);
             foreach (var c in e.Changes)
             {
+                TKey key;
                 switch (c.State)
                 {
                     case DeltaState.Add:
-                        _targetCache[c.CurrentItem] = _targetFactory(c.CurrentItem);
+                        key = _sourceCache.KeyOf(c.CurrentItem);
+                        _targetCache[key] = _targetFactory(c.CurrentItem);
                         events.Add(new NotifyCollectionChangedEventArgs(
                             NotifyCollectionChangedAction.Add,
-                            _targetCache[c.CurrentItem],
+                            _targetCache[key],
                             c.CurrentIndex.Value));
                         break;
                     case DeltaState.Update:
+                        key = _sourceCache.KeyOf(c.CurrentItem);
+                        if (_targetCache.TryGetValue(key, out var target))
                         {
-                            if (_targetCache.TryGetValue(c.PreviousItem, out var target))
+                            RxApp.MainThreadScheduler.Schedule(target, (scheduler, target) =>
                             {
-                                _targetCache.Remove(c.PreviousItem);
-                                _targetCache[c.CurrentItem] = target;
-                                RxApp.MainThreadScheduler.Schedule(target, (scheduler, target) =>
-                                {
-                                    target.Refresh(c.CurrentItem);
-                                    return Disposable.Empty;
-                                });
-                            }                            
-
-                            if (c.PreviousIndex.Value != c.CurrentIndex.Value)
-                            {
-                                events.Add(new NotifyCollectionChangedEventArgs(
-                                    NotifyCollectionChangedAction.Move,
-                                    _targetCache[c.CurrentItem],
-                                    c.CurrentIndex.Value,
-                                    c.PreviousIndex.Value));
-                            }
+                                target.Refresh(c.CurrentItem);
+                                return Disposable.Empty;
+                            });
+                        }
+                        if (c.PreviousIndex.Value != c.CurrentIndex.Value)
+                        {
+                            events.Add(new NotifyCollectionChangedEventArgs(
+                                NotifyCollectionChangedAction.Move,
+                                _targetCache[key],
+                                c.CurrentIndex.Value,
+                                c.PreviousIndex.Value));
                         }
                         break;
                     case DeltaState.Remove:
+                        if (c.PreviousItem != null)
                         {
-                            if (_targetCache.TryGetValue(c.PreviousItem, out var oldItem))
+                            key = _sourceCache.KeyOf(c.PreviousItem);
+                            if (_targetCache.TryGetValue(key, out var oldItem))
                             {
                                 (oldItem as IDisposable)?.Dispose();
-                                _targetCache.Remove(c.PreviousItem);
+                                _targetCache.Remove(key);
                             }
                             events.Add(new NotifyCollectionChangedEventArgs(
                                 NotifyCollectionChangedAction.Remove,
                                 oldItem,
                                 c.PreviousIndex.Value));
                         }
+                        else
+                        {
+                            events.Add(new NotifyCollectionChangedEventArgs(
+                                NotifyCollectionChangedAction.Remove,
+                                new VirtualizingPlaceholder(c.PreviousIndex.Value),
+                                c.PreviousIndex.Value));
+                        }
                         break;
                 }
             }
 
-            foreach (var source in e.DiscardedItems)
+            foreach (var source in e.DiscardedItems.Where(i => i != null))
             {
-                if (_targetCache.ContainsKey(source))
+                var key = _sourceCache.KeyOf(source);
+                if (_targetCache.ContainsKey(key))
                 {
-                    (_targetCache[source] as IDisposable)?.Dispose();
-                    _targetCache.Remove(source);
+                    (_targetCache[key] as IDisposable)?.Dispose();
+                    _targetCache.Remove(key);
                 }
             }
 
@@ -208,7 +218,7 @@ namespace Observatory.UI.Virtualizing
             get
             {
                 var source = _sourceCache[index];
-                return source != null ? _targetCache[source] : null;
+                return source != null ? _targetCache[_sourceCache.KeyOf(source)] : null;
             }
             set => throw new NotSupportedException();
         }

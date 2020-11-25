@@ -25,7 +25,8 @@ namespace Observatory.Core.Virtualization
 
         /// <summary>
         /// Gets the previous item affected by the change, only valid
-        /// for <see cref="DeltaState.Update"/> of <see cref="DeltaState.Remove"/>.
+        /// for <see cref="DeltaState.Update"/> of <see cref="DeltaState.Remove"/> and
+        /// can be null if it is not tracked by the cache.
         /// </summary>
         public T PreviousItem { get; }
 

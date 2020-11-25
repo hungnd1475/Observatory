@@ -11,7 +11,7 @@ namespace Observatory.Core.Virtualization
     /// <summary>
     /// Represents a specialized <see cref="IVirtualizingSource{T}"/> that queries messages in a mail folder.
     /// </summary>
-    public class MessageVirtualizingSource : IVirtualizingSource<MessageSummary>
+    public class MessageVirtualizingSource : IVirtualizingSource<MessageSummary, string>
     {
         private readonly IProfileDataQueryFactory _queryFactory;
         private readonly string _folderId;
@@ -27,6 +27,16 @@ namespace Observatory.Core.Virtualization
         {
             _queryFactory = queryFactory;
             _folderId = folderId;
+        }
+
+        public List<string> GetAllKeys()
+        {
+            using var query = _queryFactory.Connect();
+            var specification = Specification.Relay<MessageSummary, string>(
+                q => q.Where(m => m.FolderId == _folderId)
+                     .OrderByDescending(m => m.ReceivedDateTime)
+                     .Select(m => m.Id));
+            return query.MessageSummaries.ToList(specification);
         }
 
         public MessageSummary[] GetItems(int startIndex, int maxNumberOfItems)
@@ -53,5 +63,7 @@ namespace Observatory.Core.Virtualization
                 q => q.Where(m => m.FolderId == _folderId && m.ReceivedDateTime > entity.ReceivedDateTime));
             return query.MessageSummaries.Count(specification);
         }
+
+        public string KeyOf(MessageSummary entity) => entity.Id;
     }
 }

@@ -7,8 +7,8 @@ namespace Observatory.Core.Virtualization
     /// <summary>
     /// Defines an interface implemented by any class that servces as the target for a virtualizing list.
     /// </summary>
-    /// <typeparam name="TSource"></typeparam>
-    public interface IVirtualizingTarget<TSource>
+    /// <typeparam name="TSource">The type of source.</typeparam>
+    public interface IVirtualizableTarget<TSource>
     {
         /// <summary>
         /// Refreshes whenever the source changed.

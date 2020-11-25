@@ -14,32 +14,36 @@ namespace Observatory.Core.Virtualization
     /// <summary>
     /// Represents a cache of items with virtualization capability.
     /// </summary>
-    /// <typeparam name="T">The type of items retrieved from source.</typeparam>
-    public class VirtualizingCache<T> : IDisposable, IEnableLogger
-        where T : class
+    /// <typeparam name="TEntity">The type of items retrieved from source.</typeparam>
+    public class VirtualizingCache<TEntity, TKey> : IDisposable, IEnableLogger
+        where TEntity : class
+        where TKey : IEquatable<TKey>
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
-        private readonly Subject<IndexRange[]> _rangesObserver = new Subject<IndexRange[]>();
-        private readonly ReplaySubject<IVirtualizingCacheEvent<T>> _cacheObserver =
-            new ReplaySubject<IVirtualizingCacheEvent<T>>();
+        private readonly Subject<IndexRange[]> _rangeSubject = new Subject<IndexRange[]>();
+        private readonly Subject<IVirtualizingCacheEvent<TEntity>> _cacheSubject =
+            new Subject<IVirtualizingCacheEvent<TEntity>>();
+        private readonly BehaviorSubject<List<TKey>> _keySubject = new BehaviorSubject<List<TKey>>(null);
+        private readonly IVirtualizingSource<TEntity, TKey> _source;
+        private readonly Func<TEntity, TKey> _keySelector;
         private readonly object _lock = new object();
 
         /// <summary>
         /// Gets the current blocks the cache is tracking.
         /// </summary>
-        public VirtualizingCacheBlock<T>[] CurrentBlocks { get; private set; } = new VirtualizingCacheBlock<T>[0];
+        public VirtualizingCacheBlock<TEntity>[] CurrentBlocks { get; private set; } = new VirtualizingCacheBlock<TEntity>[0];
 
         /// <summary>
         /// Gets an observable stream of <see cref="IVirtualizingCacheEvent{T}"/> fired whenever there are changes happened in the cache.
         /// </summary>
-        public IObservable<IVirtualizingCacheEvent<T>> WhenCacheChanged => _cacheObserver.AsObservable();
+        public IObservable<IVirtualizingCacheEvent<TEntity>> WhenCacheChanged => _cacheSubject.AsObservable();
 
         /// <summary>
         /// Gets the item at a given index.
         /// </summary>
         /// <param name="index">The index.</param>
-        /// <returns>The item instance if the index is within the ranges the cache is tracking, otherwise the default value of type <typeparamref name="T"/>.</returns>
-        public T this[int index] => SearchItem(CurrentBlocks, index);
+        /// <returns>The item instance if the index is within the ranges the cache is tracking, otherwise the default value of type <typeparamref name="TEntity"/>.</returns>
+        public TEntity this[int index] => SearchItem(CurrentBlocks, index);
 
         /// <summary>
         /// Gets an <see cref="IEnumerable{T}"/> of all the indices the cache is holding.
@@ -47,21 +51,17 @@ namespace Observatory.Core.Virtualization
         public IEnumerable<int> Indices => CurrentBlocks.Select(b => b.Range).SelectMany(r => r);
 
         /// <summary>
-        /// Gets the equality comparer for items stored by the cache.
-        /// </summary>
-        public IEqualityComparer<T> ItemComparer { get; }
-
-        /// <summary>
         /// Constructs an instance of <see cref="VirtualizingCache{T}"/>.
         /// </summary>
         /// <param name="source">The source where items are retrieved from.</param>
-        public VirtualizingCache(IVirtualizingSource<T> source,
-            IObservable<IReadOnlyList<DeltaEntity<T>>> sourceObserver,
-            IEqualityComparer<T> itemComparer)
+        public VirtualizingCache(IVirtualizingSource<TEntity, TKey> source,
+            Func<TEntity, TKey> keySelector,
+            IObservable<IReadOnlyList<DeltaEntity<TEntity>>> whenSourceChanged)
         {
-            ItemComparer = itemComparer;
+            _source = source;
+            _keySelector = keySelector;
 
-            _rangesObserver
+            _rangeSubject
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Throttle(TimeSpan.FromMilliseconds(20))
                 .Select(Normalize)
@@ -71,57 +71,89 @@ namespace Observatory.Core.Virtualization
                 {
                     var discardedItems = Purge(CurrentBlocks, newRanges);
                     CurrentBlocks = UpdateBlocks(CurrentBlocks, newRanges, source);
-                    _cacheObserver.OnNext(new VirtualizingCacheRangesUpdatedEvent<T>(discardedItems));
+                    _cacheSubject.OnNext(new VirtualizingCacheRangesUpdatedEvent<TEntity>(discardedItems));
                     foreach (var b in CurrentBlocks)
                     {
-                        b.Subscribe(_cacheObserver);
+                        b.Subscribe(_cacheSubject);
                     }
+                    this.Log().Debug($"Tracking {CurrentBlocks.Length} block(s): [{string.Join(",", CurrentBlocks.Select(b => b.Range))}]");
                 })
                 .DisposeWith(_disposables);
 
-            sourceObserver
+            whenSourceChanged
                 .ObserveOn(RxApp.TaskpoolScheduler)
+                .WithLatestFrom(_keySubject, (changes, keys) => (Changes: changes, Keys: keys))
+                .SkipWhile(x => x.Keys == null)
                 .Synchronize(_lock)
-                .Select(changes => changes.Select(c =>
-                {
-                    int currentIndex, previousIndex;
-                    switch (c.State)
-                    {
-                        case DeltaState.Add:
-                            currentIndex = source.IndexOf(c.Entity);
-                            return LogicalChange.Addition(c.Entity, currentIndex);
-                        case DeltaState.Remove:
-                            previousIndex = IndexOf(c.Entity, itemComparer);
-                            return LogicalChange.Removal(this[previousIndex], previousIndex);
-                        case DeltaState.Update:
-                            currentIndex = source.IndexOf(c.Entity);
-                            previousIndex = IndexOf(c.Entity, itemComparer);
-                            return LogicalChange.Update(c.Entity, currentIndex, this[previousIndex], previousIndex);
-                        default:
-                            throw new NotSupportedException($"{c.State} is not supported.");
-                    }
-                }).ToArray())
-                .Subscribe(changes =>
+                .Subscribe(x =>
                 {
                     var totalCount = source.GetTotalCount();
-                    var (newBlocks, discardedItems) = RefreshBlocks(CurrentBlocks, totalCount, changes, source);
-                    var serializedChanges = LogicalChange.Serialize(changes);
+                    var logicalChanges = x.Changes.Select(c =>
+                    {
+                        int currentIndex, previousIndex;
+                        switch (c.State)
+                        {
+                            case DeltaState.Add:
+                                currentIndex = source.IndexOf(c.Entity);
+                                return LogicalChange.Addition(c.Entity, currentIndex);
+                            case DeltaState.Remove:
+                                previousIndex = x.Keys.IndexOf(keySelector(c.Entity));
+                                return LogicalChange.Removal(this[previousIndex], previousIndex);
+                            case DeltaState.Update:
+                                currentIndex = source.IndexOf(c.Entity);
+                                previousIndex = x.Keys.IndexOf(keySelector(c.Entity));
+                                return LogicalChange.Update(c.Entity, currentIndex, this[previousIndex], previousIndex);
+                            default:
+                                throw new NotSupportedException($"{c.State} is not supported.");
+                        }
+                    }).ToArray();
 
+                    var (newBlocks, discardedItems) = RefreshBlocks(CurrentBlocks, totalCount, logicalChanges, source);
                     CurrentBlocks = newBlocks;
-                    _cacheObserver.OnNext(new VirtualizingCacheSourceUpdatedEvent<T>(discardedItems, serializedChanges, totalCount));
+
+                    var serializedChanges = LogicalChange.Serialize(logicalChanges);
+                    foreach (var c in serializedChanges)
+                    {
+                        switch (c.State)
+                        {
+                            case DeltaState.Add:
+                                x.Keys.Insert(c.CurrentIndex.Value, keySelector(c.CurrentItem));
+                                break;
+                            case DeltaState.Remove:
+                                x.Keys.RemoveAt(c.PreviousIndex.Value);
+                                break;
+                            case DeltaState.Update:
+                                if (c.PreviousIndex.Value != c.CurrentIndex.Value)
+                                {
+                                    x.Keys.RemoveAt(c.PreviousIndex.Value);
+                                    x.Keys.Insert(c.CurrentIndex.Value, keySelector(c.CurrentItem));
+                                }
+                                break;
+                        }
+                    }
+
+                    _keySubject.OnNext(x.Keys);
+                    _cacheSubject.OnNext(new VirtualizingCacheSourceUpdatedEvent<TEntity>(discardedItems, serializedChanges, totalCount));
 
                     foreach (var b in CurrentBlocks)
                     {
-                        b.Subscribe(_cacheObserver);
+                        b.Subscribe(_cacheSubject);
                     }
 
                     this.Log().Debug($"Changes:\n{string.Join("\n", serializedChanges)}");
                 })
                 .DisposeWith(_disposables);
 
-            Observable.Start(() => source.GetTotalCount(), RxApp.TaskpoolScheduler)
-                .Subscribe(totalCount => _cacheObserver.OnNext(new VirtualizingCacheInitializedEvent<T>(totalCount)))
+            Observable.Start(() => source.GetAllKeys(), RxApp.TaskpoolScheduler)
+                .Subscribe(_keySubject.OnNext)
                 .DisposeWith(_disposables);
+        }
+
+        public void Initialize()
+        {
+            Observable.Start(() => _source.GetTotalCount(), RxApp.TaskpoolScheduler)
+                .Select(totalCount => new VirtualizingCacheInitializedEvent<TEntity>(totalCount))
+                .Subscribe(_cacheSubject.OnNext);
         }
 
         /// <summary>
@@ -132,39 +164,22 @@ namespace Observatory.Core.Virtualization
         /// <param name="newRanges">The ranges of items that need to be displayed.</param>
         public void UpdateRanges(IndexRange[] newRanges)
         {
-            _rangesObserver.OnNext(newRanges);
+            _rangeSubject.OnNext(newRanges);
         }
 
         /// <summary>
-        /// Returns the index of a given item based on a given equality comparer.
+        /// Returns the index of a given key.
         /// </summary>
-        /// <param name="item">The item to get the index.</param>
-        /// <param name="itemComparer">The equality comparer to find item in the cache.</param>
+        /// <param name="key">The item to get the index.</param>
         /// <returns>The index if found, otherwise -1.</returns>
-        public int IndexOf(T item, IEqualityComparer<T> itemComparer)
-        {
-            foreach (var b in CurrentBlocks)
-            {
-                var index = b.IndexOf(item, itemComparer);
-                if (index != -1) return index;
-            }
-            return -1;
-        }
+        public int IndexOf(TKey key) => _keySubject.Value?.IndexOf(key) ?? -1;
 
         /// <summary>
-        /// Returns the index of a given item based on reference equality.
+        /// Returns the key of a given item.
         /// </summary>
-        /// <param name="item">The item to get the index.</param>
-        /// <returns>The index if found, otherwise -1.</returns>
-        public int IndexOf(T item)
-        {
-            foreach (var b in CurrentBlocks)
-            {
-                var index = b.IndexOf(item);
-                if (index != -1) return index;
-            }
-            return -1;
-        }
+        /// <param name="item">The item to get the key.</param>
+        /// <returns></returns>
+        public TKey KeyOf(TEntity item) => _keySelector(item);
 
         /// <summary>
         /// Clears the cache.
@@ -175,14 +190,15 @@ namespace Observatory.Core.Virtualization
             {
                 b.Unsubscribe();
             }
-            CurrentBlocks = new VirtualizingCacheBlock<T>[0];
+            CurrentBlocks = new VirtualizingCacheBlock<TEntity>[0];
         }
 
         public void Dispose()
         {
+            // dispose subscriptions
             _disposables.Dispose();
 
-            // disconnect any pending requests
+            // unsubsribe any pending requests
             foreach (var b in CurrentBlocks)
             {
                 b.Unsubscribe();
@@ -190,8 +206,12 @@ namespace Observatory.Core.Virtualization
             CurrentBlocks = null;
 
             // dispose events
-            _cacheObserver.OnCompleted();
-            _cacheObserver.Dispose();
+            _cacheSubject.OnCompleted();
+            _cacheSubject.Dispose();
+
+            // dispose keys
+            _keySubject.OnCompleted();
+            _keySubject.Dispose();
         }
 
         /// <summary>
@@ -200,7 +220,7 @@ namespace Observatory.Core.Virtualization
         /// <param name="currentBlocks">The current blocks.</param>
         /// <param name="newRanges">The newly requested ranges.</param>
         /// <returns>True if there is any difference, otherwise false.</returns>
-        private static bool Differs(VirtualizingCacheBlock<T>[] currentBlocks, IndexRange[] newRanges)
+        private static bool Differs(VirtualizingCacheBlock<TEntity>[] currentBlocks, IndexRange[] newRanges)
         {
             int i = 0, j = 0;
             while (i < currentBlocks.Length && j < newRanges.Length)
@@ -239,9 +259,9 @@ namespace Observatory.Core.Virtualization
         /// <param name="currentBlocks">The current blocks.</param>
         /// <param name="newRanges">The newly requested ranges.</param>
         /// <returns>An array of <see cref="IndexRange"/> that should be discarded.</returns>
-        private static IReadOnlyList<T> Purge(VirtualizingCacheBlock<T>[] currentBlocks, IndexRange[] newRanges)
+        private static IReadOnlyList<TEntity> Purge(VirtualizingCacheBlock<TEntity>[] currentBlocks, IndexRange[] newRanges)
         {
-            var discardedItems = new List<T>();
+            var discardedItems = new List<TEntity>();
             int i = 0, j = 0;
             while (i < currentBlocks.Length)
             {
@@ -278,21 +298,21 @@ namespace Observatory.Core.Virtualization
         /// <param name="oldBlocks">The current blocks.</param>
         /// <param name="source">The source where items are retrieved from.</param>
         /// <returns>An array of <see cref="VirtualizingCacheBlock{T}"/> that tracks only items in the newly requested ranges.</returns>
-        private static VirtualizingCacheBlock<T>[] UpdateBlocks(VirtualizingCacheBlock<T>[] oldBlocks,
+        private static VirtualizingCacheBlock<TEntity>[] UpdateBlocks(VirtualizingCacheBlock<TEntity>[] oldBlocks,
             IndexRange[] newRanges,
-            IVirtualizingSource<T> source)
+            IVirtualizingSource<TEntity, TKey> source)
         {
             foreach (var b in oldBlocks)
             {
                 b.Unsubscribe();
             }
 
-            var newBlocks = new VirtualizingCacheBlock<T>[newRanges.Length];
+            var newBlocks = new VirtualizingCacheBlock<TEntity>[newRanges.Length];
             int i = 0, j = 0;
             while (j < newRanges.Length)
             {
-                var requests = new List<VirtualizingCacheBlockRequest<T>>();
-                var newItems = new T[newRanges[j].Length];
+                var requests = new List<VirtualizingCacheBlockRequest<TEntity>>();
+                var newItems = new TEntity[newRanges[j].Length];
 
                 IndexRange? leftDiff, rightDiff = newRanges[j];
                 while (i < oldBlocks.Length && rightDiff.HasValue)
@@ -309,14 +329,14 @@ namespace Observatory.Core.Virtualization
                             var effectiveRange = r.FullRange.Intersect(intersect.Value);
                             if (effectiveRange.HasValue)
                             {
-                                requests.Add(new VirtualizingCacheBlockRequest<T>(r.FullRange, effectiveRange.Value, r.WhenItemsLoaded));
+                                requests.Add(r.Transfer(effectiveRange.Value));
                             }
                         }
                     }
 
                     if (leftDiff.HasValue)
                     {
-                        requests.Add(new VirtualizingCacheBlockRequest<T>(leftDiff.Value, source));
+                        requests.Add(VirtualizingCacheBlockRequest<TEntity>.FromSource(leftDiff.Value, source));
                     }
                     if (rightDiff.HasValue)
                     {
@@ -326,10 +346,10 @@ namespace Observatory.Core.Virtualization
 
                 if (rightDiff.HasValue)
                 {
-                    requests.Add(new VirtualizingCacheBlockRequest<T>(rightDiff.Value, source));
+                    requests.Add(VirtualizingCacheBlockRequest<TEntity>.FromSource(rightDiff.Value, source));
                 }
 
-                newBlocks[j] = new VirtualizingCacheBlock<T>(newRanges[j], newItems, requests);
+                newBlocks[j] = new VirtualizingCacheBlock<TEntity>(newRanges[j], newItems, requests);
                 j += 1;
             }
 
@@ -344,9 +364,9 @@ namespace Observatory.Core.Virtualization
         /// <param name="logicalChanges">The changes happened to the source.</param>
         /// <param name="source">The source where items are retrieved from.</param>
         /// <returns>A new array of <see cref="VirtualizingCacheBlock{T}"/> reflecting the changes.</returns>
-        private static (VirtualizingCacheBlock<T>[], IReadOnlyList<T>) RefreshBlocks(VirtualizingCacheBlock<T>[] oldBlocks,
+        private static (VirtualizingCacheBlock<TEntity>[], IReadOnlyList<TEntity>) RefreshBlocks(VirtualizingCacheBlock<TEntity>[] oldBlocks,
             int totalCount, LogicalChange[] logicalChanges,
-            IVirtualizingSource<T> source)
+            IVirtualizingSource<TEntity, TKey> source)
         {
             var removals = logicalChanges.Where(c => c.State != DeltaState.Add)
                 .Select(c => new PhysicalChange(PhysicalChangeAction.Remove, c.PreviousEntity, c.PreviousIndex.Value))
@@ -357,8 +377,8 @@ namespace Observatory.Core.Virtualization
                 .OrderBy(c => c.Index)
                 .ToArray();
 
-            var newBlocks = new List<VirtualizingCacheBlock<T>>(oldBlocks.Length);
-            var discardedItems = new List<T>();
+            var newBlocks = new List<VirtualizingCacheBlock<TEntity>>(oldBlocks.Length);
+            var discardedItems = new List<TEntity>();
             var removalIndex = 0;
             var additionIndex = 0;
             var shift = 0;
@@ -372,8 +392,8 @@ namespace Observatory.Core.Virtualization
                 }
 
                 var newRange = new IndexRange(oldBlock.Range.FirstIndex, Math.Min(oldBlock.Range.LastIndex, totalCount - 1));
-                var newItems = new T[newRange.Length];
-                var newRequests = new List<VirtualizingCacheBlockRequest<T>>();
+                var newItems = new TEntity[newRange.Length];
+                var newRequests = new List<VirtualizingCacheBlockRequest<TEntity>>();
 
                 // iterates through all changes prior to the current blocks
                 while (true)
@@ -421,14 +441,14 @@ namespace Observatory.Core.Virtualization
                         else if (requestIndex < currentAddition.Index)
                         {
                             var range = new IndexRange(requestIndex, currentAddition.Index - 1);
-                            newRequests.Add(new VirtualizingCacheBlockRequest<T>(range, source));
+                            newRequests.Add(VirtualizingCacheBlockRequest<TEntity>.FromSource(range, source));
                             requestIndex = currentAddition.Index + 1;
                         }
                     }
                     else
                     {
                         var range = new IndexRange(requestIndex, destinationIndex - 1);
-                        newRequests.Add(new VirtualizingCacheBlockRequest<T>(range, source));
+                        newRequests.Add(VirtualizingCacheBlockRequest<TEntity>.FromSource(range, source));
                         requestIndex = destinationIndex;
                     }
                 }
@@ -553,7 +573,7 @@ namespace Observatory.Core.Virtualization
                 if (destinationIndex <= newRange.LastIndex)
                 {
                     var range = new IndexRange(destinationIndex, newRange.LastIndex);
-                    newRequests.Add(new VirtualizingCacheBlockRequest<T>(range, source));
+                    newRequests.Add(VirtualizingCacheBlockRequest<TEntity>.FromSource(range, source));
                 }
 
                 // discards any remaining items from source if necessary
@@ -576,12 +596,12 @@ namespace Observatory.Core.Virtualization
                             var destinationEffectiveRange = new IndexRange(
                                 DestinationRange.FirstIndex + sourceEffectiveRange.Value.FirstIndex - SourceRange.FirstIndex,
                                 DestinationRange.FirstIndex + sourceEffectiveRange.Value.Length - 1);
-                            newRequests.Add(new VirtualizingCacheBlockRequest<T>(destinationEffectiveRange, source));
+                            newRequests.Add(VirtualizingCacheBlockRequest<TEntity>.FromSource(destinationEffectiveRange, source));
                         }
                     }
                 }
 
-                newBlocks.Add(new VirtualizingCacheBlock<T>(newRange, newItems, newRequests));
+                newBlocks.Add(new VirtualizingCacheBlock<TEntity>(newRange, newItems, newRequests));
             }
             return (newBlocks.ToArray(), discardedItems.AsReadOnly());
         }
@@ -624,8 +644,8 @@ namespace Observatory.Core.Virtualization
         /// </summary>
         /// <param name="blocks">The blocks to search.</param>
         /// <param name="index">The index of the item to search for.</param>
-        /// <returns>The item instance if the index is within the ranges the cache is tracking, otherwise the default value of type <typeparamref name="T"/>.</returns>
-        private static T SearchItem(VirtualizingCacheBlock<T>[] blocks, int index)
+        /// <returns>The item instance if the index is within the ranges the cache is tracking, otherwise the default value of type <typeparamref name="TEntity"/>.</returns>
+        private static TEntity SearchItem(VirtualizingCacheBlock<TEntity>[] blocks, int index)
         {
             var startIndex = 0;
             var endIndex = blocks.Length - 1;
@@ -655,12 +675,12 @@ namespace Observatory.Core.Virtualization
         private readonly struct LogicalChange
         {
             public readonly DeltaState State;
-            public readonly T CurrentEntity;
-            public readonly T PreviousEntity;
+            public readonly TEntity CurrentEntity;
+            public readonly TEntity PreviousEntity;
             public readonly int? CurrentIndex;
             public readonly int? PreviousIndex;
 
-            private LogicalChange(DeltaState state, T currentEntity, T previousEntity, int? currentIndex, int? previousIndex)
+            private LogicalChange(DeltaState state, TEntity currentEntity, TEntity previousEntity, int? currentIndex, int? previousIndex)
             {
                 State = state;
                 CurrentEntity = currentEntity;
@@ -669,24 +689,24 @@ namespace Observatory.Core.Virtualization
                 PreviousIndex = previousIndex;
             }
 
-            public static LogicalChange Addition(T currentEntity, int currentIndex)
+            public static LogicalChange Addition(TEntity currentEntity, int currentIndex)
             {
                 return new LogicalChange(DeltaState.Add, currentEntity, null, currentIndex, null);
             }
 
-            public static LogicalChange Removal(T previousEntity, int previousIndex)
+            public static LogicalChange Removal(TEntity previousEntity, int previousIndex)
             {
                 return new LogicalChange(DeltaState.Remove, null, previousEntity, null, previousIndex);
             }
 
-            public static LogicalChange Update(T currentEntity, int currentIndex, T previousEntity, int previousIndex)
+            public static LogicalChange Update(TEntity currentEntity, int currentIndex, TEntity previousEntity, int previousIndex)
             {
                 return new LogicalChange(DeltaState.Update, currentEntity, previousEntity, currentIndex, previousIndex);
             }
 
-            public static IReadOnlyList<VirtualizingCacheSourceChange<T>> Serialize(LogicalChange[] logicalChanges)
+            public static IReadOnlyList<VirtualizingCacheSourceChange<TEntity>> Serialize(LogicalChange[] logicalChanges)
             {
-                var serializedChanges = new List<VirtualizingCacheSourceChange<T>>();
+                var serializedChanges = new List<VirtualizingCacheSourceChange<TEntity>>();
                 var additions = logicalChanges.Where(c => c.State == DeltaState.Add)
                     .OrderBy(c => c.CurrentIndex.Value)
                     .ToArray();
@@ -730,19 +750,19 @@ namespace Observatory.Core.Virtualization
                         switch (currentChange.Value.State)
                         {
                             case DeltaState.Add:
-                                serializedChanges.Add(VirtualizingCacheSourceChange<T>.Addition(
+                                serializedChanges.Add(VirtualizingCacheSourceChange<TEntity>.Addition(
                                     currentChange.Value.CurrentEntity,
                                     currentChange.Value.CurrentIndex.Value));
                                 shift += 1;
                                 break;
                             case DeltaState.Remove:
-                                serializedChanges.Add(VirtualizingCacheSourceChange<T>.Removal(
+                                serializedChanges.Add(VirtualizingCacheSourceChange<TEntity>.Removal(
                                     currentChange.Value.PreviousEntity,
                                     currentChange.Value.PreviousIndex.Value + shift));
                                 shift -= 1;
                                 break;
                             case DeltaState.Update:
-                                serializedChanges.Add(VirtualizingCacheSourceChange<T>.Update(
+                                serializedChanges.Add(VirtualizingCacheSourceChange<TEntity>.Update(
                                     currentChange.Value.CurrentEntity,
                                     currentChange.Value.CurrentIndex.Value,
                                     currentChange.Value.PreviousEntity,
@@ -761,10 +781,10 @@ namespace Observatory.Core.Virtualization
         private readonly struct PhysicalChange
         {
             public readonly PhysicalChangeAction Action;
-            public readonly T Entity;
+            public readonly TEntity Entity;
             public readonly int Index;
 
-            public PhysicalChange(PhysicalChangeAction action, T entity, int index)
+            public PhysicalChange(PhysicalChangeAction action, TEntity entity, int index)
             {
                 Action = action;
                 Entity = entity;
