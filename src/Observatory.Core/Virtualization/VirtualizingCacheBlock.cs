@@ -103,27 +103,5 @@ namespace Observatory.Core.Virtualization
         /// <returns>A <see cref="Span{T}"/> holding the slice.</returns>
         /// <exception cref="ArgumentOutOfRangeException"/>
         public Span<T> Slice(IndexRange subrange) => Range.Slice(_items, subrange);
-
-        /// <summary>
-        /// Gets the index of a given item based on a given equality comparer.
-        /// </summary>
-        /// <param name="item">The item to get index.</param>
-        /// <returns>The index if found, otherwise -1.</returns>
-        public int IndexOf(T item, IEqualityComparer<T> comparer)
-        {
-            var index = Array.FindIndex(_items, x => comparer.Equals(x, item));
-            return index != -1 ? index + Range.FirstIndex : -1;
-        }
-
-        /// <summary>
-        /// Gets the index of a given item based on reference equality.
-        /// </summary>
-        /// <param name="item">The item to get index.</param>
-        /// <returns>The index if found, otherwise -1.</returns>
-        public int IndexOf(T item)
-        {
-            var index = Array.IndexOf(_items, item);
-            return index == -1 ? index + Range.FirstIndex : -1;
-        }
     }
 }

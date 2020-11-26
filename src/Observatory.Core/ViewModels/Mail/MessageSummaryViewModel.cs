@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Observatory.Core.ViewModels.Mail
 {
-    public class MessageSummaryViewModel : ReactiveObject, IVirtualizableTarget<MessageSummary>, IDisposable
+    public class MessageSummaryViewModel : ReactiveObject, IVirtualizableTarget<MessageSummary, string>, IDisposable
     {
         private static readonly Regex NEWLINE_PATTERN = new Regex("\\r?\n|\u200B|\u200C|\u200D", RegexOptions.Compiled);
         private static readonly Regex SPACES_PATTERN = new Regex("\\s\\s+", RegexOptions.Compiled);

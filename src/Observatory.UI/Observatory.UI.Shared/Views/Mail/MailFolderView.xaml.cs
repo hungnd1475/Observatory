@@ -45,10 +45,10 @@ namespace Observatory.UI.Views.Mail
                 this.WhenAnyValue(x => x.ViewModel)
                     .Where(vm => vm != null)
                     .SelectMany(vm => vm.WhenAnyValue(x => x.Messages).Where(m => m != null).Select(messages => (ViewModel: vm, Messages: messages)))
-                    .Select(x => new VirtualizingList<MessageSummary, MessageSummaryViewModel, string>(x.Messages, x.ViewModel.Transform, m => m.Id))
+                    .Select(x => new VirtualizingList<MessageSummary, MessageSummaryViewModel, string>(x.Messages, x.ViewModel.Transform))
                     .Subscribe(source =>
                     {
-                        (_messageList.ItemsSource as VirtualizingList<MessageSummary, MessageSummaryViewModel, string>)?.Dispose();
+                        (_messageList.ItemsSource as IDisposable)?.Dispose();
                         _messageList.ItemsSource = source;
                     })
                     .DisposeWith(disposables);

@@ -131,7 +131,6 @@ namespace Observatory.Core.ViewModels.Mail
         {
             Messages = new VirtualizingCache<MessageSummary, string>(
                 new MessageVirtualizingSource(_queryFactory, _folderId),
-                m => m.Id,
                 _mailService.MessageChanges
                     .Where(d => d.FolderId == _folderId)
                     .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray()));

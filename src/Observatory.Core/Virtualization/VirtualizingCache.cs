@@ -16,7 +16,7 @@ namespace Observatory.Core.Virtualization
     /// </summary>
     /// <typeparam name="TEntity">The type of items retrieved from source.</typeparam>
     public class VirtualizingCache<TEntity, TKey> : IDisposable, IEnableLogger
-        where TEntity : class
+        where TEntity : class, IVirtualizableSource<TKey>
         where TKey : IEquatable<TKey>
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
@@ -25,7 +25,6 @@ namespace Observatory.Core.Virtualization
             new Subject<IVirtualizingCacheEvent<TEntity>>();
         private readonly BehaviorSubject<List<TKey>> _keySubject = new BehaviorSubject<List<TKey>>(null);
         private readonly IVirtualizingSource<TEntity, TKey> _source;
-        private readonly Func<TEntity, TKey> _keySelector;
         private readonly object _lock = new object();
 
         /// <summary>
@@ -55,11 +54,9 @@ namespace Observatory.Core.Virtualization
         /// </summary>
         /// <param name="source">The source where items are retrieved from.</param>
         public VirtualizingCache(IVirtualizingSource<TEntity, TKey> source,
-            Func<TEntity, TKey> keySelector,
             IObservable<IReadOnlyList<DeltaEntity<TEntity>>> whenSourceChanged)
         {
             _source = source;
-            _keySelector = keySelector;
 
             _rangeSubject
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -97,11 +94,11 @@ namespace Observatory.Core.Virtualization
                                 currentIndex = source.IndexOf(c.Entity);
                                 return LogicalChange.Addition(c.Entity, currentIndex);
                             case DeltaState.Remove:
-                                previousIndex = x.Keys.IndexOf(keySelector(c.Entity));
+                                previousIndex = x.Keys.IndexOf(c.Entity.Id);
                                 return LogicalChange.Removal(this[previousIndex], previousIndex);
                             case DeltaState.Update:
                                 currentIndex = source.IndexOf(c.Entity);
-                                previousIndex = x.Keys.IndexOf(keySelector(c.Entity));
+                                previousIndex = x.Keys.IndexOf(c.Entity.Id);
                                 return LogicalChange.Update(c.Entity, currentIndex, this[previousIndex], previousIndex);
                             default:
                                 throw new NotSupportedException($"{c.State} is not supported.");
@@ -117,7 +114,7 @@ namespace Observatory.Core.Virtualization
                         switch (c.State)
                         {
                             case DeltaState.Add:
-                                x.Keys.Insert(c.CurrentIndex.Value, keySelector(c.CurrentItem));
+                                x.Keys.Insert(c.CurrentIndex.Value, c.CurrentItem.Id);
                                 break;
                             case DeltaState.Remove:
                                 x.Keys.RemoveAt(c.PreviousIndex.Value);
@@ -126,7 +123,7 @@ namespace Observatory.Core.Virtualization
                                 if (c.PreviousIndex.Value != c.CurrentIndex.Value)
                                 {
                                     x.Keys.RemoveAt(c.PreviousIndex.Value);
-                                    x.Keys.Insert(c.CurrentIndex.Value, keySelector(c.CurrentItem));
+                                    x.Keys.Insert(c.CurrentIndex.Value, c.CurrentItem.Id);
                                 }
                                 break;
                         }
@@ -173,13 +170,6 @@ namespace Observatory.Core.Virtualization
         /// <param name="key">The item to get the index.</param>
         /// <returns>The index if found, otherwise -1.</returns>
         public int IndexOf(TKey key) => _keySubject.Value?.IndexOf(key) ?? -1;
-
-        /// <summary>
-        /// Returns the key of a given item.
-        /// </summary>
-        /// <param name="item">The item to get the key.</param>
-        /// <returns></returns>
-        public TKey KeyOf(TEntity item) => _keySelector(item);
 
         /// <summary>
         /// Clears the cache.

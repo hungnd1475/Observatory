@@ -9,7 +9,6 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using Windows.UI.Core;
 using Windows.UI.Xaml.Data;
 
 namespace Observatory.UI.Virtualizing
@@ -22,8 +21,8 @@ namespace Observatory.UI.Virtualizing
     /// <typeparam name="TKey">The type of key of both <typeparamref name="TSource"/> and <typeparamref name="TTarget"/>.</typeparam>
     public class VirtualizingList<TSource, TTarget, TKey> : IList, INotifyCollectionChanged, IItemsRangeInfo, IEnableLogger,
         IVirtualizingCacheEventProcessor<TSource, IEnumerable<NotifyCollectionChangedEventArgs>>
-        where TSource : class
-        where TTarget : class, IVirtualizableTarget<TSource>
+        where TSource : class, IVirtualizableSource<TKey>
+        where TTarget : class, IVirtualizableTarget<TSource, TKey>
         where TKey : IEquatable<TKey>
     {
         public event NotifyCollectionChangedEventHandler CollectionChanged;
@@ -32,21 +31,18 @@ namespace Observatory.UI.Virtualizing
         private readonly VirtualizingCache<TSource, TKey> _sourceCache;
         private readonly Dictionary<TKey, TTarget> _targetCache;
         private readonly Func<TSource, TTarget> _targetFactory;
-        private readonly Func<TTarget, TKey> _keySelector;
 
         /// <summary>
-        /// Constructs an instance of <see cref="VirtualizingList{TSource, TTarget}"/>.
+        /// Constructs an instance of <see cref="VirtualizingList{TSource, TTarget, TKey}"/>.
         /// </summary>
         /// <param name="sourceCache">The cache.</param>
         /// <param name="targetFactory">The factory function transforming <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.</param>
         public VirtualizingList(VirtualizingCache<TSource, TKey> sourceCache,
-            Func<TSource, TTarget> targetFactory,
-            Func<TTarget, TKey> keySelector)
+            Func<TSource, TTarget> targetFactory)
         {
             _sourceCache = sourceCache;
             _targetCache = new Dictionary<TKey, TTarget>();
             _targetFactory = targetFactory;
-            _keySelector = keySelector;
 
             _sourceCache.WhenCacheChanged
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -76,8 +72,7 @@ namespace Observatory.UI.Virtualizing
 
         private int IndexOf(TTarget item)
         {
-            var key = _keySelector(item);
-            return _sourceCache.IndexOf(key);
+            return _sourceCache.IndexOf(item.Id);
         }
 
         public void Dispose()
@@ -105,7 +100,7 @@ namespace Observatory.UI.Virtualizing
             {
                 var source = e.Block[index];
                 var target = _targetFactory(source);
-                _targetCache[_sourceCache.KeyOf(source)] = target;
+                _targetCache[source.Id] = target;
                 events.Add(new NotifyCollectionChangedEventArgs(
                     NotifyCollectionChangedAction.Replace, target,
                     new VirtualizingPlaceholder(index), index));
@@ -117,7 +112,7 @@ namespace Observatory.UI.Virtualizing
         {
             foreach (var source in e.DiscardedItems.Where(i => i != null))
             {
-                var key = _sourceCache.KeyOf(source);
+                var key = source.Id;
                 if (_targetCache.ContainsKey(key))
                 {
                     (_targetCache[key] as IDisposable)?.Dispose();
@@ -126,7 +121,7 @@ namespace Observatory.UI.Virtualizing
             }
             return Enumerable.Empty<NotifyCollectionChangedEventArgs>();
         }
-        
+
         public IEnumerable<NotifyCollectionChangedEventArgs> Process(VirtualizingCacheSourceUpdatedEvent<TSource> e)
         {
             var events = new List<NotifyCollectionChangedEventArgs>(e.Changes.Count);
@@ -136,7 +131,7 @@ namespace Observatory.UI.Virtualizing
                 switch (c.State)
                 {
                     case DeltaState.Add:
-                        key = _sourceCache.KeyOf(c.CurrentItem);
+                        key = c.CurrentItem.Id;
                         _targetCache[key] = _targetFactory(c.CurrentItem);
                         events.Add(new NotifyCollectionChangedEventArgs(
                             NotifyCollectionChangedAction.Add,
@@ -144,7 +139,7 @@ namespace Observatory.UI.Virtualizing
                             c.CurrentIndex.Value));
                         break;
                     case DeltaState.Update:
-                        key = _sourceCache.KeyOf(c.CurrentItem);
+                        key = c.CurrentItem.Id;
                         if (_targetCache.TryGetValue(key, out var target))
                         {
                             RxApp.MainThreadScheduler.Schedule(target, (scheduler, target) =>
@@ -165,7 +160,7 @@ namespace Observatory.UI.Virtualizing
                     case DeltaState.Remove:
                         if (c.PreviousItem != null)
                         {
-                            key = _sourceCache.KeyOf(c.PreviousItem);
+                            key = c.PreviousItem.Id;
                             if (_targetCache.TryGetValue(key, out var oldItem))
                             {
                                 (oldItem as IDisposable)?.Dispose();
@@ -189,7 +184,7 @@ namespace Observatory.UI.Virtualizing
 
             foreach (var source in e.DiscardedItems.Where(i => i != null))
             {
-                var key = _sourceCache.KeyOf(source);
+                var key = source.Id;
                 if (_targetCache.ContainsKey(key))
                 {
                     (_targetCache[key] as IDisposable)?.Dispose();
@@ -218,7 +213,7 @@ namespace Observatory.UI.Virtualizing
             get
             {
                 var source = _sourceCache[index];
-                return source != null ? _targetCache[_sourceCache.KeyOf(source)] : null;
+                return source != null ? _targetCache[source.Id] : null;
             }
             set => throw new NotSupportedException();
         }
