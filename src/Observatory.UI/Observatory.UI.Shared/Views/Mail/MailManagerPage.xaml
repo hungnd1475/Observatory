@@ -309,7 +309,7 @@
                          Text="Accounts"/>
               <Button Grid.Column="1"
                       HorizontalContentAlignment="Center"
-                      Flyout="{x:Bind ProvidersFlyout, Mode=OneWay}"
+                      Command="{x:Bind ViewModel.HostScreen.AddProfile}"
                       Style="{StaticResource NavigationPaneButtonStyle}"
                       ToolTipService.ToolTip="Add new account">
                 <SymbolIcon Symbol="Add"/>

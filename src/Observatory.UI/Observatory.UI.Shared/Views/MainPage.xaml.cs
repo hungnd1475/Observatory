@@ -1,10 +1,12 @@
 ﻿using Observatory.Core.ViewModels;
+using Observatory.UI.Views.Mail;
 using ReactiveUI;
 using Splat;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -25,14 +27,25 @@ namespace Observatory.UI.Views
     /// </summary>
     public sealed partial class MainPage : Page, IViewFor<MainViewModel>
     {
-        public static readonly DependencyProperty ViewModelProperty =
+        public static DependencyProperty ViewModelProperty { get; } =
             DependencyProperty.Register(nameof(ViewModel), typeof(MainViewModel), typeof(MainPage), null);
 
         public MainPage()
         {
             this.InitializeComponent();
             ViewModel = Locator.Current.GetService<MainViewModel>();
-            this.WhenActivated(disposables => { });
+
+            this.WhenActivated(disposables => 
+            {
+                ViewModel.ProviderSelection
+                    .RegisterHandler(async interaction =>
+                    {
+                        var selector = new ProviderSelector() { Providers = interaction.Input };
+                        await selector.ShowAsync();
+                        interaction.SetOutput(selector.SelectedProvider);
+                    })
+                    .DisposeWith(disposables);
+            });
         }
 
         public MainViewModel ViewModel 

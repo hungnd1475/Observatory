@@ -5,8 +5,10 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -34,6 +36,7 @@ namespace Observatory.Core.ViewModels.Mail
         IScreen IRoutableViewModel.HostScreen => HostScreen;
 
         public MainViewModel HostScreen { get; set; }
+
 
         public MailManagerViewModel(IProfileRegistrationService profileRegistrationService,
             IIndex<string, IProfileProvider> providers)

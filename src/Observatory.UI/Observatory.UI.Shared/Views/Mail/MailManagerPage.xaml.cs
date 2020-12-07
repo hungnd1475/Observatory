@@ -61,55 +61,7 @@ namespace Observatory.UI.Views.Mail
         public MailManagerPage()
         {
             this.InitializeComponent();
-            this.WhenActivated(disposables => 
-            {
-                this.WhenAnyValue(x => x.ViewModel)
-                    .Select(vm =>
-                    {
-                        var providers = vm.HostScreen.Providers;
-                        var flyout = new MenuFlyout()
-                        {
-                            Placement = FlyoutPlacementMode.Full,
-                            MenuFlyoutPresenterStyle = new Style(typeof(MenuFlyoutPresenter)),
-                        };
-                        flyout.MenuFlyoutPresenterStyle.Setters.AddRange(new Setter[]
-                        {
-                            new Setter(PaddingProperty, 0),
-                            new Setter(MaxHeightProperty, 400),
-                            new Setter(MinHeightProperty, 240),
-                            new Setter(HeightProperty, providers.Count() * 40),
-                        });
-                        flyout.Items.AddRange(new MenuFlyoutItemBase[]
-                        {
-                            new MenuFlyoutItem()
-                            {
-                                Text = "Choose a provider",
-                                FontSize = 14,
-                                FontWeight = FontWeights.SemiBold,
-                                IsHitTestVisible = false,
-                            },
-                            new MenuFlyoutSeparator(),
-                        });
-                        foreach (var p in providers)
-                        {
-                            flyout.Items.Add(new MenuFlyoutItem()
-                            {
-                                Height = 45,
-                                VerticalContentAlignment = VerticalAlignment.Center,
-                                Text = p.DisplayName,
-                                Command = vm.HostScreen.AddProfile,
-                                CommandParameter = p,
-                                Icon = new PathIcon()
-                                {
-                                    Data = (Geometry)XamlBindingHelper.ConvertValue(typeof(Geometry), p.IconGeometry),
-                                },
-                            });
-                        }
-                        return flyout;
-                    })
-                    .BindTo(this, x => x.ProvidersFlyout)
-                    .DisposeWith(disposables);
-            });
+            this.WhenActivated(disposables => { });
         }
 
         public void ToggleNavigationPane()

@@ -17,15 +17,16 @@ namespace Observatory.Core.ViewModels
 {
     public class MainViewModel : ReactiveObject, IScreen
     {
-        public ReactiveCommand<IProfileProvider, Unit> AddProfile { get; }
+        public Interaction<IEnumerable<IProfileProvider>, IProfileProvider> ProviderSelection { get; } =
+            new Interaction<IEnumerable<IProfileProvider>, IProfileProvider>();
+
+        public ReactiveCommand<Unit, Unit> AddProfile { get; }
 
         public FunctionalityMode[] Modes { get; } = new FunctionalityMode[]
         {
             FunctionalityMode.Mail,
             FunctionalityMode.Calendar,
         };
-
-        public IEnumerable<IProfileProvider> Providers { get; }
 
         [Reactive]
         public FunctionalityMode SelectedMode { get; set; } = FunctionalityMode.Mail;
@@ -41,12 +42,14 @@ namespace Observatory.Core.ViewModels
             mailViewModel.HostScreen = this;
             calendarViewModel.HostScreen = this;
 
-            Providers = providers;
-            AddProfile = ReactiveCommand.CreateFromTask<IProfileProvider, Unit>(async provider =>
+            AddProfile = ReactiveCommand.CreateFromTask(async () =>
             {
-                var profile = await provider.CreateRegisterAsync(profilePersistenceConfiguration.ProfileDataDirectory);
-                await profileRegistration.RegisterAsync(profile);
-                return Unit.Default;
+                var provider = await ProviderSelection.Handle(providers);
+                if (provider != null)
+                {
+                    var profile = await provider.CreateRegisterAsync(profilePersistenceConfiguration.ProfileDataDirectory);
+                    await profileRegistration.RegisterAsync(profile);
+                }
             });
             AddProfile.ThrownExceptions
                 .Subscribe(ex => this.Log().Error(ex));
