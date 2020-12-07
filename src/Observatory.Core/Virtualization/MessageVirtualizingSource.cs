@@ -63,7 +63,5 @@ namespace Observatory.Core.Virtualization
                 q => q.Where(m => m.FolderId == _folderId && m.ReceivedDateTime > entity.ReceivedDateTime));
             return query.MessageSummaries.Count(specification);
         }
-
-        public string KeyOf(MessageSummary entity) => entity.Id;
     }
 }

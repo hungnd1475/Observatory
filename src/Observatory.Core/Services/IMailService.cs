@@ -12,7 +12,7 @@ namespace Observatory.Core.Services
     /// <summary>
     /// Defines a service to interact with a mail server.
     /// </summary>
-    public interface IMailService 
+    public interface IMailService
     {
         /// <summary>
         /// Gets an observable of changes to the mail folders.
@@ -38,5 +38,12 @@ namespace Observatory.Core.Services
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task SynchronizeMessagesAsync(string folderId, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets an instance of <see cref="IEntityUpdater{TEntity}"/> to update a message given its id.
+        /// </summary>
+        /// <param name="messageId">The message id.</param>
+        /// <returns>An instance of <see cref="IEntityUpdater{TEntity}"/>.</returns>
+        IEntityUpdater<Message> UpdateMessage(string folderId, string messageId);
     }
 }

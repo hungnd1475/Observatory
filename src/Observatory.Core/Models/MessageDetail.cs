@@ -9,6 +9,6 @@ namespace Observatory.Core.Models
         public string Id { get; set; }
         public string FolderId { get; set; }
         public string Body { get; set; }
-        public ContentType BodyType { get; set; }
+        public ContentType? BodyType { get; set; }
     }
 }

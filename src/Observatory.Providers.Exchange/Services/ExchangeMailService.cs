@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Observatory.Core.Models;
 using Observatory.Core.Services;
 using Observatory.Providers.Exchange.Models;
@@ -7,6 +8,7 @@ using Splat;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -201,6 +203,7 @@ namespace Observatory.Providers.Exchange.Services
         public async Task SynchronizeMessagesAsync(string folderId, CancellationToken cancellationToken = default)
         {
             using var store = _storeFactory.Invoke(_register.DataFilePath, true);
+            var mapper = ExchangeModule.MapperConfiguration.CreateMapper();
             var syncState = await store.MessageSynchronizationStates.FindAsync(folderId);
 
             MG.IMessageDeltaRequest request = null;
@@ -246,12 +249,12 @@ namespace Observatory.Providers.Exchange.Services
                         .ToDictionaryAsync(m => m.Id);
                     var newMessages = deltaMessages
                         .Where(m => !updatedMessages.Keys.Contains(m.Key))
-                        .Select(m => m.Value.Convert())
+                        .Select(m => mapper.Map<MG.Message, Message>(m.Value))
                         .ToArray();
 
                     foreach (var m in updatedMessages)
                     {
-                        store.Entry(m.Value).UpdateFrom(deltaMessages[m.Key]);
+                        mapper.Map(deltaMessages[m.Key], m.Value);
                     }
 
                     store.AddRange(newMessages);
@@ -277,7 +280,7 @@ namespace Observatory.Providers.Exchange.Services
                     syncState.DeltaLink = page.GetDeltaLink();
                 }
 
-                // save without accepting changes so that we can publish the changes after the save is successful
+                // save without accepting changes so that we can publish the changes after
                 await store.SaveChangesAsync(acceptAllChangesOnSuccess: false)
                     .ConfigureAwait(false);
 
@@ -292,6 +295,40 @@ namespace Observatory.Providers.Exchange.Services
 
                 store.ChangeTracker.AcceptAllChanges();
             }
+        }
+
+        public IEntityUpdater<Message> UpdateMessage(string folderId, string messageId)
+        {
+            return new DelegateEntityUpdater<Message>(async setExpressions =>
+            {
+                var mapper = ExchangeModule.MapperConfiguration.CreateMapper();
+                var sourceMessage = new Message();
+                foreach (var (propertyExperssion, value) in setExpressions)
+                {
+                    propertyExperssion.GetPropertyAccess().SetValue(sourceMessage, value);
+                }
+                var targetMessage = mapper.Map<Message, MG.Message>(sourceMessage);
+                await _client.Me.Messages[messageId]
+                    .Request()
+                    .UpdateAsync(targetMessage)
+                    .ConfigureAwait(false);
+
+                using var store = _storeFactory.Invoke(_register.DataFilePath, true);
+                var originalMessage = await store.Messages
+                    .FindAsync(messageId, folderId)
+                    .ConfigureAwait(false);
+                foreach (var (propertyExpression, value) in setExpressions)
+                {
+                    propertyExpression.GetPropertyAccess().SetValue(originalMessage, value);
+                }
+                await store.SaveChangesAsync()
+                    .ConfigureAwait(false);
+
+                if (_messageChanges.HasObservers)
+                {
+                    _messageChanges.OnNext((folderId, new DeltaEntity<Message>[] { DeltaEntity.Updated(originalMessage) }));
+                }
+            });
         }
     }
 }

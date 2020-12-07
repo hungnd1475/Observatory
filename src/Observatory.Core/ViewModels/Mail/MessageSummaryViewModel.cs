@@ -1,8 +1,10 @@
 ﻿using Observatory.Core.Models;
 using Observatory.Core.Persistence;
+using Observatory.Core.Services;
 using Observatory.Core.Virtualization;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using Splat;
 using System;
 using System.Globalization;
 using System.Linq;
@@ -18,9 +20,9 @@ namespace Observatory.Core.ViewModels.Mail
         private static readonly Regex NEWLINE_PATTERN = new Regex("\\r?\n|\u200B|\u200C|\u200D", RegexOptions.Compiled);
         private static readonly Regex SPACES_PATTERN = new Regex("\\s\\s+", RegexOptions.Compiled);
 
-        private readonly IProfileDataQueryFactory _queryFactory;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly Lazy<MessageDetailViewModel> _detail;
+        private readonly string _folderId;
 
         public string Id { get; }
 
@@ -81,22 +83,46 @@ namespace Observatory.Core.ViewModels.Mail
 
         public ReactiveCommand<Unit, Unit> IgnoreCommand { get; }
 
-        public MessageSummaryViewModel(MessageSummary state, IProfileDataQueryFactory queryFactory)
+        public MessageSummaryViewModel(MessageSummary state,
+            IProfileDataQueryFactory queryFactory,
+            IMailService mailService)
         {
-            _queryFactory = queryFactory;
             _detail = new Lazy<MessageDetailViewModel>(() => new MessageDetailViewModel(state, queryFactory));
-
+            _folderId = state.FolderId;
             Id = state.Id;
             Refresh(state);
 
             ToggleFlagCommand = ReactiveCommand.CreateFromTask(async () =>
             {
-                await Task.Delay(200);
                 IsFlagged = !IsFlagged;
+                await mailService.UpdateMessage(_folderId, Id)
+                    .Set(m => m.IsFlagged, IsFlagged)
+                    .ExecuteAsync();
             });
             ToggleFlagCommand.IsExecuting
                 .ToPropertyEx(this, x => x.IsTogglingFlag)
                 .DisposeWith(_disposables);
+            ToggleFlagCommand.ThrownExceptions
+                .Subscribe(ex =>
+                {
+                    IsFlagged = !IsFlagged;
+                    this.Log().Error(ex);
+                })
+                .DisposeWith(_disposables);
+
+            ToggleReadCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                IsRead = !IsRead;
+                await mailService.UpdateMessage(_folderId, Id)
+                    .Set(m => m.IsRead, IsRead)
+                    .ExecuteAsync();
+            });
+            ToggleReadCommand.ThrownExceptions
+                .Subscribe(ex =>
+                {
+                    IsRead = !IsRead;
+                    this.Log().Error(ex);
+                });
 
             ArchiveCommand = ReactiveCommand.CreateFromTask(() =>
             {
@@ -107,19 +133,19 @@ namespace Observatory.Core.ViewModels.Mail
         public void Refresh(MessageSummary state)
         {
             Subject = state.Subject;
-            IsRead = state.IsRead;
-            Importance = state.Importance;
-            HasAttachments = state.HasAttachments;
-            IsDraft = state.IsDraft;
+            IsRead = state.IsRead.Value;
+            Importance = state.Importance.Value;
+            HasAttachments = state.HasAttachments.Value;
+            IsDraft = state.IsDraft.Value;
             Preview = state.BodyPreview != null
                 ? SPACES_PATTERN.Replace(NEWLINE_PATTERN.Replace(state.BodyPreview, " "), " ")
                 : null;
-            IsFlagged = state.IsFlagged;
-            Correspondents = state.IsDraft
+            IsFlagged = state.IsFlagged.Value;
+            Correspondents = state.IsDraft.Value
                 ? string.Join(", ", state.ToRecipients.Select(r => r.DisplayName))
                 : state.Sender.DisplayName;
-            ReceivedDateTime = state.ReceivedDateTime;
-            FormattedReceivedDateTime = FormatReceivedDateTime(state.ReceivedDateTime);
+            ReceivedDateTime = state.ReceivedDateTime.Value;
+            FormattedReceivedDateTime = FormatReceivedDateTime(state.ReceivedDateTime.Value);
 
             if (_detail.IsValueCreated)
             {

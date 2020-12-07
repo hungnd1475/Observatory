@@ -113,7 +113,7 @@ namespace Observatory.Core.ViewModels.Mail
 
         public MessageSummaryViewModel Transform(MessageSummary state)
         {
-            return new MessageSummaryViewModel(state, _queryFactory);
+            return new MessageSummaryViewModel(state, _queryFactory, _mailService);
         }
 
         private IObservable<(int UnreadCount, int TotalCount)> CountMessages()
@@ -121,7 +121,7 @@ namespace Observatory.Core.ViewModels.Mail
             return Observable.Start(() =>
             {
                 using var query = _queryFactory.Connect();
-                var unreadCount = query.MessageSummaries.Count(m => m.FolderId == _folderId && !m.IsRead);
+                var unreadCount = query.MessageSummaries.Count(m => m.FolderId == _folderId && !m.IsRead.Value);
                 var totalCount = query.MessageSummaries.Count(m => m.FolderId == _folderId);
                 return (UnreadCount: unreadCount, TotalCount: totalCount);
             }, RxApp.TaskpoolScheduler);

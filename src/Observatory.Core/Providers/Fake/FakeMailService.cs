@@ -11,7 +11,7 @@ namespace Observatory.Core.Providers.Fake
 {
     public class FakeMailService : IMailService
     {
-        public IObservable<IEnumerable<DeltaEntity<MailFolder>>> FolderChanges { get; } = 
+        public IObservable<IEnumerable<DeltaEntity<MailFolder>>> FolderChanges { get; } =
             Observable.Empty<IEnumerable<DeltaEntity<MailFolder>>>();
 
         public IObservable<(string FolderId, IEnumerable<DeltaEntity<Message>> Changes)> MessageChanges { get; } =
@@ -22,12 +22,12 @@ namespace Observatory.Core.Providers.Fake
             return Task.CompletedTask;
         }
 
-        public Task SynchronizeMessagesAsync(CancellationToken cancellationToken = default)
+        public Task SynchronizeMessagesAsync(string folderId, CancellationToken cancellationToken = default)
         {
-            return Task.CompletedTask;
+            throw new NotImplementedException();
         }
 
-        public Task SynchronizeMessagesAsync(string folderId, CancellationToken cancellationToken = default)
+        public IEntityUpdater<Message> UpdateMessage(string folderId, string messageId)
         {
             throw new NotImplementedException();
         }

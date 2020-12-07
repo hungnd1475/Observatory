@@ -97,33 +97,23 @@ namespace Observatory.Core.ViewModels.Mail
                 if (r != null)
                 {
                     Body = r.Body;
-                    BodyType = r.BodyType;
+                    BodyType = r.BodyType.Value;
                 }
                 IsLoading = false;
             });
 
             IsLoading = true;
             Subject = summary.Subject;
-            IsRead = summary.IsRead;
-            Importance = summary.Importance;
-            HasAttachments = summary.HasAttachments;
-            IsDraft = summary.IsDraft;
-            IsFlagged = summary.IsFlagged;
+            IsRead = summary.IsRead.Value;
+            Importance = summary.Importance.Value;
+            HasAttachments = summary.HasAttachments.Value;
+            IsDraft = summary.IsDraft.Value;
+            IsFlagged = summary.IsFlagged.Value;
             Sender = FormatRecipient(summary.Sender, true);
-            CcRecipients = summary.CcRecipients.Select((r, i) =>
-            {
-                return i == summary.CcRecipients.Count - 1
-                    ? FormatRecipient(r, false)
-                    : FormatRecipient(r, false) + ";";
-            }).ToList().AsReadOnly();
-            ToRecipients = summary.ToRecipients.Select((r, i) =>
-            {
-                return i == summary.ToRecipients.Count - 1
-                    ? FormatRecipient(r, false)
-                    : FormatRecipient(r, false) + ";";
-            }).ToList().AsReadOnly();
-            ReceivedDateTime = summary.ReceivedDateTime;
-            FormattedReceivedDateTime = FormatReceivedDateTime(summary.ReceivedDateTime);
+            CcRecipients = FormatRecipients(summary.CcRecipients);
+            ToRecipients = FormatRecipients(summary.ToRecipients);
+            ReceivedDateTime = summary.ReceivedDateTime.Value;
+            FormattedReceivedDateTime = FormatReceivedDateTime(summary.ReceivedDateTime.Value);
             Body = "";
             BodyType = ContentType.Html;
             IsLoading = true;
@@ -143,6 +133,17 @@ namespace Observatory.Core.ViewModels.Mail
             {
                 return recipient.DisplayName;
             }
+        }
+
+        private IReadOnlyList<string> FormatRecipients(IReadOnlyList<Recipient> recipients)
+        {
+            return recipients.Select((r, i) =>
+            {
+                return i == recipients.Count - 1
+                    ? FormatRecipient(r, false)
+                    : FormatRecipient(r, false) + ";";
+            })
+            .ToList().AsReadOnly();
         }
 
         private string FormatReceivedDateTime(DateTimeOffset receivedDateTime)

@@ -6,10 +6,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Services\ExchangeMessageUpdater.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
+    <PackageReference Include="AutoMapper.Extensions.ExpressionMapping" Version="4.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.8" />
     <PackageReference Include="Microsoft.Graph" Version="3.15.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.19.0" />
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="2.15.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Include="Services\ExchangeMessageUpdater.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
   <ItemGroup>
