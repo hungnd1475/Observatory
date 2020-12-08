@@ -18,7 +18,7 @@ namespace Observatory.Core.Providers.Fake
 
         public string IconGeometry { get; } = "F1 M 10 0 L 20 10 L 10 20 L 0 10 Z M 1.328125 10 L 10 18.671875 L 18.671875 10 L 10 1.328125 Z";
 
-        public FakeProfileProvider(string providerId, string emailAddress, string displayName, 
+        public FakeProfileProvider(string providerId, string emailAddress, string displayName,
             FakeProfileDataQueryFactory queryFactory, FakeMailService mailService)
         {
             _register = new ProfileRegister()
@@ -45,6 +45,11 @@ namespace Observatory.Core.Providers.Fake
         public Task<ProfileViewModelBase> CreateViewModelAsync(ProfileRegister register)
         {
             return Task.FromResult<ProfileViewModelBase>(_viewModel);
+        }
+
+        public Stream ReadIcon()
+        {
+            throw new NotImplementedException();
         }
     }
 }

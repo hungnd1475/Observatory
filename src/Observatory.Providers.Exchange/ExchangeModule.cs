@@ -5,7 +5,6 @@ using Observatory.Core.Models;
 using Observatory.Core.Services;
 using Observatory.Providers.Exchange.Persistence;
 using Observatory.Providers.Exchange.Services;
-using System;
 using AM = AutoMapper;
 using MG = Microsoft.Graph;
 

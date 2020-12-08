@@ -1,5 +1,6 @@
 ﻿using Observatory.Core.Models;
 using Observatory.Core.ViewModels;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Observatory.Core.Services
@@ -25,5 +26,7 @@ namespace Observatory.Core.Services
         /// <param name="profileDataDirectory">The directory to the file storing the profile's data.</param>
         /// <returns></returns>
         Task<ProfileRegister> CreateRegisterAsync(string profileDataDirectory);
+
+        Stream ReadIcon();
     }
 }

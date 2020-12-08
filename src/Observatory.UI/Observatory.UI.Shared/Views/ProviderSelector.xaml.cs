@@ -16,7 +16,7 @@ using Windows.UI.Xaml.Navigation;
 
 // The Content Dialog item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
-namespace Observatory.UI.Views.Mail
+namespace Observatory.UI.Views
 {
     public sealed partial class ProviderSelector : ContentDialog
     {
