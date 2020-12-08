@@ -555,7 +555,8 @@
           <local:MailFolderView SelectedMessage="{x:Bind ViewModel.SelectedMessage, Mode=TwoWay}"
                                 ViewModel="{x:Bind ViewModel.SelectedFolder, Mode=OneWay}"/>
           <local:MessageDetailView Grid.Column="1"
-                                   ViewModel="{x:Bind ViewModel.SelectedMessage.Detail, Mode=OneWay}"/>
+                                   ViewModel="{x:Bind ViewModel.SelectedMessage.Detail, Mode=OneWay}"
+                                   Visibility="{x:Bind ui:Converters.ObjectNullToVisibility(ViewModel.SelectedMessage), Mode=OneWay, FallbackValue='Collapsed'}"/>
         </Grid>
       </SplitView>
     </SplitView>

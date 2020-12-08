@@ -11,6 +11,7 @@ using System.Reactive.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -49,6 +50,15 @@ namespace Observatory.UI.Views.Mail
                     .Subscribe(body => BodyViewer.NavigateToString(body))
                     .DisposeWith(disposables);
             });
+        }
+
+        public async void BodyViewer_NavigationStarting(WebView sender, WebViewNavigationStartingEventArgs e)
+        {
+            if (e.Uri != null)
+            {
+                e.Cancel = true;
+                await Launcher.LaunchUriAsync(e.Uri);
+            }
         }
     }
 }

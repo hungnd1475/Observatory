@@ -38,7 +38,7 @@ namespace Observatory.UI.Views
 
         public void SelectProvider(object sender, ItemClickEventArgs e)
         {
-            SelectedProvider = (IProfileProvider)e.ClickedItem;
+            SelectedProvider = e.ClickedItem as IProfileProvider;
             Hide();
         }
     }

@@ -8,8 +8,7 @@
              xmlns:sys="using:System"
              xmlns:ui="using:Observatory.UI"
              mc:Ignorable="d">
-  <UserControl.Resources/>
-  <Grid>
+  <Grid x:DefaultBindMode="OneWay">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
@@ -140,7 +139,8 @@
       <WebView x:Name="BodyViewer"
                Grid.Row="1"
                HorizontalAlignment="Stretch"
-               VerticalAlignment="Stretch"/>
+               VerticalAlignment="Stretch"
+               NavigationStarting="BodyViewer_NavigationStarting"/>
     </Grid>
   </Grid>
 </UserControl>

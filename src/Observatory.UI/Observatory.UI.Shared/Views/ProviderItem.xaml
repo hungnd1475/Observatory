@@ -18,6 +18,7 @@
            VerticalAlignment="Center"
            Loaded="LogoLoaded"/>
     <TextBlock Grid.Column="1"
+               Margin="8,0,0,0"
                VerticalAlignment="Center"
                Text="{x:Bind Provider.DisplayName, Mode=OneWay}"/>
   </Grid>
