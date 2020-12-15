@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using AutoMapper;
 using AutoMapper.Extensions.ExpressionMapping;
 using Observatory.Core.Models;
 using Observatory.Core.Services;
@@ -19,6 +18,7 @@ namespace Observatory.Providers.Exchange
             MapperConfiguration = new AM.MapperConfiguration(cfg =>
             {
                 cfg.AddExpressionMapping();
+                cfg.AddProfile<FolderProfile>();
                 cfg.AddProfile<MessageProfile>();
             });
         }
@@ -37,11 +37,29 @@ namespace Observatory.Providers.Exchange
         }
     }
 
+    public class FolderProfile : AM.Profile
+    {
+        public FolderProfile()
+        {
+            CreateMap<MG.MailFolder, MailFolder>()
+                .ForMember(dst => dst.Name, opt => opt.MapFrom(src => src.DisplayName))
+                .ForMember(dst => dst.ParentId, opt => opt.MapFrom(src => src.ParentFolderId))
+                .ForMember(dst => dst.IsFavorite, opt => opt.MapFrom(src => false))
+                .ForMember(dst => dst.Type, opt => opt.MapFrom(src => FolderType.None))
+                .ForAllMembers(opt => opt.Condition((src, dst, prop) => prop != null));
+
+            CreateMap<MailFolder, MG.MailFolder>()
+                .ForMember(dst => dst.DisplayName, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dst => dst.ParentFolderId, opt => opt.MapFrom(src => src.ParentId))
+                .ForAllMembers(opt => opt.Condition((src, dst, prop) => prop != null));
+        }
+    }
+
     public class MessageProfile : AM.Profile
     {
-        class BodyResolver : IValueResolver<Message, MG.Message, MG.ItemBody>
+        class BodyResolver : AM.IValueResolver<Message, MG.Message, MG.ItemBody>
         {
-            public MG.ItemBody Resolve(Message source, MG.Message destination, MG.ItemBody destMember, ResolutionContext context)
+            public MG.ItemBody Resolve(Message source, MG.Message destination, MG.ItemBody destMember, AM.ResolutionContext context)
             {
                 if (source.Body != null || source.BodyType != null)
                 {
@@ -53,9 +71,9 @@ namespace Observatory.Providers.Exchange
             }
         }
 
-        class FlagResolver : IValueResolver<Message, MG.Message, MG.FollowupFlag>
+        class FlagResolver : AM.IValueResolver<Message, MG.Message, MG.FollowupFlag>
         {
-            public MG.FollowupFlag Resolve(Message source, MG.Message destination, MG.FollowupFlag destMember, ResolutionContext context)
+            public MG.FollowupFlag Resolve(Message source, MG.Message destination, MG.FollowupFlag destMember, AM.ResolutionContext context)
             {
                 if (source.IsFlagged != null)
                 {
@@ -99,13 +117,8 @@ namespace Observatory.Providers.Exchange
                 .ForMember(dst => dst.Body, opt => opt.MapFrom(new BodyResolver()))
                 .ForMember(dst => dst.ParentFolderId, opt => opt.MapFrom(dst => dst.FolderId))
                 .ForMember(dst => dst.ConversationId, opt => opt.MapFrom(dst => dst.ThreadId))
-                .ForMember(dst => dst.Flag, opt => opt.Condition(src => src.IsFlagged != null))
                 .ForMember(dst => dst.Flag, opt => opt.MapFrom(new FlagResolver()))
-                .ForAllMembers(opt =>
-                {
-                    opt.Condition((src, dst, prop) => prop != null);
-                    opt.AllowNull();
-                });
+                .ForAllMembers(opt => opt.Condition((src, dst, prop) => prop != null));
         }
     }
 }

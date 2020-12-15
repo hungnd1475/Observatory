@@ -1,8 +1,10 @@
 ﻿using Autofac;
 using Observatory.Core.ViewModels.Calendar;
 using Observatory.Core.ViewModels.Mail;
+using Observatory.Core.ViewModels.Settings;
 using Observatory.UI.Views.Calendar;
 using Observatory.UI.Views.Mail;
+using Observatory.UI.Views.Settings;
 using ReactiveUI;
 
 namespace Observatory.UI
@@ -13,6 +15,7 @@ namespace Observatory.UI
         {
             builder.RegisterType<MailManagerPage>().As<IViewFor<MailManagerViewModel>>();
             builder.RegisterType<CalendarManagerPage>().As<IViewFor<CalendarViewModel>>();
+            builder.RegisterType<SettingPage>().As<IViewFor<SettingsViewModel>>();
         }
     }
 }

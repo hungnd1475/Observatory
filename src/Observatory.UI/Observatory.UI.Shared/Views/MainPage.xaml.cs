@@ -8,8 +8,11 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -34,6 +37,14 @@ namespace Observatory.UI.Views
         {
             this.InitializeComponent();
             ViewModel = Locator.Current.GetService<MainViewModel>();
+
+            var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
+            coreTitleBar.ExtendViewIntoTitleBar = true;
+
+            var appTitlebar = ApplicationView.GetForCurrentView().TitleBar;
+            appTitlebar.ButtonBackgroundColor = Colors.Transparent;
+            appTitlebar.ButtonInactiveBackgroundColor = Colors.Transparent;
+            appTitlebar.ButtonForegroundColor = Colors.Black;
 
             this.WhenActivated(disposables => 
             {

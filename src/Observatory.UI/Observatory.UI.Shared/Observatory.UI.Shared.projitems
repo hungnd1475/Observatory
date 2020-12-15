@@ -20,6 +20,10 @@
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageListViewItem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Controls\OneWayToggleButton.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UISettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Views\FunctionalityModeSelector.xaml.cs">
+      <DependentUpon>FunctionalityModeSelector.xaml</DependentUpon>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Views\Mail\MailFolderView.xaml.cs">
       <DependentUpon>MailFolderView.xaml</DependentUpon>
     </Compile>
@@ -47,10 +51,23 @@
     <Compile Include="$(MSBuildThisFileDirectory)Views\ProviderItem.xaml.cs">
       <DependentUpon>ProviderItem.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\SettingDialog.xaml.cs">
+      <DependentUpon>SettingDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\Settings\SettingPage.xaml.cs">
+      <DependentUpon>SettingPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\Settings\SettingsDialog.xaml.cs">
+      <DependentUpon>SettingsDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Virtualizing\VirtualizingList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Virtualizing\VirtualizingPlaceholder.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)Views\FunctionalityModeSelector.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="$(MSBuildThisFileDirectory)Views\Mail\MailFolderView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -80,6 +97,18 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="$(MSBuildThisFileDirectory)Views\ProviderItem.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Views\SettingDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Views\Settings\SettingPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Views\Settings\SettingsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

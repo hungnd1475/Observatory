@@ -13,7 +13,7 @@
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
-    <CommandBar Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
+    <!--<CommandBar Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
                 DefaultLabelPosition="Right">
       <AppBarButton Icon="MailReply"
                     Label="Reply"/>
@@ -56,14 +56,14 @@
         <AppBarButton Icon="Zoom"
                       Label="Zoom"/>
       </CommandBar.SecondaryCommands>
-    </CommandBar>
+    </CommandBar>-->
     <Grid Grid.Row="1"
           x:DefaultBindMode="OneWay">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto"/>
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
-      <Grid Margin="15">
+      <Grid Margin="8">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto"/>
           <RowDefinition Height="Auto"/>

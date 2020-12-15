@@ -127,7 +127,7 @@ namespace Observatory.Core.ViewModels.Mail
             }, RxApp.TaskpoolScheduler);
         }
 
-        public void InitializeMessages()
+        public void LoadMessages()
         {
             Messages = new VirtualizingCache<MessageSummary, string>(
                 new MessageVirtualizingSource(_queryFactory, _folderId),

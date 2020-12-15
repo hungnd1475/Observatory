@@ -19,7 +19,7 @@
       </Grid.RowDefinitions>
       <ListView Grid.Row="1"
                 ItemsSource="{x:Bind ViewModel.HostScreen.Modes}"
-                SelectedItem="{x:Bind ViewModel.HostScreen.SelectedMode, Mode=TwoWay}"
+                SelectedItem="{x:Bind ViewModel.HostScreen.CurrentMode, Mode=TwoWay}"
                 SelectionMode="Single">
         <ListView.ItemsPanel>
           <ItemsPanelTemplate>

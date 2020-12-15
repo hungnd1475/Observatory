@@ -8,7 +8,6 @@ using Splat;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -20,10 +19,6 @@ namespace Observatory.Providers.Exchange.Services
 {
     public class ExchangeMailService : IMailService, IEnableLogger
     {
-        public const string REMOVED_FLAG = "@removed";
-        public const string DELTA_LINK = "@odata.deltaLink";
-        public const string NEXT_LINK = "@odata.nextLink";
-
         public const string MESSAGES_SELECT_QUERY = "Subject,Sender,ReceivedDateTime,IsRead,Importance," +
             "HasAttachments,Flag,ToRecipients,CcRecipients,Body," +
             "ConversationId,ConversationIndex,IsDraft,ParentFolderId," +
@@ -76,22 +71,29 @@ namespace Observatory.Providers.Exchange.Services
         {
             using var store = _storeFactory.Invoke(_register.DataFilePath, false);
             var syncState = await store.FolderSynchronizationStates.FirstAsync();
+            var mapper = ExchangeModule.MapperConfiguration.CreateMapper();
+
             if (syncState.DeltaLink == null)
             {
                 static async Task<MailFolder> RequestSpecialFolder(MG.IMailFolderRequestBuilder requestBuilder,
-                    FolderType type, bool isFavorite)
+                    FolderType type, bool isFavorite,
+                    AutoMapper.IMapper mapper)
                 {
                     var folder = await requestBuilder.Request()
                         .GetAsync()
                         .ConfigureAwait(false);
-                    return folder.Convert(type, isFavorite);
+                    return mapper.Map<MG.MailFolder, MailFolder>(folder, opt => opt.AfterMap((src, dst) =>
+                    {
+                        dst.IsFavorite = isFavorite;
+                        dst.Type = type;
+                    }));
                 }
 
                 var specialFolders = await Task.WhenAll(
-                    RequestSpecialFolder(_client.Me.MailFolders.Inbox, FolderType.Inbox, true),
-                    RequestSpecialFolder(_client.Me.MailFolders.SentItems, FolderType.SentItems, true),
-                    RequestSpecialFolder(_client.Me.MailFolders.Drafts, FolderType.Drafts, true),
-                    RequestSpecialFolder(_client.Me.MailFolders.DeletedItems, FolderType.DeletedItems, true));
+                    RequestSpecialFolder(_client.Me.MailFolders.Inbox, FolderType.Inbox, true, mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders.SentItems, FolderType.SentItems, true, mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders.Drafts, FolderType.Drafts, true, mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders.DeletedItems, FolderType.DeletedItems, true, mapper));
                 var specialIds = new HashSet<string>(specialFolders.Select(f => f.Id));
                 var folders = new List<MailFolder>(specialFolders);
 
@@ -100,13 +102,14 @@ namespace Observatory.Providers.Exchange.Services
                     .Delta()
                     .Request()
                     .Header(PREFER_HEADER, $"{MAX_PAGE_SIZE}={pageSize}");
+
                 while (true)
                 {
                     var page = await request.GetAsync(cancellationToken)
                         .ConfigureAwait(false);
                     folders.AddRange(page
                         .Where(f => !specialIds.Contains(f.Id))
-                        .Select(f => f.Convert()));
+                        .Select(f => mapper.Map<MG.MailFolder, MailFolder>(f)));
 
                     if (page.NextPageRequest != null)
                     {
@@ -168,11 +171,11 @@ namespace Observatory.Providers.Exchange.Services
                         .ToDictionaryAsync(f => f.Id);
                     var newFolders = deltaFolders.Values
                         .Where(f => !updatedFolders.ContainsKey(f.Id))
-                        .Select(f => f.Convert())
+                        .Select(f => mapper.Map<MG.MailFolder, MailFolder>(f))
                         .ToList();
                     foreach (var f in updatedFolders)
                     {
-                        store.Entry(f.Value).UpdateFrom(deltaFolders[f.Key]);
+                        mapper.Map(deltaFolders[f.Key], f.Value);
                     }
 
                     store.AddRange(newFolders);

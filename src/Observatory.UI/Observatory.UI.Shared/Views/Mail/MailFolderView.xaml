@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="using:Observatory.UI.Views.Mail"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
              d:DesignHeight="600"
              d:DesignWidth="500"
              mc:Ignorable="d">
@@ -23,36 +24,64 @@
         </Setter.Value>
       </Setter>
     </Style>
+
+    <ThemeShadow x:Name="FolderNameShadow"/>
   </UserControl.Resources>
-  <Grid BorderBrush="{ThemeResource SystemBaseLowColor}"
-        BorderThickness="1,0">
+  <Grid>
     <Grid.RowDefinitions>
-      <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
-    <Grid>
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*"/>
-        <ColumnDefinition Width="Auto"/>
-      </Grid.ColumnDefinitions>
-      <TextBox PlaceholderText="Search"/>
-      <Button Grid.Column="1"
-              Command="{x:Bind ViewModel.Synchronize, Mode=OneWay}">
-        <SymbolIcon Symbol="Sync"/>
-      </Button>
+    <Grid Height="{StaticResource NavigationViewCompactPaneLength}"
+          Background="{ThemeResource SystemControlAcrylicWindowBrush}"
+          Shadow="{StaticResource FolderNameShadow}"
+          Translation="0,0,4">
+      <CommandBar VerticalContentAlignment="Center"
+                  Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
+                  DefaultLabelPosition="Right"
+                  IsDynamicOverflowEnabled="False">
+        <AppBarButton Icon="ViewAll"
+                      Label="Show: All">
+          <AppBarButton.Flyout>
+            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+              <muxc:RadioMenuFlyoutItem GroupName="Filter"
+                                        Text="All"/>
+              <muxc:RadioMenuFlyoutItem GroupName="Filter"
+                                        Text="Unread"/>
+              <muxc:RadioMenuFlyoutItem GroupName="Filter"
+                                        Text="Flagged"/>
+              <MenuFlyoutSeparator/>
+              <muxc:RadioMenuFlyoutItem GroupName="Sort"
+                                        Text="Sort By Date"/>
+              <muxc:RadioMenuFlyoutItem GroupName="Sort"
+                                        Text="Sort By Name"/>
+            </MenuFlyout>
+          </AppBarButton.Flyout>
+        </AppBarButton>
+        <CommandBar.SecondaryCommands>
+          <AppBarButton Icon="Edit"
+                        Label="Rename"/>
+          <AppBarButton Icon="Delete"
+                        Label="Delete"/>
+          <AppBarButton Icon="MoveToFolder"
+                        Label="Move"/>
+          <AppBarSeparator/>
+          <AppBarButton Icon="Favorite"
+                        Label="Add to Favorites"/>
+          <AppBarButton Icon="Mail"
+                        Label="Mark all as read"/>
+        </CommandBar.SecondaryCommands>
+        <CommandBar.Content>
+          <TextBlock Margin="8,0"
+                     VerticalAlignment="Center"
+                     FontSize="16"
+                     FontWeight="SemiBold"
+                     Text="{x:Bind ViewModel.Name, Mode=OneWay}"/>
+        </CommandBar.Content>
+      </CommandBar>
     </Grid>
-    <Grid Grid.Row="1"
-          Margin="8">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*"/>
-        <ColumnDefinition Width="Auto"/>
-      </Grid.ColumnDefinitions>
-      <TextBlock FontSize="20"
-                 FontWeight="SemiBold"
-                 Text="{x:Bind ViewModel.Name, Mode=OneWay}"/>
-    </Grid>
-    <Grid Grid.Row="2">
+    <Grid x:Name="MessageListGrid"
+          Grid.Row="1">
       <controls:MessageListView x:Name="_messageList"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"

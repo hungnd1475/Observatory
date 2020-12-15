@@ -16,6 +16,11 @@ namespace Observatory.UI
             return Equals(x, y) ? Visibility.Visible : Visibility.Collapsed;
         }
 
+        public static bool Equality(object x, object y)
+        {
+            return Equals(x, y);
+        }
+
         public static Visibility InequalityToVisibility(object x, object y)
         {
             return !Equals(x, y) ? Visibility.Visible : Visibility.Collapsed;
@@ -47,6 +52,7 @@ namespace Observatory.UI
             {
                 FunctionalityMode.Mail => Symbol.Mail,
                 FunctionalityMode.Calendar => Symbol.Calendar,
+                FunctionalityMode.Setup => Symbol.Setting,
                 _ => throw new NotSupportedException(),
             };
         }

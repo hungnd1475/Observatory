@@ -24,12 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Page Include="Services\ExchangeMessageUpdater.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Observatory.Core\Observatory.Core.csproj" />
   </ItemGroup>
 

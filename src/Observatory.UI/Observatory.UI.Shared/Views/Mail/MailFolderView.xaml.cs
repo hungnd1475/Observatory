@@ -40,6 +40,8 @@ namespace Observatory.UI.Views.Mail
         public MailFolderView()
         {
             this.InitializeComponent();
+            FolderNameShadow.Receivers.Add(MessageListGrid);
+
             this.WhenActivated(disposables =>
             {
                 this.WhenAnyValue(x => x.ViewModel)

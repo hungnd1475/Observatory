@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -14,6 +15,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Uno.Extensions;
 using Uno.Logging;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Text;
@@ -37,13 +39,19 @@ namespace Observatory.UI.Views.Mail
         public static DependencyProperty ViewModelProperty { get; } =
             DependencyProperty.Register(nameof(ViewModel), typeof(MailManagerViewModel), typeof(MailManagerPage), null);
 
-        public static DependencyProperty ProvidersFlyoutProperty { get; } =
-            DependencyProperty.Register(nameof(ProvidersFlyout), typeof(MenuFlyout), typeof(MailManagerPage), null);
+        public static DependencyProperty TitleTextProperty { get; } =
+            DependencyProperty.Register(nameof(TitleText), typeof(string), typeof(MailManagerPage), new PropertyMetadata("Mail"));
 
         public MailManagerViewModel ViewModel
         {
             get => (MailManagerViewModel)GetValue(ViewModelProperty);
             set => SetValue(ViewModelProperty, value);
+        }
+
+        public string TitleText
+        {
+            get { return (string)GetValue(TitleTextProperty); }
+            set { SetValue(TitleTextProperty, value); }
         }
 
         object IViewFor.ViewModel
@@ -52,16 +60,36 @@ namespace Observatory.UI.Views.Mail
             set => ViewModel = (MailManagerViewModel)value;
         }
 
-        public MenuFlyout ProvidersFlyout
-        {
-            get => (MenuFlyout)GetValue(ProvidersFlyoutProperty);
-            set => SetValue(ProvidersFlyoutProperty, value);
-        }
-
         public MailManagerPage()
         {
             this.InitializeComponent();
-            this.WhenActivated(disposables => { });
+            ContentGridShadow.Receivers.Add(NavigationPaneRoot);
+            TopBarGridShadow.Receivers.Add(NavigationView);
+            CoreApplication.GetCurrentView().TitleBar.LayoutMetricsChanged += TitleBar_LayoutMetricsChanged;
+
+            SearchFolderTextBox.LostFocus += SearchFolderTextBox_LostFocus;
+
+            this.WhenActivated(disposables => 
+            {
+                this.WhenAnyValue(x => x.ViewModel.SelectedProfile)
+                    .DistinctUntilChanged()
+                    .Select(x => x == null ? "Mail" : $"Mail - {x.DisplayName}")
+                    .BindTo(this, x => x.TitleTextBlock.Text)
+                    .DisposeWith(disposables);
+            });
+        }
+
+        private void SearchFolderTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(SearchFolderTextBox.Text))
+            {
+                HideSearchFolderCommandBar();
+            }
+        }
+
+        private void TitleBar_LayoutMetricsChanged(CoreApplicationViewTitleBar sender, object args)
+        {
+            WindowTitleRegion.Height = new GridLength(sender.Height);
         }
 
         public void ToggleNavigationPane()
@@ -83,6 +111,20 @@ namespace Observatory.UI.Views.Mail
         {
             ViewModel.SelectedFolder = e.InvokedItem as MailFolderViewModel;
             ToggleFolderListPane();
+        }
+
+        public void ShowSearchFolderCommandBar()
+        {
+            DefaultFolderCommandBar.Visibility = Visibility.Collapsed;
+            SearchFolderCommandBar.Visibility = Visibility.Visible;
+            SearchFolderTextBox.Focus(FocusState.Keyboard);
+        }
+
+        public void HideSearchFolderCommandBar()
+        {
+            DefaultFolderCommandBar.Visibility = Visibility.Visible;
+            SearchFolderCommandBar.Visibility = Visibility.Collapsed;
+            SearchFolderTextBox.Text = string.Empty;
         }
     }
 }

@@ -153,6 +153,11 @@ namespace Observatory.Core.Virtualization
                 .Subscribe(_cacheSubject.OnNext);
         }
 
+        public void Reset()
+        {
+
+        }
+
         /// <summary>
         /// Update the ranges of items the cache holds. Based on the newly requested ranges, the cache
         /// will figure out which items to load from source and which items are longer needed. Call this function whenever the UI

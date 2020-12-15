@@ -22,6 +22,8 @@ namespace Observatory.Core.ViewModels
 
         public ReactiveCommand<Unit, Unit> AddProfile { get; }
 
+        public ReactiveCommand<FunctionalityMode, Unit> SelectMode { get; }
+
         public FunctionalityMode[] Modes { get; } = new FunctionalityMode[]
         {
             FunctionalityMode.Mail,
@@ -29,19 +31,15 @@ namespace Observatory.Core.ViewModels
         };
 
         [Reactive]
-        public FunctionalityMode SelectedMode { get; set; } = FunctionalityMode.Mail;
+        public FunctionalityMode CurrentMode { get; set; } = FunctionalityMode.Mail;
 
         public RoutingState Router { get; } = new RoutingState();
 
         public MainViewModel(IProfileRegistrationService profileRegistration,
             ProfilePersistenceConfiguration profilePersistenceConfiguration,
             IEnumerable<IProfileProvider> providers,
-            MailManagerViewModel mailViewModel,
-            CalendarViewModel calendarViewModel)
+            IIndex<FunctionalityMode, IFunctionalityViewModel> functionalityViewModels)
         {
-            mailViewModel.HostScreen = this;
-            calendarViewModel.HostScreen = this;
-
             AddProfile = ReactiveCommand.CreateFromTask(async () =>
             {
                 var provider = await ProviderSelection.Handle(providers);
@@ -54,21 +52,20 @@ namespace Observatory.Core.ViewModels
             AddProfile.ThrownExceptions
                 .Subscribe(ex => this.Log().Error(ex));
 
-            this.WhenAnyValue(x => x.SelectedMode)
+            SelectMode = ReactiveCommand.Create<FunctionalityMode, Unit>(mode =>
+            {
+                CurrentMode = mode;
+                return Unit.Default;
+            });
+
+            this.WhenAnyValue(x => x.CurrentMode)
                 .DistinctUntilChanged()
-                .Do(mode =>
+                .Subscribe(mode =>
                 {
-                    switch (mode)
-                    {
-                        case FunctionalityMode.Mail:
-                            Router.Navigate.Execute(mailViewModel);
-                            break;
-                        case FunctionalityMode.Calendar:
-                            Router.Navigate.Execute(calendarViewModel);
-                            break;
-                    }
-                })
-                .Subscribe();
+                    var viewModel = functionalityViewModels[mode];
+                    viewModel.HostScreen = this;
+                    Router.Navigate.Execute(viewModel);
+                });
         }
     }
 }

@@ -1,0 +1,156 @@
+﻿<UserControl x:Class="Observatory.UI.Views.FunctionalityModeSelector"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:Observatory.UI.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="using:Observatory.UI.Views"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="using:Observatory.UI"
+             xmlns:vm="using:Observatory.Core.ViewModels"
+             d:DesignHeight="300"
+             d:DesignWidth="400"
+             mc:Ignorable="d">
+  <UserControl.Resources>
+    <ThemeResource x:Key="ModeSelectorToggleButtonCheckedBackgroundBrush"
+                   ResourceKey="SystemControlHighlightAccentRevealBackgroundBrush"/>
+
+    <Style x:Key="ModeSelectorToggleButtonStyle" TargetType="ToggleButton">
+      <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
+      <Setter Property="BorderBrush" Value="{ThemeResource SystemControlTransparentRevealBorderBrush}"/>
+      <Setter Property="Height" Value="{StaticResource NavigationViewCompactPaneLength}"/>
+      <Setter Property="HorizontalAlignment" Value="Left"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ToggleButton">
+            <Grid x:Name="ContentPresenterGrid"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}">
+              <ContentPresenter x:Name="ContentPresenter"
+                                Padding="{TemplateBinding Padding}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                AutomationProperties.AccessibilityView="Raw"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                ContentTransitions="{TemplateBinding ContentTransitions}"
+                                Foreground="{TemplateBinding Foreground}"/>
+              <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="CommonStates">
+                  <VisualState x:Name="Normal"/>
+                  <VisualState x:Name="PointerOver">
+                    <VisualState.Setters>
+                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="PointerOver"/>
+                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListLowRevealBackgroundBrush}"/>
+                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
+                    </VisualState.Setters>
+                  </VisualState>
+                  <VisualState x:Name="Pressed">
+                    <VisualState.Setters>
+                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="Pressed"/>
+                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListMediumRevealBackgroundBrush}"/>
+                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
+                    </VisualState.Setters>
+                  </VisualState>
+                  <VisualState x:Name="Checked">
+                    <VisualState.Setters>
+                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
+                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
+                    </VisualState.Setters>
+                  </VisualState>
+                  <VisualState x:Name="CheckedPointerOver">
+                    <VisualState.Setters>
+                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="PointerOver"/>
+                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
+                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
+                    </VisualState.Setters>
+                  </VisualState>
+                  <VisualState x:Name="CheckedPressed">
+                    <VisualState.Setters>
+                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="Pressed"/>
+                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
+                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
+                    </VisualState.Setters>
+                  </VisualState>
+                </VisualStateGroup>
+              </VisualStateManager.VisualStateGroups>
+            </Grid>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="Width" Value="{StaticResource NavigationViewCompactPaneLength}"/>
+    </Style>
+  </UserControl.Resources>
+  <Grid>
+    <Grid x:Name="CompactGrid">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      <controls:OneWayToggleButton Command="{x:Bind MainViewModel.SelectMode, Mode=OneWay}"
+                                   CommandParameter="{x:Bind vm:FunctionalityMode.Mail}"
+                                   IsChecked="{x:Bind ui:Converters.Equality(MainViewModel.CurrentMode, vm:FunctionalityMode.Mail), Mode=OneWay}"
+                                   Style="{StaticResource ModeSelectorToggleButtonStyle}">
+        <SymbolIcon Symbol="Mail"/>
+      </controls:OneWayToggleButton>
+      <controls:OneWayToggleButton Grid.Row="1"
+                                   Command="{x:Bind MainViewModel.SelectMode, Mode=OneWay}"
+                                   CommandParameter="{x:Bind vm:FunctionalityMode.Calendar}"
+                                   IsChecked="{x:Bind ui:Converters.Equality(MainViewModel.CurrentMode, vm:FunctionalityMode.Calendar), Mode=OneWay}"
+                                   Style="{StaticResource ModeSelectorToggleButtonStyle}">
+        <SymbolIcon Symbol="Calendar"/>
+      </controls:OneWayToggleButton>
+      <controls:OneWayToggleButton Grid.Row="2"
+                                   Command="{x:Bind MainViewModel.SelectMode, Mode=OneWay}"
+                                   CommandParameter="{x:Bind vm:FunctionalityMode.Setup}"
+                                   IsChecked="{x:Bind ui:Converters.Equality(MainViewModel.CurrentMode, vm:FunctionalityMode.Setup), Mode=OneWay}"
+                                   Style="{StaticResource ModeSelectorToggleButtonStyle}">
+        <SymbolIcon Symbol="Setting"/>
+      </controls:OneWayToggleButton>
+    </Grid>
+    <Grid x:Name="ExpandedGrid"
+          Visibility="Collapsed">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <controls:OneWayToggleButton Command="{x:Bind MainViewModel.SelectMode, Mode=OneWay}"
+                                   CommandParameter="{x:Bind vm:FunctionalityMode.Mail}"
+                                   IsChecked="{x:Bind ui:Converters.Equality(MainViewModel.CurrentMode, vm:FunctionalityMode.Mail), Mode=OneWay}"
+                                   Style="{StaticResource ModeSelectorToggleButtonStyle}">
+        <SymbolIcon Symbol="Mail"/>
+      </controls:OneWayToggleButton>
+      <controls:OneWayToggleButton Grid.Column="1"
+                                   Command="{x:Bind MainViewModel.SelectMode, Mode=OneWay}"
+                                   CommandParameter="{x:Bind vm:FunctionalityMode.Calendar}"
+                                   IsChecked="{x:Bind ui:Converters.Equality(MainViewModel.CurrentMode, vm:FunctionalityMode.Calendar), Mode=OneWay}"
+                                   Style="{StaticResource ModeSelectorToggleButtonStyle}">
+        <SymbolIcon Symbol="Calendar"/>
+      </controls:OneWayToggleButton>
+      <controls:OneWayToggleButton Grid.Column="2"
+                                   Command="{x:Bind MainViewModel.SelectMode, Mode=OneWay}"
+                                   CommandParameter="{x:Bind vm:FunctionalityMode.Setup}"
+                                   IsChecked="{x:Bind ui:Converters.Equality(MainViewModel.CurrentMode, vm:FunctionalityMode.Setup), Mode=OneWay}"
+                                   Style="{StaticResource ModeSelectorToggleButtonStyle}">
+        <SymbolIcon Symbol="Setting"/>
+      </controls:OneWayToggleButton>
+    </Grid>
+    <VisualStateManager.VisualStateGroups>
+      <VisualStateGroup>
+        <VisualState>
+          <VisualState.StateTriggers>
+            <StateTrigger IsActive="{x:Bind IsExpanded, Mode=OneWay}"/>
+          </VisualState.StateTriggers>
+          <VisualState.Setters>
+            <Setter Target="CompactGrid.Visibility" Value="Collapsed"/>
+            <Setter Target="ExpandedGrid.Visibility" Value="Visible"/>
+          </VisualState.Setters>
+        </VisualState>
+      </VisualStateGroup>
+    </VisualStateManager.VisualStateGroups>
+  </Grid>
+</UserControl>

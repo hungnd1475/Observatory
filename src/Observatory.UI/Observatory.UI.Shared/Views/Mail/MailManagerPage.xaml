@@ -7,186 +7,11 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
       xmlns:ui="using:Observatory.UI"
+      xmlns:v="using:Observatory.UI.Views"
       xmlns:vm="using:Observatory.Core.ViewModels"
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
       mc:Ignorable="d">
   <Page.Resources>
-    <Style x:Key="ModeSelectorListViewItemStyle" TargetType="ListViewItem">
-      <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
-      <Setter Property="BorderBrush" Value="{ThemeResource SystemControlTransparentRevealBorderBrush}"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="Height" Value="40"/>
-      <Setter Property="HorizontalContentAlignment" Value="Center"/>
-      <Setter Property="MaxHeight" Value="40"/>
-      <Setter Property="MaxWidth" Value="40"/>
-      <Setter Property="MinHeight" Value="40"/>
-      <Setter Property="MinWidth" Value="40"/>
-      <Setter Property="Padding" Value="0"/>
-      <Setter Property="Template">
-        <Setter.Value>
-          <ControlTemplate TargetType="ListViewItem">
-            <Grid x:Name="ContentPresenterGrid"
-                  Background="{TemplateBinding Background}"
-                  BorderBrush="{TemplateBinding BorderBrush}"
-                  BorderThickness="{TemplateBinding BorderThickness}">
-              <ContentPresenter x:Name="ContentPresenter"
-                                Grid.Column="1"
-                                Margin="{TemplateBinding Padding}"
-                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                Content="{TemplateBinding Content}"
-                                ContentTemplate="{TemplateBinding ContentTemplate}"
-                                ContentTransitions="{TemplateBinding ContentTransitions}"
-                                Foreground="{TemplateBinding Foreground}"/>
-              <VisualStateManager.VisualStateGroups>
-                <VisualStateGroup x:Name="CommonStates">
-                  <VisualState x:Name="Normal"/>
-
-                  <VisualState x:Name="PointerOver">
-                    <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="PointerOver"/>
-                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListLowRevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
-                    </VisualState.Setters>
-                  </VisualState>
-
-                  <VisualState x:Name="Pressed">
-                    <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="Pressed"/>
-                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListMediumRevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
-                    </VisualState.Setters>
-                  </VisualState>
-
-                  <VisualState x:Name="Selected">
-                    <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
-                    </VisualState.Setters>
-                  </VisualState>
-
-                  <VisualState x:Name="PointerOverSelected">
-                    <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="PointerOver"/>
-                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
-                    </VisualState.Setters>
-                  </VisualState>
-
-                  <VisualState x:Name="PressedSelected">
-                    <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="Pressed"/>
-                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
-                    </VisualState.Setters>
-                  </VisualState>
-                </VisualStateGroup>
-              </VisualStateManager.VisualStateGroups>
-            </Grid>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-      <Setter Property="VerticalContentAlignment" Value="Center"/>
-      <Setter Property="Width" Value="40"/>
-    </Style>
-
-    <Style x:Key="NavigationPaneListViewItemStyle" TargetType="ListViewItem">
-      <Setter Property="AllowDrop" Value="False"/>
-      <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
-      <Setter Property="BorderBrush" Value="{ThemeResource SystemControlTransparentRevealBorderBrush}"/>
-      <Setter Property="BorderThickness" Value="0,1"/>
-      <Setter Property="HorizontalAlignment" Value="Stretch"/>
-      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-      <Setter Property="Padding" Value="0"/>
-      <Setter Property="Template">
-        <Setter.Value>
-          <ControlTemplate TargetType="ListViewItem">
-            <Grid x:Name="ContentPresenterGrid"
-                  Background="{TemplateBinding Background}"
-                  BorderBrush="{TemplateBinding BorderBrush}"
-                  BorderThickness="{TemplateBinding BorderThickness}">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="40"/>
-                <ColumnDefinition Width="*"/>
-              </Grid.ColumnDefinitions>
-              <Rectangle x:Name="SelectionIndicatorRectangle"
-                         Width="5"
-                         HorizontalAlignment="Left"
-                         Fill="{TemplateBinding Foreground}"
-                         Visibility="Collapsed"/>
-              <ContentPresenter x:Name="ContentPresenter"
-                                Grid.Column="1"
-                                Margin="{TemplateBinding Padding}"
-                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                Content="{TemplateBinding Content}"
-                                ContentTemplate="{TemplateBinding ContentTemplate}"
-                                ContentTransitions="{TemplateBinding ContentTransitions}"
-                                Foreground="{TemplateBinding Foreground}"/>
-              <VisualStateManager.VisualStateGroups>
-                <VisualStateGroup x:Name="CommonStates">
-                  <VisualState x:Name="Normal"/>
-
-                  <VisualState x:Name="PointerOver">
-                    <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="PointerOver"/>
-                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListLowRevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
-                    </VisualState.Setters>
-                  </VisualState>
-
-                  <VisualState x:Name="Pressed">
-                    <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="Pressed"/>
-                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListMediumRevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
-                      <Setter Target="ContentPresenter.FontWeight" Value="SemiBold"/>
-                    </VisualState.Setters>
-                  </VisualState>
-
-                  <VisualState x:Name="Selected">
-                    <VisualState.Setters>
-                      <Setter Target="SelectionIndicatorRectangle.Visibility" Value="Visible"/>
-                      <Setter Target="ContentPresenter.FontWeight" Value="SemiBold"/>
-                    </VisualState.Setters>
-                  </VisualState>
-
-                  <VisualState x:Name="PointerOverSelected">
-                    <VisualState.Setters>
-                      <Setter Target="SelectionIndicatorRectangle.Visibility" Value="Visible"/>
-                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="PointerOver"/>
-                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListLowRevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
-                      <Setter Target="ContentPresenter.FontWeight" Value="SemiBold"/>
-                    </VisualState.Setters>
-                  </VisualState>
-
-                  <VisualState x:Name="PressedSelected">
-                    <VisualState.Setters>
-                      <Setter Target="SelectionIndicatorRectangle.Visibility" Value="Visible"/>
-                      <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="Pressed"/>
-                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightListLowRevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
-                      <Setter Target="ContentPresenter.FontWeight" Value="SemiBold"/>
-                    </VisualState.Setters>
-                  </VisualState>
-                </VisualStateGroup>
-              </VisualStateManager.VisualStateGroups>
-            </Grid>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-      <Setter Property="UseSystemFocusVisuals" Value="True"/>
-      <Setter Property="VerticalContentAlignment" Value="Center"/>
-    </Style>
-
-    <DataTemplate x:Key="ModeSelectorItemTemplate"
-                  x:DataType="vm:FunctionalityMode">
-      <SymbolIcon HorizontalAlignment="Center"
-                  VerticalAlignment="Center"
-                  Symbol="{x:Bind ui:Converters.FunctionalityModeToIcon((vm:FunctionalityMode))}"/>
-    </DataTemplate>
-
     <Style x:Key="ProfileListViewStyle" TargetType="ListView">
       <Setter Property="HorizontalAlignment" Value="Stretch"/>
       <Setter Property="ItemContainerStyle">
@@ -243,260 +68,290 @@
         </Setter.Value>
       </Setter>
     </Style>
+
+    <DataTemplate x:Key="ModeSelectorItemTemplate"
+                  x:DataType="vm:FunctionalityMode">
+      <SymbolIcon HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Symbol="{x:Bind ui:Converters.FunctionalityModeToIcon((vm:FunctionalityMode))}"/>
+    </DataTemplate>
+
+    <ThemeShadow x:Name="ContentGridShadow"/>
+    <ThemeShadow x:Name="TopBarGridShadow"/>
   </Page.Resources>
 
-  <SplitView x:Name="NavigationView"
-             CompactPaneLength="40"
-             DisplayMode="CompactInline"
-             IsPaneOpen="True"
-             OpenPaneLength="300"
-             PaneBackground="{ThemeResource SystemControlAccentDark1AcrylicWindowAccentDark1Brush}">
-    <SplitView.Pane>
-      <Grid RequestedTheme="Dark">
-        <Grid x:Name="ExpandedNavigationPane">
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"
-                           MaxHeight="240"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-          </Grid.RowDefinitions>
+  <Grid x:Name="LayoutRoot"
+        x:DefaultBindMode="OneWay"
+        Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+        RequestedTheme="Light">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <Grid x:Name="TopBarGrid"
+          Background="{ThemeResource SystemControlAcrylicWindowBrush}"
+          Shadow="{StaticResource TopBarGridShadow}"
+          Translation="0,0,4">
+      <Grid.RowDefinitions>
+        <RowDefinition x:Name="WindowTitleRegion"
+                       Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      <TextBlock x:Name="TitleTextBlock"
+                 Margin="8,0"
+                 VerticalAlignment="Center"/>
+      <Grid Grid.Row="1">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition x:Name="TopBarNavigationPaneRegion"
+                            Width="300"/>
+          <ColumnDefinition Width="500"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+          </Grid.ColumnDefinitions>
           <Button HorizontalAlignment="Left"
                   HorizontalContentAlignment="Center"
-                  Click="{x:Bind ToggleNavigationPane}"
+                  Click="{x:Bind ToggleNavigationPane, Mode=OneTime}"
                   Style="{StaticResource NavigationPaneButtonStyle}">
             <SymbolIcon Symbol="GlobalNavigationButton"/>
           </Button>
-          <Button Grid.Row="1"
-                  Padding="0"
-                  HorizontalContentAlignment="Stretch"
-                  VerticalContentAlignment="Center"
-                  Style="{StaticResource NavigationPaneButtonStyle}"
-                  ToolTipService.ToolTip="Compose new message">
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="38"/>
-                <ColumnDefinition Width="*"/>
-              </Grid.ColumnDefinitions>
-              <SymbolIcon HorizontalAlignment="Center"
-                          Symbol="Add"/>
-              <TextBlock Grid.Column="1"
-                         FontSize="18"
-                         FontWeight="SemiBold"
-                         Text="New Message"/>
-            </Grid>
-          </Button>
-          <Grid Grid.Row="2"
-                Height="40">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="40"/>
-              <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <SymbolIcon Symbol="Contact"/>
-            <Grid Grid.Column="1">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-              </Grid.ColumnDefinitions>
-              <TextBlock VerticalAlignment="Center"
-                         FontSize="18"
-                         FontWeight="SemiBold"
-                         Text="Accounts"/>
-              <Button Grid.Column="1"
-                      HorizontalContentAlignment="Center"
-                      Command="{x:Bind ViewModel.HostScreen.AddProfile}"
-                      Style="{StaticResource NavigationPaneButtonStyle}"
-                      ToolTipService.ToolTip="Add new account">
-                <SymbolIcon Symbol="Add"/>
-              </Button>
-            </Grid>
-          </Grid>
-          <ListView Grid.Row="3"
-                    ItemsSource="{x:Bind ViewModel.Profiles, Mode=OneWay}"
-                    SelectedItem="{x:Bind ViewModel.SelectedProfile, Mode=TwoWay}"
-                    Style="{StaticResource ProfileListViewStyle}"/>
-          <Button Grid.Row="4"
-                  Padding="0"
-                  HorizontalContentAlignment="Stretch"
-                  VerticalContentAlignment="Stretch"
-                  Click="{x:Bind ToggleFolderListPane}"
-                  Style="{StaticResource NavigationPaneButtonStyle}"
-                  ToolTipService.ToolTip="View all folders">
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="39"/>
-                <ColumnDefinition Width="*"/>
-              </Grid.ColumnDefinitions>
-              <FontIcon Glyph="&#xF12B;"/>
-              <TextBlock Grid.Column="1"
-                         HorizontalAlignment="Stretch"
-                         VerticalAlignment="Center"
-                         FontSize="18"
-                         FontWeight="SemiBold"
-                         Text="Folders"/>
-            </Grid>
-          </Button>
-          <ListView Grid.Row="5"
-                    ItemsSource="{x:Bind ViewModel.SelectedProfile.MailBox.FavoriteFolders, Mode=OneWay, FallbackValue={x:Null}, TargetNullValue={x:Null}}"
-                    SelectedValue="{x:Bind ViewModel.SelectedFolder, Mode=TwoWay}"
-                    Style="{StaticResource FolderListViewStyle}"/>
-          <Button Grid.Row="6"
-                  Padding="0"
-                  HorizontalContentAlignment="Stretch"
-                  Click="{x:Bind ToggleFolderListPane}"
-                  Style="{StaticResource NavigationPaneButtonStyle}"
-                  ToolTipService.ToolTip="View all folders">
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="39"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-              </Grid.ColumnDefinitions>
-              <TextBlock Grid.Column="1"
-                         VerticalAlignment="Center"
-                         Text="More"/>
-              <FontIcon Grid.Column="2"
-                        Margin="8,6"
-                        Glyph="&#xE00F;"/>
-            </Grid>
-          </Button>
-          <Grid Grid.Row="8">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto"/>
-              <ColumnDefinition Width="*"/>
-              <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <ListView ItemContainerStyle="{StaticResource ModeSelectorListViewItemStyle}"
-                      ItemTemplate="{StaticResource ModeSelectorItemTemplate}"
-                      ItemsSource="{x:Bind ViewModel.HostScreen.Modes}"
-                      SelectedItem="{x:Bind ViewModel.HostScreen.SelectedMode, Mode=TwoWay}"
-                      SelectionMode="Single">
-              <ListView.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <StackPanel Orientation="Horizontal"/>
-                </ItemsPanelTemplate>
-              </ListView.ItemsPanel>
-            </ListView>
-            <Button Grid.Column="3"
-                    Width="40"
-                    HorizontalContentAlignment="Center"
-                    Style="{StaticResource NavigationPaneButtonStyle}">
-              <SymbolIcon Symbol="Setting"/>
-            </Button>
-          </Grid>
+          <CommandBar Grid.Column="1"
+                      HorizontalAlignment="Left"
+                      Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
+                      DefaultLabelPosition="Right">
+            <AppBarButton x:Name="ExpandedNewMailButton"
+                          Icon="Add"
+                          Label="New mail"/>
+          </CommandBar>
         </Grid>
-        <Grid x:Name="CompactNavigationPane"
-              Visibility="Collapsed">
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-          </Grid.RowDefinitions>
-          <Button HorizontalAlignment="Left"
-                  HorizontalContentAlignment="Center"
-                  Click="{x:Bind ToggleNavigationPane}"
-                  Style="{StaticResource NavigationPaneButtonStyle}">
-            <SymbolIcon Symbol="GlobalNavigationButton"/>
-          </Button>
-          <Button Grid.Row="1"
-                  HorizontalAlignment="Left"
-                  HorizontalContentAlignment="Center"
-                  VerticalContentAlignment="Center"
-                  Style="{StaticResource NavigationPaneButtonStyle}"
-                  ToolTipService.ToolTip="Compose new message">
-            <SymbolIcon Symbol="Add"/>
-          </Button>
-          <Button Grid.Row="2"
-                  HorizontalAlignment="Left"
-                  HorizontalContentAlignment="Center"
-                  Click="{x:Bind ToggleProfileListPane}"
-                  Style="{StaticResource NavigationPaneButtonStyle}"
-                  ToolTipService.ToolTip="View all accounts">
-            <SymbolIcon Symbol="Contact"/>
-          </Button>
-          <Button Grid.Row="3"
-                  Padding="0"
-                  HorizontalAlignment="Left"
-                  HorizontalContentAlignment="Center"
-                  Click="{x:Bind ToggleFolderListPane}"
-                  Style="{StaticResource NavigationPaneButtonStyle}"
-                  ToolTipService.ToolTip="View all folders">
-            <FontIcon Glyph="&#xF12B;"/>
-          </Button>
-          <StackPanel Grid.Row="5"
-                      HorizontalAlignment="Left">
-            <ListView ItemContainerStyle="{StaticResource ModeSelectorListViewItemStyle}"
-                      ItemTemplate="{StaticResource ModeSelectorItemTemplate}"
-                      ItemsSource="{x:Bind ViewModel.HostScreen.Modes}"
-                      SelectedItem="{x:Bind ViewModel.HostScreen.SelectedMode, Mode=TwoWay}"
-                      SelectionMode="Single"/>
-            <Button Grid.Column="3"
-                    Width="40"
-                    HorizontalContentAlignment="Center"
-                    Style="{StaticResource NavigationPaneButtonStyle}">
-              <SymbolIcon Symbol="Setting"/>
-            </Button>
-          </StackPanel>
+        <Grid Grid.Column="1">
+          <CommandBar x:Name="DefaultFolderCommandBar"
+                      HorizontalAlignment="Left"
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Center"
+                      Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
+                      DefaultLabelPosition="Right"
+                      IsDynamicOverflowEnabled="False"
+                      Visibility="Visible">
+            <AppBarButton x:Name="CompactNewMailButton"
+                          Icon="Add"
+                          Label="New mail"
+                          Visibility="Collapsed"/>
+            <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Synchronize, Mode=OneWay}"
+                          Icon="Sync"
+                          Label="Sync"/>
+            <AppBarButton Click="{x:Bind ShowSearchFolderCommandBar, Mode=OneTime}"
+                          Icon="Find"
+                          Label="Search"/>
+          </CommandBar>
+          <CommandBar x:Name="SearchFolderCommandBar"
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Center"
+                      Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
+                      DefaultLabelPosition="Collapsed"
+                      IsDynamicOverflowEnabled="False"
+                      Visibility="Collapsed">
+            <AppBarButton Width="40"
+                          Click="{x:Bind HideSearchFolderCommandBar, Mode=OneTime}"
+                          Icon="Cancel"
+                          ToolTipService.Placement="Bottom"
+                          ToolTipService.ToolTip="Cancel search"/>
+            <CommandBar.Content>
+              <TextBox x:Name="SearchFolderTextBox"
+                       Margin="0,0,2,0"
+                       HorizontalAlignment="Stretch"
+                       PlaceholderText="Search"/>
+            </CommandBar.Content>
+          </CommandBar>
+        </Grid>
+        <Grid Grid.Column="2"
+              Visibility="{x:Bind ui:Converters.ObjectNullToVisibility(ViewModel.SelectedMessage), FallbackValue='Collapsed'}">
+          <CommandBar Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
+                      DefaultLabelPosition="Right">
+            <AppBarButton Icon="MailReply"
+                          Label="Reply"/>
+            <AppBarButton Icon="MailReplyAll"
+                          Label="Reply all"/>
+            <AppBarButton Icon="MailForward"
+                          Label="Forward"/>
+            <AppBarButton Label="Archive">
+              <AppBarButton.Icon>
+                <FontIcon Glyph="{StaticResource ArchiveGlyph}"/>
+              </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarButton Icon="Delete"
+                          Label="Delete"/>
+            <CommandBar.SecondaryCommands>
+              <AppBarButton Icon="Read"
+                            Label="Mark as read"
+                            Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.SelectedMessage.IsRead)}"/>
+              <AppBarButton Icon="Mail"
+                            Label="Mark as unread"
+                            Visibility="{x:Bind ViewModel.SelectedMessage.IsRead}"/>
+              <AppBarButton Icon="MoveToFolder"
+                            Label="Move"/>
+              <AppBarButton Label="Move to junk">
+                <AppBarButton.Icon>
+                  <FontIcon FontSize="16"
+                            Glyph="&#xF140;"/>
+                </AppBarButton.Icon>
+              </AppBarButton>
+              <AppBarButton Icon="Find"
+                            Label="Find"/>
+              <AppBarButton Label="Save as">
+                <AppBarButton.Icon>
+                  <FontIcon FontSize="16"
+                            Glyph="&#xE792;"/>
+                </AppBarButton.Icon>
+              </AppBarButton>
+              <AppBarButton Icon="Print"
+                            Label="Print"/>
+              <AppBarButton Icon="Zoom"
+                            Label="Zoom"/>
+            </CommandBar.SecondaryCommands>
+          </CommandBar>
         </Grid>
       </Grid>
-    </SplitView.Pane>
-    <SplitView x:Name="ProfileListSplitView"
-               DisplayMode="Overlay"
-               IsPaneOpen="False"
-               LightDismissOverlayMode="On"
+    </Grid>
+    <SplitView x:Name="NavigationView"
+               Grid.Row="1"
+               CompactPaneLength="40"
+               DisplayMode="CompactInline"
+               IsPaneOpen="True"
                OpenPaneLength="300"
-               PaneBackground="{ThemeResource SystemAccentColorDark2}"
-               PanePlacement="Left">
+               PaneBackground="{ThemeResource SystemControlChromeMediumLowAcrylicWindowMediumBrush}">
+      <!--  PaneBackground="{ThemeResource SystemControlAccentAcrylicWindowAccentMediumHighBrush}">  -->
+      <!--  PaneBackground="{ThemeResource SystemControlChromeMediumLowAcrylicWindowMediumBrush}">  -->
       <SplitView.Pane>
-        <Grid RequestedTheme="Dark">
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-          </Grid.RowDefinitions>
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*"/>
-              <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Margin="8,0"
-                       VerticalAlignment="Center"
-                       FontSize="20"
-                       Text="All accounts"/>
-            <Button Grid.Column="1"
-                    HorizontalContentAlignment="Center"
-                    VerticalContentAlignment="Center"
-                    Click="{x:Bind ToggleProfileListPane}"
-                    Flyout="{x:Bind ProvidersFlyout, Mode=OneWay}"
+        <Grid x:Name="NavigationPaneRoot">
+          <Grid x:Name="ExpandedNavigationPane">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"
+                             MaxHeight="240"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <SymbolIcon Symbol="Contact"/>
+              <Grid Grid.Column="1">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock VerticalAlignment="Center"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           Text="Accounts"/>
+                <Button Grid.Column="1"
+                        HorizontalContentAlignment="Center"
+                        Command="{x:Bind ViewModel.HostScreen.AddProfile, Mode=OneTime}"
+                        Style="{StaticResource NavigationPaneButtonStyle}"
+                        ToolTipService.ToolTip="Add new account">
+                  <SymbolIcon Symbol="Add"/>
+                </Button>
+              </Grid>
+            </Grid>
+            <ListView Grid.Row="1"
+                      ItemsSource="{x:Bind ViewModel.Profiles}"
+                      SelectedItem="{x:Bind ViewModel.SelectedProfile, Mode=TwoWay}"
+                      Style="{StaticResource ProfileListViewStyle}"/>
+            <Button Grid.Row="2"
+                    Padding="0"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    Click="{x:Bind ToggleFolderListPane, Mode=OneTime}"
                     Style="{StaticResource NavigationPaneButtonStyle}"
-                    ToolTipService.ToolTip="Add new account">
-              <SymbolIcon Symbol="Add"/>
+                    ToolTipService.ToolTip="View all folders">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="39"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <FontIcon Glyph="&#xF12B;"/>
+                <TextBlock Grid.Column="1"
+                           HorizontalAlignment="Stretch"
+                           VerticalAlignment="Center"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           Text="Folders"/>
+              </Grid>
             </Button>
+            <ListView Grid.Row="3"
+                      ItemsSource="{x:Bind ViewModel.SelectedProfile.MailBox.FavoriteFolders, FallbackValue={x:Null}, TargetNullValue={x:Null}}"
+                      SelectedValue="{x:Bind ViewModel.SelectedFolder, Mode=TwoWay}"
+                      Style="{StaticResource FolderListViewStyle}"/>
+            <Button Grid.Row="4"
+                    Padding="0"
+                    HorizontalContentAlignment="Stretch"
+                    Click="{x:Bind ToggleFolderListPane, Mode=OneTime}"
+                    Style="{StaticResource NavigationPaneButtonStyle}"
+                    ToolTipService.ToolTip="View all folders">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="39"/>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="1"
+                           VerticalAlignment="Center"
+                           Text="More"/>
+                <FontIcon Grid.Column="2"
+                          Margin="8,6"
+                          Glyph="&#xE00F;"/>
+              </Grid>
+            </Button>
+            <v:FunctionalityModeSelector Grid.Row="6"
+                                         IsExpanded="True"/>
           </Grid>
-          <ListView Grid.Row="1"
-                    IsItemClickEnabled="True"
-                    ItemClick="{x:Bind ToggleProfileListPane}"
-                    ItemsSource="{x:Bind ViewModel.Profiles, Mode=OneWay}"
-                    SelectedItem="{x:Bind ViewModel.SelectedProfile, Mode=TwoWay}"
-                    Style="{StaticResource ProfileListViewStyle}"/>
+          <Grid x:Name="CompactNavigationPane"
+                Visibility="Collapsed">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Button HorizontalAlignment="Left"
+                    HorizontalContentAlignment="Center"
+                    Click="{x:Bind ToggleProfileListPane, Mode=OneTime}"
+                    Style="{StaticResource NavigationPaneButtonStyle}"
+                    ToolTipService.ToolTip="View all accounts">
+              <SymbolIcon Symbol="Contact"/>
+            </Button>
+            <Button Grid.Row="1"
+                    Padding="0"
+                    HorizontalAlignment="Left"
+                    HorizontalContentAlignment="Center"
+                    Click="{x:Bind ToggleFolderListPane, Mode=OneTime}"
+                    Style="{StaticResource NavigationPaneButtonStyle}"
+                    ToolTipService.ToolTip="View all folders">
+              <FontIcon Glyph="&#xF12B;"/>
+            </Button>
+            <v:FunctionalityModeSelector Grid.Row="3"
+                                         IsExpanded="False"/>
+          </Grid>
         </Grid>
       </SplitView.Pane>
-      <SplitView x:Name="FolderListSplitView"
+      <SplitView x:Name="ProfileListSplitView"
                  DisplayMode="Overlay"
                  IsPaneOpen="False"
                  LightDismissOverlayMode="On"
                  OpenPaneLength="300"
-                 PaneBackground="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}"
+                 PaneBackground="{ThemeResource SystemAccentColorDark2}"
                  PanePlacement="Left">
         <SplitView.Pane>
-          <Grid>
+          <Grid RequestedTheme="Dark">
             <Grid.RowDefinitions>
               <RowDefinition Height="Auto"/>
               <RowDefinition Height="*"/>
@@ -509,58 +364,105 @@
               <TextBlock Margin="8,0"
                          VerticalAlignment="Center"
                          FontSize="20"
-                         Text="All folders"/>
+                         Text="All accounts"/>
               <Button Grid.Column="1"
                       HorizontalContentAlignment="Center"
                       VerticalContentAlignment="Center"
-                      Click="{x:Bind ToggleFolderListPane}"
+                      Click="{x:Bind ToggleProfileListPane, Mode=OneTime}"
+                      Command="{x:Bind ViewModel.HostScreen.AddProfile, Mode=OneTime}"
                       Style="{StaticResource NavigationPaneButtonStyle}"
-                      ToolTipService.ToolTip="Add new folder">
+                      ToolTipService.ToolTip="Add new account">
                 <SymbolIcon Symbol="Add"/>
               </Button>
             </Grid>
-            <muxc:TreeView x:Name="FolderTreeView"
-                           Grid.Row="1"
-                           ItemInvoked="{x:Bind SelectFolder}"
-                           ItemsSource="{x:Bind ViewModel.SelectedProfile.MailBox.AllFolders, Mode=OneWay}"
-                           SelectedItem="{x:Bind ViewModel.SelectedFolder, Mode=OneWay}">
-              <muxc:TreeView.ItemTemplate>
-                <DataTemplate x:DataType="mailvm:MailFolderViewModel">
-                  <muxc:TreeViewItem HorizontalContentAlignment="Stretch"
-                                     IsExpanded="True"
-                                     ItemsSource="{x:Bind ChildFolders, Mode=OneWay}">
-                    <Grid>
-                      <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                      </Grid.ColumnDefinitions>
-                      <TextBlock Text="{x:Bind Name, Mode=OneWay}"/>
-                      <TextBlock Grid.Column="1"
-                                 Margin="0,0,15,0"
-                                 Text="{x:Bind UnreadCount, Mode=OneWay}"
-                                 TextAlignment="Right"
-                                 Visibility="{x:Bind ui:Converters.IntegerVisibility(UnreadCount), Mode=OneWay}"/>
-                    </Grid>
-                  </muxc:TreeViewItem>
-                </DataTemplate>
-              </muxc:TreeView.ItemTemplate>
-            </muxc:TreeView>
+            <ListView Grid.Row="1"
+                      IsItemClickEnabled="True"
+                      ItemClick="{x:Bind ToggleProfileListPane, Mode=OneTime}"
+                      ItemsSource="{x:Bind ViewModel.Profiles}"
+                      SelectedItem="{x:Bind ViewModel.SelectedProfile, Mode=TwoWay}"
+                      Style="{StaticResource ProfileListViewStyle}"/>
           </Grid>
         </SplitView.Pane>
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="500"/>
-            <ColumnDefinition Width="*"/>
-          </Grid.ColumnDefinitions>
-          <local:MailFolderView SelectedMessage="{x:Bind ViewModel.SelectedMessage, Mode=TwoWay}"
-                                ViewModel="{x:Bind ViewModel.SelectedFolder, Mode=OneWay}"/>
-          <local:MessageDetailView Grid.Column="1"
-                                   ViewModel="{x:Bind ViewModel.SelectedMessage.Detail, Mode=OneWay}"
-                                   Visibility="{x:Bind ui:Converters.ObjectNullToVisibility(ViewModel.SelectedMessage), Mode=OneWay, FallbackValue='Collapsed'}"/>
-        </Grid>
+        <SplitView x:Name="FolderListSplitView"
+                   DisplayMode="Overlay"
+                   IsPaneOpen="False"
+                   LightDismissOverlayMode="On"
+                   OpenPaneLength="300"
+                   PaneBackground="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}"
+                   PanePlacement="Left">
+          <SplitView.Pane>
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Margin="8,0"
+                           VerticalAlignment="Center"
+                           FontSize="20"
+                           Text="All folders"/>
+                <Button Grid.Column="1"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        Click="{x:Bind ToggleFolderListPane}"
+                        Style="{StaticResource NavigationPaneButtonStyle}"
+                        ToolTipService.ToolTip="Add new folder">
+                  <SymbolIcon Symbol="Add"/>
+                </Button>
+              </Grid>
+              <muxc:TreeView x:Name="FolderTreeView"
+                             Grid.Row="1"
+                             ItemInvoked="{x:Bind SelectFolder, Mode=OneTime}"
+                             ItemsSource="{x:Bind ViewModel.SelectedProfile.MailBox.AllFolders}"
+                             SelectedItem="{x:Bind ViewModel.SelectedFolder}">
+                <muxc:TreeView.ItemTemplate>
+                  <DataTemplate x:DataType="mailvm:MailFolderViewModel">
+                    <muxc:TreeViewItem HorizontalContentAlignment="Stretch"
+                                       IsExpanded="True"
+                                       ItemsSource="{x:Bind ChildFolders}">
+                      <Grid>
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Bind Name}"/>
+                        <TextBlock Grid.Column="1"
+                                   Margin="0,0,15,0"
+                                   Text="{x:Bind UnreadCount}"
+                                   TextAlignment="Right"
+                                   Visibility="{x:Bind ui:Converters.IntegerVisibility(UnreadCount)}"/>
+                      </Grid>
+                    </muxc:TreeViewItem>
+                  </DataTemplate>
+                </muxc:TreeView.ItemTemplate>
+              </muxc:TreeView>
+            </Grid>
+          </SplitView.Pane>
+          <Grid Shadow="{StaticResource ContentGridShadow}"
+                Translation="0,0,8">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="500"/>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <local:MailFolderView SelectedMessage="{x:Bind ViewModel.SelectedMessage, Mode=TwoWay}"
+                                  ViewModel="{x:Bind ViewModel.SelectedFolder}"/>
+            <Rectangle Grid.Column="1"
+                       Width="1"
+                       VerticalAlignment="Stretch"
+                       Fill="{ThemeResource SystemBaseLowColor}"/>
+            <local:MessageDetailView Grid.Column="2"
+                                     ViewModel="{x:Bind ViewModel.SelectedMessage.Detail}"
+                                     Visibility="{x:Bind ui:Converters.ObjectNullToVisibility(ViewModel.SelectedMessage), FallbackValue='Collapsed'}"/>
+          </Grid>
+        </SplitView>
       </SplitView>
     </SplitView>
-  </SplitView>
+  </Grid>
   <VisualStateManager.VisualStateGroups>
     <VisualStateGroup>
       <VisualState>
@@ -569,7 +471,10 @@
         </VisualState.StateTriggers>
         <VisualState.Setters>
           <Setter Target="ExpandedNavigationPane.Visibility" Value="Collapsed"/>
+          <Setter Target="ExpandedNewMailButton.Visibility" Value="Collapsed"/>
           <Setter Target="CompactNavigationPane.Visibility" Value="Visible"/>
+          <Setter Target="CompactNewMailButton.Visibility" Value="Visible"/>
+          <Setter Target="TopBarNavigationPaneRegion.Width" Value="{StaticResource NavigationViewCompactPaneLength}"/>
         </VisualState.Setters>
       </VisualState>
     </VisualStateGroup>

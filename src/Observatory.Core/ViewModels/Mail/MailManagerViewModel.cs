@@ -15,7 +15,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Observatory.Core.ViewModels.Mail
 {
-    public class MailManagerViewModel : ReactiveObject, IRoutableViewModel, IDisposable
+    public class MailManagerViewModel : ReactiveObject, IFunctionalityViewModel, IDisposable
     {
         private readonly ReadOnlyObservableCollection<ProfileViewModelBase> _profiles;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
@@ -36,7 +36,6 @@ namespace Observatory.Core.ViewModels.Mail
         IScreen IRoutableViewModel.HostScreen => HostScreen;
 
         public MainViewModel HostScreen { get; set; }
-
 
         public MailManagerViewModel(IProfileRegistrationService profileRegistrationService,
             IIndex<string, IProfileProvider> providers)
@@ -73,13 +72,21 @@ namespace Observatory.Core.ViewModels.Mail
                 .Subscribe(x =>
                 {
                     x.Previous?.ClearMessages();
-                    x.Current?.InitializeMessages();
+                    x.Current?.LoadMessages();
                 });
         }
 
         public void Dispose()
         {
             _disposables.Dispose();
+        }
+
+        public void OnNavigatedAway()
+        {
+        }
+
+        public void OnNavigatedTo()
+        {
         }
     }
 }
