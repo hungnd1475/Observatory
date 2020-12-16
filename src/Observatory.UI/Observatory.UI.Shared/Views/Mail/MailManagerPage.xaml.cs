@@ -77,9 +77,9 @@ namespace Observatory.UI.Views.Mail
 
             this.WhenActivated(disposables => 
             {
-                this.WhenAnyValue(x => x.ViewModel.SelectedProfile)
+                this.WhenAnyValue(x => x.ViewModel.SelectedFolder)
                     .DistinctUntilChanged()
-                    .Select(x => x == null ? "Mail" : $"Mail - {x.DisplayName}")
+                    .Select(x => x == null ? "Mail" : $"Mail - {x.Name}")
                     .BindTo(this, x => x.TitleTextBlock.Text)
                     .DisposeWith(disposables);
             });

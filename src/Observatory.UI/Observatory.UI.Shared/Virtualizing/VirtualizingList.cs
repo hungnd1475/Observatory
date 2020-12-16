@@ -67,6 +67,7 @@ namespace Observatory.UI.Virtualizing
         /// <param name="trackedItems"></param>
         public void RangesChanged(ItemIndexRange visibleRange, IReadOnlyList<ItemIndexRange> trackedItems)
         {
+            //this.Log().Debug("Ranges requested.");
             _sourceCache.UpdateRanges(trackedItems.Select(i => new IndexRange(i.FirstIndex, i.LastIndex)).ToArray());
         }
 
@@ -89,6 +90,7 @@ namespace Observatory.UI.Virtualizing
 
         public IEnumerable<NotifyCollectionChangedEventArgs> Process(VirtualizingCacheInitializedEvent<TSource> e)
         {
+            //this.Log().Debug("Initialized.");
             Count = e.TotalCount;
             yield return new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
         }

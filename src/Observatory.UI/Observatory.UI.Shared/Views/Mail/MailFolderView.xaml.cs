@@ -8,6 +8,9 @@ using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using System.Reactive.Disposables;
+using Windows.ApplicationModel.Store;
+using Uno.Extensions;
+using Uno.Logging;
 
 namespace Observatory.UI.Views.Mail
 {
@@ -18,6 +21,11 @@ namespace Observatory.UI.Views.Mail
 
         public static DependencyProperty SelectedMessageProperty { get; } =
             DependencyProperty.Register(nameof(SelectedMessage), typeof(MessageSummaryViewModel), typeof(MailFolderView), new PropertyMetadata(null));
+
+        public static DependencyProperty MessagesProperty { get; } =
+            DependencyProperty.Register(nameof(Messages), 
+                typeof(VirtualizingList<MessageSummary, MessageSummaryViewModel, string>), 
+                typeof(MailFolderView), new PropertyMetadata(null));
 
         public MailFolderViewModel ViewModel
         {
@@ -37,6 +45,12 @@ namespace Observatory.UI.Views.Mail
             set => ViewModel = (MailFolderViewModel)value;
         }
 
+        public VirtualizingList<MessageSummary, MessageSummaryViewModel, string> Messages
+        {
+            get { return (VirtualizingList<MessageSummary, MessageSummaryViewModel, string>)GetValue(MessagesProperty); }
+            set { SetValue(MessagesProperty, value); }
+        }
+
         public MailFolderView()
         {
             this.InitializeComponent();
@@ -44,14 +58,19 @@ namespace Observatory.UI.Views.Mail
 
             this.WhenActivated(disposables =>
             {
-                this.WhenAnyValue(x => x.ViewModel)
-                    .Where(vm => vm != null)
-                    .SelectMany(vm => vm.WhenAnyValue(x => x.Messages).Where(m => m != null).Select(messages => (ViewModel: vm, Messages: messages)))
+                this.WhenAnyValue(x => x.ViewModel.Messages)
+                    .WithLatestFrom(this.WhenAnyValue(x => x.ViewModel), (messages, vm) => (Messages: messages, ViewModel: vm))
+                    .Where(x => x.ViewModel != null && x.Messages != null)
                     .Select(x => new VirtualizingList<MessageSummary, MessageSummaryViewModel, string>(x.Messages, x.ViewModel.Transform))
-                    .Subscribe(source =>
+                    .BindTo(this, x => x.Messages)
+                    .DisposeWith(disposables);
+
+                this.WhenAnyValue(x => x.Messages)
+                    .Buffer(2, 1)
+                    .Select(x => (Previous: x[0], Current: x[1]))
+                    .Subscribe(x =>
                     {
-                        (_messageList.ItemsSource as IDisposable)?.Dispose();
-                        _messageList.ItemsSource = source;
+                        x.Previous?.Dispose();
                     })
                     .DisposeWith(disposables);
             });

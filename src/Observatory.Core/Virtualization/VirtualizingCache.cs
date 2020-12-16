@@ -155,7 +155,6 @@ namespace Observatory.Core.Virtualization
 
         public void Reset()
         {
-
         }
 
         /// <summary>
