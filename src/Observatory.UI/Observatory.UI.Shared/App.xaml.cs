@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Uwp.UI.Helpers;
 using Observatory.Core;
 using Observatory.Core.Services;
 using Observatory.Providers.Exchange;
@@ -38,6 +39,8 @@ namespace Observatory.UI
     sealed partial class App : Application
     {
         public IContainer Container { get; }
+
+        public static ThemeListener ThemeListener { get; } = new ThemeListener();
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code

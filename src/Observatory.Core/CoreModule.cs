@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Observatory.Core.Models.Settings;
 using Observatory.Core.Persistence;
 using Observatory.Core.Providers.Fake;
 using Observatory.Core.Services;
@@ -56,6 +57,9 @@ namespace Observatory.Core
             builder.RegisterType<SettingsViewModel>()
                 .Keyed<IFunctionalityViewModel>(FunctionalityMode.Setup)
                 .SingleInstance();
+
+            builder.RegisterType<MailSettings>()
+                .AsSelf().SingleInstance();
         }
     }
 }

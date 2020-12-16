@@ -1,5 +1,6 @@
 ﻿using Observatory.Core.ViewModels;
 using Observatory.Core.ViewModels.Mail;
+using Observatory.UI.Settings;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
@@ -60,13 +61,18 @@ namespace Observatory.UI.Views.Mail
             set => ViewModel = (MailManagerViewModel)value;
         }
 
+        public UISettings Settings { get; }
+
         public MailManagerPage()
         {
             this.InitializeComponent();
+            Settings = Locator.Current.GetService<UISettings>();
+
+            CoreApplication.GetCurrentView().TitleBar.LayoutMetricsChanged += TitleBar_LayoutMetricsChanged;
+            App.ThemeListener.ThemeChanged += ThemeListener_ThemeChanged;
+
             ContentGridShadow.Receivers.Add(NavigationPaneRoot);
             TopBarGridShadow.Receivers.Add(NavigationView);
-            CoreApplication.GetCurrentView().TitleBar.LayoutMetricsChanged += TitleBar_LayoutMetricsChanged;
-
             SearchFolderTextBox.LostFocus += SearchFolderTextBox_LostFocus;
 
             this.WhenActivated(disposables => 
@@ -77,6 +83,14 @@ namespace Observatory.UI.Views.Mail
                     .BindTo(this, x => x.TitleTextBlock.Text)
                     .DisposeWith(disposables);
             });
+        }
+
+        private void ThemeListener_ThemeChanged(Microsoft.Toolkit.Uwp.UI.Helpers.ThemeListener sender)
+        {
+            var key = sender.CurrentTheme == ApplicationTheme.Light
+                ? "LightCommandBarOverflowPresenterStyle"
+                : "DarkCommandBarOverflowPresenterStyle";
+            MessageDetailCommandBar.CommandBarOverflowPresenterStyle = (Style)Resources[key];
         }
 
         private void SearchFolderTextBox_LostFocus(object sender, RoutedEventArgs e)

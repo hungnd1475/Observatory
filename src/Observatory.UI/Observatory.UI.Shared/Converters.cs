@@ -74,5 +74,15 @@ namespace Observatory.UI
             }
             throw new ArgumentException("Argument is not a collection.");
         }
+
+        public static GridLength PixelsToGridLength(double pixels)
+        {
+            return new GridLength(pixels);
+        }
+
+        public static double GridLengthToPixels(GridLength gridLength)
+        {
+            return gridLength.Value;
+        }
     }
 }

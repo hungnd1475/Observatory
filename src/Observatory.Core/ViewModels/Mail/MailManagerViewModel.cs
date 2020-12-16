@@ -1,5 +1,6 @@
 ﻿using Autofac.Features.Indexed;
 using DynamicData;
+using Observatory.Core.Models.Settings;
 using Observatory.Core.Services;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -38,7 +39,8 @@ namespace Observatory.Core.ViewModels.Mail
         public MainViewModel HostScreen { get; set; }
 
         public MailManagerViewModel(IProfileRegistrationService profileRegistrationService,
-            IIndex<string, IProfileProvider> providers)
+            IIndex<string, IProfileProvider> providers,
+            MailSettings settings)
         {
             var sourceProfiles = profileRegistrationService.Connect()
                 .ObserveOn(RxApp.TaskpoolScheduler)

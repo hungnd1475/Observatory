@@ -8,139 +8,90 @@
              xmlns:sys="using:System"
              xmlns:ui="using:Observatory.UI"
              mc:Ignorable="d">
-  <Grid x:DefaultBindMode="OneWay">
+  <Grid Grid.Row="1"
+        x:DefaultBindMode="OneWay">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
-    <!--<CommandBar Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
-                DefaultLabelPosition="Right">
-      <AppBarButton Icon="MailReply"
-                    Label="Reply"/>
-      <AppBarButton Icon="MailReplyAll"
-                    Label="Reply all"/>
-      <AppBarButton Icon="MailForward"
-                    Label="Forward"/>
-      <AppBarButton Label="Archive">
-        <AppBarButton.Icon>
-          <FontIcon Glyph="{StaticResource ArchiveGlyph}"/>
-        </AppBarButton.Icon>
-      </AppBarButton>
-      <AppBarButton Icon="Delete"
-                    Label="Delete"/>
-      <CommandBar.SecondaryCommands>
-        <AppBarButton Icon="Read"
-                      Label="Mark as read"
-                      Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.IsRead)}"/>
-        <AppBarButton Icon="Mail"
-                      Label="Mark as unread"
-                      Visibility="{x:Bind ViewModel.IsRead}"/>
-        <AppBarButton Icon="MoveToFolder"
-                      Label="Move"/>
-        <AppBarButton Label="Move to junk">
-          <AppBarButton.Icon>
-            <FontIcon FontSize="16"
-                      Glyph="&#xF140;"/>
-          </AppBarButton.Icon>
-        </AppBarButton>
-        <AppBarButton Icon="Find"
-                      Label="Find"/>
-        <AppBarButton Label="Save as">
-          <AppBarButton.Icon>
-            <FontIcon FontSize="16"
-                      Glyph="&#xE792;"/>
-          </AppBarButton.Icon>
-        </AppBarButton>
-        <AppBarButton Icon="Print"
-                      Label="Print"/>
-        <AppBarButton Icon="Zoom"
-                      Label="Zoom"/>
-      </CommandBar.SecondaryCommands>
-    </CommandBar>-->
-    <Grid Grid.Row="1"
-          x:DefaultBindMode="OneWay">
+    <Grid Margin="16,8">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto"/>
-        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
-      <Grid Margin="8">
+      <TextBlock d:Text="Test"
+                 FontSize="20"
+                 FontWeight="SemiBold"
+                 Text="{x:Bind ViewModel.Subject}"/>
+      <Grid Grid.Row="1"
+            ColumnSpacing="5"
+            RowSpacing="2">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto"/>
           <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBlock d:Text="Test"
-                   FontSize="20"
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock VerticalAlignment="Center"
+                   Foreground="{ThemeResource SystemColorGrayTextColor}"
+                   Text="From:"
+                   TextAlignment="Right"/>
+        <TextBlock Grid.Column="1"
+                   VerticalAlignment="Center"
+                   d:Text="Gitter notifications &lt;support@gitter.im&gt;"
                    FontWeight="SemiBold"
-                   Text="{x:Bind ViewModel.Subject}"/>
-        <Grid Grid.Row="1"
-              ColumnSpacing="5"
-              RowSpacing="2">
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-          </Grid.RowDefinitions>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-          </Grid.ColumnDefinitions>
-          <TextBlock VerticalAlignment="Center"
-                     Foreground="{ThemeResource SystemColorGrayTextColor}"
-                     Text="From:"
-                     TextAlignment="Right"/>
-          <TextBlock Grid.Column="1"
-                     VerticalAlignment="Center"
-                     d:Text="Gitter notifications &lt;support@gitter.im&gt;"
-                     FontWeight="SemiBold"
-                     Text="{x:Bind ViewModel.Sender}"/>
-          <TextBlock Grid.Row="1"
-                     VerticalAlignment="Center"
-                     Foreground="{ThemeResource SystemColorGrayTextColor}"
-                     Text="To:"
-                     TextAlignment="Right"/>
-          <ItemsControl Grid.Row="1"
-                        Grid.Column="1"
-                        VerticalAlignment="Center"
-                        ItemsSource="{x:Bind ViewModel.ToRecipients}">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <StackPanel Orientation="Horizontal"
-                            Spacing="3"/>
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-          </ItemsControl>
-          <TextBlock Grid.Row="2"
-                     VerticalAlignment="Center"
-                     Foreground="{ThemeResource SystemColorGrayTextColor}"
-                     Text="Cc:"
-                     TextAlignment="Right"
-                     Visibility="{x:Bind ui:Converters.CollectionEmptyToVisibility(ViewModel.CcRecipients)}"/>
-          <ItemsControl Grid.Row="2"
-                        Grid.Column="1"
-                        VerticalAlignment="Center"
-                        ItemsSource="{x:Bind ViewModel.CcRecipients}"
-                        Visibility="{x:Bind ui:Converters.CollectionEmptyToVisibility(ViewModel.CcRecipients)}">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <StackPanel Orientation="Horizontal"
-                            Spacing="3"/>
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-          </ItemsControl>
-          <TextBlock Grid.Row="3"
-                     Grid.ColumnSpan="2"
-                     d:Text="12/02/2020"
-                     Foreground="{ThemeResource SystemColorGrayTextColor}"
-                     Style="{StaticResource CaptionTextBlockStyle}"
-                     Text="{x:Bind ViewModel.FormattedReceivedDateTime}"/>
-        </Grid>
+                   Text="{x:Bind ViewModel.Sender}"/>
+        <TextBlock Grid.Row="1"
+                   VerticalAlignment="Center"
+                   Foreground="{ThemeResource SystemColorGrayTextColor}"
+                   Text="To:"
+                   TextAlignment="Right"/>
+        <ItemsControl Grid.Row="1"
+                      Grid.Column="1"
+                      VerticalAlignment="Center"
+                      ItemsSource="{x:Bind ViewModel.ToRecipients}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal"
+                          Spacing="3"/>
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+        <TextBlock Grid.Row="2"
+                   VerticalAlignment="Center"
+                   Foreground="{ThemeResource SystemColorGrayTextColor}"
+                   Text="Cc:"
+                   TextAlignment="Right"
+                   Visibility="{x:Bind ui:Converters.CollectionEmptyToVisibility(ViewModel.CcRecipients)}"/>
+        <ItemsControl Grid.Row="2"
+                      Grid.Column="1"
+                      VerticalAlignment="Center"
+                      ItemsSource="{x:Bind ViewModel.CcRecipients}"
+                      Visibility="{x:Bind ui:Converters.CollectionEmptyToVisibility(ViewModel.CcRecipients)}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal"
+                          Spacing="3"/>
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+        <TextBlock Grid.Row="3"
+                   Grid.ColumnSpan="2"
+                   d:Text="12/02/2020"
+                   Foreground="{ThemeResource SystemColorGrayTextColor}"
+                   Style="{StaticResource CaptionTextBlockStyle}"
+                   Text="{x:Bind ViewModel.FormattedReceivedDateTime}"/>
       </Grid>
-      <WebView x:Name="BodyViewer"
-               Grid.Row="1"
-               HorizontalAlignment="Stretch"
-               VerticalAlignment="Stretch"
-               NavigationStarting="BodyViewer_NavigationStarting"/>
     </Grid>
+    <WebView x:Name="BodyViewer"
+             Grid.Row="1"
+             HorizontalAlignment="Stretch"
+             VerticalAlignment="Stretch"
+             NavigationStarting="BodyViewer_NavigationStarting"
+             ScrollViewer.VerticalScrollBarVisibility="Hidden"/>
   </Grid>
 </UserControl>

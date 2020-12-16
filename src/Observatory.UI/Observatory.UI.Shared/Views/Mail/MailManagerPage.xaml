@@ -5,6 +5,7 @@
       xmlns:local="using:Observatory.UI.Views.Mail"
       xmlns:mailvm="using:Observatory.Core.ViewModels.Mail"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:mctk="using:Microsoft.Toolkit.Uwp.UI.Controls"
       xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
       xmlns:ui="using:Observatory.UI"
       xmlns:v="using:Observatory.UI.Views"
@@ -69,6 +70,14 @@
       </Setter>
     </Style>
 
+    <Style x:Key="LightCommandBarOverflowPresenterStyle" TargetType="CommandBarOverflowPresenter">
+      <Setter Property="RequestedTheme" Value="Light"/>
+    </Style>
+
+    <Style x:Key="DarkCommandBarOverflowPresenterStyle" TargetType="CommandBarOverflowPresenter">
+      <Setter Property="RequestedTheme" Value="Dark"/>
+    </Style>
+
     <DataTemplate x:Key="ModeSelectorItemTemplate"
                   x:DataType="vm:FunctionalityMode">
       <SymbolIcon HorizontalAlignment="Center"
@@ -82,14 +91,14 @@
 
   <Grid x:Name="LayoutRoot"
         x:DefaultBindMode="OneWay"
-        Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-        RequestedTheme="Light">
+        Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
     <Grid x:Name="TopBarGrid"
-          Background="{ThemeResource SystemControlAcrylicWindowBrush}"
+          Background="{ThemeResource SystemControlAccentDark1AcrylicWindowAccentDark1Brush}"
+          RequestedTheme="Dark"
           Shadow="{StaticResource TopBarGridShadow}"
           Translation="0,0,4">
       <Grid.RowDefinitions>
@@ -103,8 +112,8 @@
       <Grid Grid.Row="1">
         <Grid.ColumnDefinitions>
           <ColumnDefinition x:Name="TopBarNavigationPaneRegion"
-                            Width="300"/>
-          <ColumnDefinition Width="500"/>
+                            Width="{x:Bind ui:Converters.PixelsToGridLength(Settings.NavigationViewOpenPaneLength)}"/>
+          <ColumnDefinition Width="{x:Bind ui:Converters.PixelsToGridLength(Settings.MessageListWidth)}"/>
           <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid>
@@ -163,13 +172,16 @@
               <TextBox x:Name="SearchFolderTextBox"
                        Margin="0,0,2,0"
                        HorizontalAlignment="Stretch"
-                       PlaceholderText="Search"/>
+                       PlaceholderText="Search"
+                       RequestedTheme="Light"/>
             </CommandBar.Content>
           </CommandBar>
         </Grid>
         <Grid Grid.Column="2"
               Visibility="{x:Bind ui:Converters.ObjectNullToVisibility(ViewModel.SelectedMessage), FallbackValue='Collapsed'}">
-          <CommandBar Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
+          <CommandBar x:Name="MessageDetailCommandBar"
+                      Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
+                      CommandBarOverflowPresenterStyle="{StaticResource LightCommandBarOverflowPresenterStyle}"
                       DefaultLabelPosition="Right">
             <AppBarButton Icon="MailReply"
                           Label="Reply"/>
@@ -220,11 +232,9 @@
                Grid.Row="1"
                CompactPaneLength="40"
                DisplayMode="CompactInline"
-               IsPaneOpen="True"
-               OpenPaneLength="300"
-               PaneBackground="{ThemeResource SystemControlChromeMediumLowAcrylicWindowMediumBrush}">
-      <!--  PaneBackground="{ThemeResource SystemControlAccentAcrylicWindowAccentMediumHighBrush}">  -->
-      <!--  PaneBackground="{ThemeResource SystemControlChromeMediumLowAcrylicWindowMediumBrush}">  -->
+               IsPaneOpen="{x:Bind Settings.IsNavigationViewPaneOpen, Mode=TwoWay}"
+               OpenPaneLength="{x:Bind Settings.NavigationViewOpenPaneLength}"
+               PaneBackground="{ThemeResource SystemControlAcrylicWindowBrush}">
       <SplitView.Pane>
         <Grid x:Name="NavigationPaneRoot">
           <Grid x:Name="ExpandedNavigationPane">
@@ -445,19 +455,32 @@
           <Grid Shadow="{StaticResource ContentGridShadow}"
                 Translation="0,0,8">
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="500"/>
-              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="{x:Bind Settings.MessageListWidth, Converter={StaticResource DoubleToGridLengthConverter}, Mode=TwoWay}"
+                                MinWidth="400"
+                                MaxWidth="600"/>
               <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <local:MailFolderView SelectedMessage="{x:Bind ViewModel.SelectedMessage, Mode=TwoWay}"
                                   ViewModel="{x:Bind ViewModel.SelectedFolder}"/>
-            <Rectangle Grid.Column="1"
-                       Width="1"
-                       VerticalAlignment="Stretch"
-                       Fill="{ThemeResource SystemBaseLowColor}"/>
-            <local:MessageDetailView Grid.Column="2"
+            <local:MessageDetailView Grid.Column="1"
                                      ViewModel="{x:Bind ViewModel.SelectedMessage.Detail}"
                                      Visibility="{x:Bind ui:Converters.ObjectNullToVisibility(ViewModel.SelectedMessage), FallbackValue='Collapsed'}"/>
+            <Rectangle Grid.Column="1"
+                       Width="1"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Stretch"
+                       Fill="{ThemeResource SystemBaseLowColor}"/>
+            <mctk:GridSplitter Grid.Column="1"
+                               Width="8"
+                               MinWidth="0"
+                               HorizontalAlignment="Left"
+                               Background="Transparent"
+                               ResizeBehavior="PreviousAndCurrent"
+                               ResizeDirection="Columns">
+              <mctk:GridSplitter.Element>
+                <Grid/>
+              </mctk:GridSplitter.Element>
+            </mctk:GridSplitter>
           </Grid>
         </SplitView>
       </SplitView>

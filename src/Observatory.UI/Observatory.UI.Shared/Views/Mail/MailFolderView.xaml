@@ -33,14 +33,13 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
     <Grid Height="{StaticResource NavigationViewCompactPaneLength}"
-          Background="{ThemeResource SystemControlAcrylicWindowBrush}"
           Shadow="{StaticResource FolderNameShadow}"
           Translation="0,0,4">
       <CommandBar VerticalContentAlignment="Center"
                   Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
                   DefaultLabelPosition="Right"
                   IsDynamicOverflowEnabled="False">
-        <AppBarButton Icon="ViewAll"
+        <AppBarButton Icon="List"
                       Label="Show: All">
           <AppBarButton.Flyout>
             <MenuFlyout Placement="BottomEdgeAlignedLeft">
