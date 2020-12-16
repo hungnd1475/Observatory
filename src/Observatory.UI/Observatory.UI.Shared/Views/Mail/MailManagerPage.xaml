@@ -160,12 +160,12 @@
                       HorizontalContentAlignment="Stretch"
                       VerticalContentAlignment="Center"
                       Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
-                      DefaultLabelPosition="Collapsed"
+                      DefaultLabelPosition="Right"
                       IsDynamicOverflowEnabled="False"
                       Visibility="Collapsed">
-            <AppBarButton Width="40"
-                          Click="{x:Bind HideSearchFolderCommandBar, Mode=OneTime}"
+            <AppBarButton Click="{x:Bind HideSearchFolderCommandBar, Mode=OneTime}"
                           Icon="Cancel"
+                          Label="Close"
                           ToolTipService.Placement="Bottom"
                           ToolTipService.ToolTip="Cancel search"/>
             <CommandBar.Content>

@@ -55,22 +55,22 @@
                   </VisualState>
                   <VisualState x:Name="Checked">
                     <VisualState.Setters>
-                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
+                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent2RevealBackgroundBrush}"/>
                       <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAltTransparentRevealBorderBrush}"/>
                     </VisualState.Setters>
                   </VisualState>
                   <VisualState x:Name="CheckedPointerOver">
                     <VisualState.Setters>
                       <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="PointerOver"/>
-                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
+                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent2RevealBackgroundBrush}"/>
+                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAccent2RevealBackgroundBrush}"/>
                     </VisualState.Setters>
                   </VisualState>
                   <VisualState x:Name="CheckedPressed">
                     <VisualState.Setters>
                       <Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="Pressed"/>
-                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
-                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAccent3RevealBackgroundBrush}"/>
+                      <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource SystemControlHighlightAccent2RevealBackgroundBrush}"/>
+                      <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource SystemControlHighlightAccent2RevealBackgroundBrush}"/>
                     </VisualState.Setters>
                   </VisualState>
                 </VisualStateGroup>

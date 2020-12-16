@@ -43,8 +43,10 @@ namespace Observatory.UI.Views
 
             var appTitlebar = ApplicationView.GetForCurrentView().TitleBar;
             appTitlebar.ButtonBackgroundColor = Colors.Transparent;
-            appTitlebar.ButtonInactiveBackgroundColor = Colors.Transparent;
+            appTitlebar.ButtonInactiveBackgroundColor = Colors.Transparent;            
             appTitlebar.ButtonForegroundColor = Colors.White;
+            appTitlebar.ButtonHoverForegroundColor = Colors.White;
+            appTitlebar.ButtonPressedForegroundColor = Colors.White;
 
             this.WhenActivated(disposables => 
             {

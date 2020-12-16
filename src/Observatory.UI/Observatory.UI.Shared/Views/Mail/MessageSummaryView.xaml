@@ -197,7 +197,7 @@
                  Fill="{ThemeResource UnreadColor}"
                  Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.IsRead)}"/>
       <Grid Grid.Column="1"
-            Margin="12,8,20,8">
+            Margin="16,8">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto"/>
           <RowDefinition Height="Auto"/>
