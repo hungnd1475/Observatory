@@ -73,7 +73,7 @@
         <CommandBar.Content>
           <TextBlock Margin="8,0"
                      VerticalAlignment="Center"
-                     FontSize="16"
+                     FontSize="18"
                      FontWeight="SemiBold"
                      Text="{x:Bind ViewModel.Name, Mode=OneWay}"/>
         </CommandBar.Content>

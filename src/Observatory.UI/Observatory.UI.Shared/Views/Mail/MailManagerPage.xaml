@@ -137,9 +137,7 @@
           </CommandBar>
         </Grid>
         <Grid Grid.Column="1">
-          <CommandBar x:Name="DefaultFolderCommandBar"
-                      HorizontalAlignment="Left"
-                      HorizontalContentAlignment="Stretch"
+          <CommandBar HorizontalContentAlignment="Stretch"
                       VerticalContentAlignment="Center"
                       Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
                       DefaultLabelPosition="Right"
@@ -152,26 +150,10 @@
             <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Synchronize, Mode=OneWay}"
                           Icon="Sync"
                           Label="Sync"/>
-            <AppBarButton Click="{x:Bind ShowSearchFolderCommandBar, Mode=OneTime}"
-                          Icon="Find"
-                          Label="Search"/>
-          </CommandBar>
-          <CommandBar x:Name="SearchFolderCommandBar"
-                      HorizontalContentAlignment="Stretch"
-                      VerticalContentAlignment="Center"
-                      Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
-                      DefaultLabelPosition="Right"
-                      IsDynamicOverflowEnabled="False"
-                      Visibility="Collapsed">
-            <AppBarButton Click="{x:Bind HideSearchFolderCommandBar, Mode=OneTime}"
-                          Icon="Cancel"
-                          Label="Close"
-                          ToolTipService.Placement="Bottom"
-                          ToolTipService.ToolTip="Cancel search"/>
             <CommandBar.Content>
-              <TextBox x:Name="SearchFolderTextBox"
-                       Margin="0,0,2,0"
+              <TextBox Margin="0,0,2,0"
                        HorizontalAlignment="Stretch"
+                       BorderThickness="0"
                        PlaceholderText="Search"
                        RequestedTheme="Light"/>
             </CommandBar.Content>

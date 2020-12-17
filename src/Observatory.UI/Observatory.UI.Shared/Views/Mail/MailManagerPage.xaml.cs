@@ -73,14 +73,13 @@ namespace Observatory.UI.Views.Mail
 
             ContentGridShadow.Receivers.Add(NavigationPaneRoot);
             TopBarGridShadow.Receivers.Add(NavigationView);
-            SearchFolderTextBox.LostFocus += SearchFolderTextBox_LostFocus;
 
             this.WhenActivated(disposables => 
             {
-                this.WhenAnyValue(x => x.ViewModel.SelectedFolder)
-                    .DistinctUntilChanged()
-                    .Select(x => x == null ? "Mail" : $"Mail - {x.Name}")
-                    .BindTo(this, x => x.TitleTextBlock.Text)
+                this.OneWayBind(ViewModel, 
+                        x => x.SelectedProfile.DisplayName, 
+                        x => x.TitleTextBlock.Text,
+                        value => value == null ? "Mail" : $"Mail - {value}")
                     .DisposeWith(disposables);
             });
         }
@@ -91,14 +90,6 @@ namespace Observatory.UI.Views.Mail
                 ? "LightCommandBarOverflowPresenterStyle"
                 : "DarkCommandBarOverflowPresenterStyle";
             MessageDetailCommandBar.CommandBarOverflowPresenterStyle = (Style)Resources[key];
-        }
-
-        private void SearchFolderTextBox_LostFocus(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrEmpty(SearchFolderTextBox.Text))
-            {
-                HideSearchFolderCommandBar();
-            }
         }
 
         private void TitleBar_LayoutMetricsChanged(CoreApplicationViewTitleBar sender, object args)
@@ -125,20 +116,6 @@ namespace Observatory.UI.Views.Mail
         {
             ViewModel.SelectedFolder = e.InvokedItem as MailFolderViewModel;
             ToggleFolderListPane();
-        }
-
-        public void ShowSearchFolderCommandBar()
-        {
-            DefaultFolderCommandBar.Visibility = Visibility.Collapsed;
-            SearchFolderCommandBar.Visibility = Visibility.Visible;
-            SearchFolderTextBox.Focus(FocusState.Keyboard);
-        }
-
-        public void HideSearchFolderCommandBar()
-        {
-            DefaultFolderCommandBar.Visibility = Visibility.Visible;
-            SearchFolderCommandBar.Visibility = Visibility.Collapsed;
-            SearchFolderTextBox.Text = string.Empty;
         }
     }
 }
