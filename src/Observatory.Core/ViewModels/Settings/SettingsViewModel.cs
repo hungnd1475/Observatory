@@ -15,17 +15,11 @@ namespace Observatory.Core.ViewModels.Settings
 
         public IEnumerable<ISettingCategoryViewModel> Categories { get; }
 
+        public ViewModelActivator Activator { get; } = new ViewModelActivator();
+
         public SettingsViewModel(IEnumerable<ISettingCategoryViewModel> categories)
         {
             Categories = categories;
-        }
-
-        public void OnNavigatedAway()
-        {
-        }
-
-        public void OnNavigatedTo()
-        {
         }
     }
 }

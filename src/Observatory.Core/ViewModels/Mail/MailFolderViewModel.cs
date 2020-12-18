@@ -43,7 +43,7 @@ namespace Observatory.Core.ViewModels.Mail
         public ReadOnlyObservableCollection<MailFolderViewModel> ChildFolders => _childFolders;
 
         [Reactive]
-        public VirtualizingCache<MessageSummary, string> Messages { get; private set; }
+        public VirtualizingCache<MessageSummary, MessageSummaryViewModel, string> Messages { get; private set; }
 
         public ReactiveCommand<Unit, Unit> Synchronize { get; }
 
@@ -129,11 +129,14 @@ namespace Observatory.Core.ViewModels.Mail
 
         public void LoadMessages()
         {
-            Messages = new VirtualizingCache<MessageSummary, string>(
+            Messages = new VirtualizingCache<MessageSummary, MessageSummaryViewModel, string>(
                 new MessageVirtualizingSource(_queryFactory, _folderId),
                 _mailService.MessageChanges
                     .Where(d => d.FolderId == _folderId)
-                    .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray()));
+                    .Select(d => d.Changes
+                        .Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary()))
+                        .ToArray()),
+                state => new MessageSummaryViewModel(state, _queryFactory, _mailService));
         }
 
         public void ClearMessages()

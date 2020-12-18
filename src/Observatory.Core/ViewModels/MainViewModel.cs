@@ -1,4 +1,5 @@
 ﻿using Autofac.Features.Indexed;
+using DynamicData;
 using Observatory.Core.Models;
 using Observatory.Core.Persistence;
 using Observatory.Core.Services;
@@ -15,8 +16,10 @@ using System.Reactive.Linq;
 
 namespace Observatory.Core.ViewModels
 {
-    public class MainViewModel : ReactiveObject, IScreen
+    public class MainViewModel : ReactiveObject, IScreen, IActivatableViewModel
     {
+        public IObservable<IChangeSet<ProfileViewModelBase>> Profiles { get; }
+
         public Interaction<IEnumerable<IProfileProvider>, IProfileProvider> ProviderSelection { get; } =
             new Interaction<IEnumerable<IProfileProvider>, IProfileProvider>();
 
@@ -35,14 +38,23 @@ namespace Observatory.Core.ViewModels
 
         public RoutingState Router { get; } = new RoutingState();
 
+        public ViewModelActivator Activator { get; } = new ViewModelActivator();
+
         public MainViewModel(IProfileRegistrationService profileRegistration,
             ProfilePersistenceConfiguration profilePersistenceConfiguration,
-            IEnumerable<IProfileProvider> providers,
+            IEnumerable<IProfileProvider> allProviders,
+            IIndex<string, IProfileProvider> indexedProviders,
             IIndex<FunctionalityMode, IFunctionalityViewModel> functionalityViewModels)
         {
+            Profiles = profileRegistration.Connect()
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .TransformAsync(p => indexedProviders[p.ProviderId].CreateViewModelAsync(p))
+                .Publish()
+                .RefCount();
+
             AddProfile = ReactiveCommand.CreateFromTask(async () =>
             {
-                var provider = await ProviderSelection.Handle(providers);
+                var provider = await ProviderSelection.Handle(allProviders);
                 if (provider != null)
                 {
                     var profile = await provider.CreateRegisterAsync(profilePersistenceConfiguration.ProfileDataDirectory);
@@ -64,7 +76,7 @@ namespace Observatory.Core.ViewModels
                 {
                     var viewModel = functionalityViewModels[mode];
                     viewModel.HostScreen = this;
-                    Router.Navigate.Execute(viewModel);
+                    Router.NavigateAndReset.Execute(viewModel);
                 });
         }
     }

@@ -20,7 +20,7 @@ namespace Observatory.Core.Models.Settings
         public MailSettings(ISettingsStore store)
             : base(store, nameof(MailSettings))
         {
-            MarkingAsReadBehavior = LoadProperty(nameof(MarkingAsReadBehavior), () => MarkingAsReadBehavior.WhenSelectionChanged);
+            MarkingAsReadBehavior = LoadProperty(nameof(MarkingAsReadBehavior), () => MarkingAsReadBehavior.WhenViewed);
             MarkingAsReadWhenViewedSeconds = LoadProperty(nameof(MarkingAsReadWhenViewedSeconds), () => 5);
         }
     }

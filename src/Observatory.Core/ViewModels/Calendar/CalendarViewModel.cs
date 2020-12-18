@@ -14,12 +14,6 @@ namespace Observatory.Core.ViewModels.Calendar
 
         public MainViewModel HostScreen { get; set; }
 
-        public void OnNavigatedAway()
-        {
-        }
-
-        public void OnNavigatedTo()
-        {
-        }
+        public ViewModelActivator Activator { get; } = new ViewModelActivator();
     }
 }

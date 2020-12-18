@@ -122,7 +122,8 @@ namespace Observatory.Core.ViewModels.Mail
                 {
                     IsRead = !IsRead;
                     this.Log().Error(ex);
-                });
+                })
+                .DisposeWith(_disposables);
 
             ArchiveCommand = ReactiveCommand.CreateFromTask(() =>
             {

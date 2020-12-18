@@ -81,9 +81,9 @@
     </Grid>
     <Grid x:Name="MessageListGrid"
           Grid.Row="1">
-      <controls:MessageListView HorizontalAlignment="Stretch"
+      <controls:MessageListView x:Name="MessageList"
+                                HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
-                                ItemsSource="{x:Bind Messages, Mode=OneWay}"
                                 SelectedValue="{x:Bind SelectedMessage, Mode=TwoWay}"/>
     </Grid>
   </Grid>

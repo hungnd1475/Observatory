@@ -62,8 +62,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Views\Settings\SettingsDialog.xaml.cs">
       <DependentUpon>SettingsDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)Virtualizing\VirtualizingList.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Virtualizing\VirtualizingPlaceholder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UWPVirtualizingCache.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="$(MSBuildThisFileDirectory)Views\FunctionalityModeSelector.xaml">

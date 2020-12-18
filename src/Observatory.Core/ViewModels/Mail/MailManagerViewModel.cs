@@ -12,14 +12,13 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Observatory.Core.ViewModels.Mail
 {
-    public class MailManagerViewModel : ReactiveObject, IFunctionalityViewModel, IDisposable
+    public class MailManagerViewModel : ReactiveObject, IFunctionalityViewModel
     {
-        private readonly ReadOnlyObservableCollection<ProfileViewModelBase> _profiles;
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private ReadOnlyObservableCollection<ProfileViewModelBase> _profiles;
+        private IDisposable _messageMarkingAsReadWhenViewedSubscription;
 
         public ReadOnlyObservableCollection<ProfileViewModelBase> Profiles => _profiles;
 
@@ -38,57 +37,92 @@ namespace Observatory.Core.ViewModels.Mail
 
         public MainViewModel HostScreen { get; set; }
 
-        public MailManagerViewModel(IProfileRegistrationService profileRegistrationService,
-            IIndex<string, IProfileProvider> providers,
-            MailSettings settings)
+        public ViewModelActivator Activator { get; } = new ViewModelActivator();
+
+        public MailManagerViewModel(MailSettings settings)
         {
-            var sourceProfiles = profileRegistrationService.Connect()
-                .ObserveOn(RxApp.TaskpoolScheduler)
-                .TransformAsync(p => providers[p.ProviderId].CreateViewModelAsync(p))
-                .Publish()
-                .RefCount();
-            sourceProfiles
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Bind(out _profiles)
-                .DisposeMany()
-                .Subscribe(_ => { }, ex => this.Log().Error(ex))
-                .DisposeWith(_disposables);
-            sourceProfiles
-                .Where(_ => SelectedProfile == null)
-                .ToCollection()
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(profiles => SelectedProfile = profiles.FirstOrDefault())
-                .DisposeWith(_disposables);
+            this.WhenActivated(disposables =>
+            {
+                HostScreen.Profiles
+                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .Bind(out _profiles)
+                    .DisposeMany()
+                    .Subscribe(_ => { }, ex => this.Log().Error(ex))
+                    .DisposeWith(disposables);
 
-            this.WhenAnyValue(x => x.SelectedProfile)
-                .Where(p => p != null)
-                .DistinctUntilChanged()
-                .SelectMany(p => p.WhenAnyValue(x => x.MailBox.Inbox))
-                .Subscribe(f => SelectedFolder = f)
-                .DisposeWith(_disposables);
+                HostScreen.Profiles
+                    .Where(_ => SelectedProfile == null)
+                    .ToCollection()
+                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .Subscribe(profiles => SelectedProfile = profiles.FirstOrDefault())
+                    .DisposeWith(disposables);
 
-            this.WhenAnyValue(x => x.SelectedFolder)
-                .DistinctUntilChanged()
-                .Buffer(2, 1)
-                .Select(x => (Previous: x[0], Current: x[1]))
-                .Subscribe(x =>
+                this.RaisePropertyChanged(nameof(Profiles));
+
+                this.WhenAnyValue(x => x.SelectedProfile)
+                    .Where(p => p != null)
+                    .DistinctUntilChanged()
+                    .SelectMany(p => p.WhenAnyValue(x => x.MailBox.Inbox))
+                    .Subscribe(f => SelectedFolder = f)
+                    .DisposeWith(disposables);
+
+                this.WhenAnyValue(x => x.SelectedFolder)
+                    .DistinctUntilChanged()
+                    .Buffer(2, 1)
+                    .Select(x => (Previous: x[0], Current: x[1]))
+                    .Subscribe(x =>
+                    {
+                        x.Previous?.ClearMessages();
+                        x.Current?.LoadMessages();
+                    })
+                    .DisposeWith(disposables);
+
+                this.WhenAnyValue(x => x.SelectedMessage)
+                    .Buffer(2, 1)
+                    .Select(x => (Previous: x[0], Current: x[1]))
+                    .Subscribe(x =>
+                    {
+                        _messageMarkingAsReadWhenViewedSubscription?.Dispose();
+                        switch (settings.MarkingAsReadBehavior)
+                        {
+                            case MarkingAsReadBehavior.WhenViewed:
+                                if (x.Current != null && !x.Current.IsRead)
+                                {
+                                    _messageMarkingAsReadWhenViewedSubscription = Observable
+                                        .Timer(TimeSpan.FromSeconds(0))
+                                        .ObserveOn(RxApp.MainThreadScheduler)
+                                        .Subscribe(_ =>
+                                        {
+                                            x.Current.ToggleReadCommand
+                                                .Execute()
+                                                .Subscribe();
+                                        });
+                                }
+                                break;
+                            case MarkingAsReadBehavior.WhenSelectionChanged:
+                                if (x.Previous != null && !x.Previous.IsRead)
+                                {
+                                    x.Previous.ToggleReadCommand
+                                        .Execute()
+                                        .Subscribe();
+                                }
+                                break;
+                        }
+                    })
+                    .DisposeWith(disposables);
+
+                Disposable.Create(() =>
                 {
-                    x.Previous?.ClearMessages();
-                    x.Current?.LoadMessages();
-                });
-        }
+                    _profiles = null;
+                    _messageMarkingAsReadWhenViewedSubscription?.Dispose();
+                    _messageMarkingAsReadWhenViewedSubscription = null;
 
-        public void Dispose()
-        {
-            _disposables.Dispose();
-        }
-
-        public void OnNavigatedAway()
-        {
-        }
-
-        public void OnNavigatedTo()
-        {
+                    SelectedProfile = null;
+                    SelectedFolder = null;
+                    SelectedMessage = null;
+                })
+                .DisposeWith(disposables);
+            });
         }
     }
 }
