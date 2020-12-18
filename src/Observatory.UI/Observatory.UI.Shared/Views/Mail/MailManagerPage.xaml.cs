@@ -68,19 +68,27 @@ namespace Observatory.UI.Views.Mail
             this.InitializeComponent();
             Settings = Locator.Current.GetService<UISettings>();
 
-            CoreApplication.GetCurrentView().TitleBar.LayoutMetricsChanged += TitleBar_LayoutMetricsChanged;
-            App.ThemeListener.ThemeChanged += ThemeListener_ThemeChanged;
-
+            WindowTitleRegion.Height = new GridLength(CoreApplication.GetCurrentView().TitleBar.Height);
             ContentGridShadow.Receivers.Add(NavigationPaneRoot);
             TopBarGridShadow.Receivers.Add(NavigationView);
 
             this.WhenActivated(disposables => 
             {
+                CoreApplication.GetCurrentView().TitleBar.LayoutMetricsChanged += TitleBar_LayoutMetricsChanged;
+                App.ThemeListener.ThemeChanged += ThemeListener_ThemeChanged;
+
                 this.OneWayBind(ViewModel, 
                         x => x.SelectedProfile.DisplayName, 
                         x => x.TitleTextBlock.Text,
                         value => value == null ? "Mail" : $"Mail - {value}")
                     .DisposeWith(disposables);
+
+                Disposable.Create(() =>
+                {
+                    CoreApplication.GetCurrentView().TitleBar.LayoutMetricsChanged -= TitleBar_LayoutMetricsChanged;
+                    App.ThemeListener.ThemeChanged -= ThemeListener_ThemeChanged;
+                })
+                .DisposeWith(disposables);
             });
         }
 

@@ -117,6 +117,8 @@ namespace Observatory.Core.ViewModels.Mail
                     _messageMarkingAsReadWhenViewedSubscription?.Dispose();
                     _messageMarkingAsReadWhenViewedSubscription = null;
 
+                    SelectedFolder?.ClearMessages();
+
                     SelectedProfile = null;
                     SelectedFolder = null;
                     SelectedMessage = null;
