@@ -111,11 +111,6 @@ namespace Observatory.Core.ViewModels.Mail
             IsFavorite = node.Item.IsFavorite;
         }
 
-        public MessageSummaryViewModel Transform(MessageSummary state)
-        {
-            return new MessageSummaryViewModel(state, _queryFactory, _mailService);
-        }
-
         private IObservable<(int UnreadCount, int TotalCount)> CountMessages()
         {
             return Observable.Start(() =>
@@ -149,11 +144,5 @@ namespace Observatory.Core.ViewModels.Mail
         {
             _disposables.Dispose();
         }
-    }
-
-    public class MessageSummaryEqualityComparer : IEqualityComparer<MessageSummary>
-    {
-        public bool Equals(MessageSummary x, MessageSummary y) => x.Id == y.Id;
-        public int GetHashCode(MessageSummary obj) => obj.Id.GetHashCode();
     }
 }

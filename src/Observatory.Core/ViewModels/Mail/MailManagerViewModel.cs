@@ -89,7 +89,7 @@ namespace Observatory.Core.ViewModels.Mail
                                 if (x.Current != null && !x.Current.IsRead)
                                 {
                                     _messageMarkingAsReadWhenViewedSubscription = Observable
-                                        .Timer(TimeSpan.FromSeconds(0))
+                                        .Timer(TimeSpan.FromSeconds(settings.MarkingAsReadWhenViewedSeconds))
                                         .ObserveOn(RxApp.MainThreadScheduler)
                                         .Subscribe(_ =>
                                         {
