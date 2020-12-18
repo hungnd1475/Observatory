@@ -7,11 +7,11 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="953da06f-fc94-487e-9b2f-ec99f2f5dc45"
+    Name="da49ff09-65d0-4d9d-95a4-f5cf4d1d5ba3"
     Publisher="CN=hungn"
     Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="89dabc49-df27-4ddb-9b78-0e7308fe6c38" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="5bc522c8-ef64-4477-9ff2-d55017674205" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>Observatory.UI</DisplayName>
@@ -39,8 +39,6 @@
         BackgroundColor="transparent">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
-        <uap:InitialRotationPreference>
-          <uap:Rotation Preference="landscape"/></uap:InitialRotationPreference>
       </uap:VisualElements>
     </Application>
   </Applications>

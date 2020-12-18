@@ -45,12 +45,7 @@ namespace Observatory.Core.Virtualization
         public TEntity this[int index] => SearchItem(CurrentBlocks, index);
 
         /// <summary>
-        /// Gets an <see cref="IEnumerable{T}"/> of all the indices the cache is holding.
-        /// </summary>
-        public IEnumerable<int> Indices => CurrentBlocks.Select(b => b.Range).SelectMany(r => r);
-
-        /// <summary>
-        /// Constructs an instance of <see cref="VirtualizingCache{T}"/>.
+        /// Constructs an instance of <see cref="VirtualizingCache{TEntity, TKey}"/>.
         /// </summary>
         /// <param name="source">The source where items are retrieved from.</param>
         public VirtualizingCache(IVirtualizingSource<TEntity, TKey> source,

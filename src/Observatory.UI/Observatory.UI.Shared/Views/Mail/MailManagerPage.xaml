@@ -435,7 +435,7 @@
             </Grid>
           </SplitView.Pane>
           <Grid Shadow="{StaticResource ContentGridShadow}"
-                Translation="0,0,8">
+                Translation="0,0,4">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="{x:Bind Settings.MessageListWidth, Converter={StaticResource DoubleToGridLengthConverter}, Mode=TwoWay}"
                                 MinWidth="400"

@@ -11,9 +11,6 @@
              d:DesignWidth="400"
              mc:Ignorable="d">
   <UserControl.Resources>
-    <ThemeResource x:Key="ModeSelectorToggleButtonCheckedBackgroundBrush"
-                   ResourceKey="SystemControlHighlightAccentRevealBackgroundBrush"/>
-
     <Style x:Key="ModeSelectorToggleButtonStyle" TargetType="ToggleButton">
       <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
       <Setter Property="BorderBrush" Value="{ThemeResource SystemControlTransparentRevealBorderBrush}"/>

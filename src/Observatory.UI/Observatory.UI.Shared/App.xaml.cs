@@ -185,7 +185,7 @@ namespace Observatory.UI
                 .Enrich.FromLogContext()
                 .MinimumLevel.Debug()
                 .WriteTo.Debug()
-                .WriteTo.File(Path.Combine(ApplicationData.Current.LocalFolder.Path, "logs/log-.txt"), 
+                .WriteTo.File(Path.Combine(ApplicationData.Current.LocalFolder.Path, "logs/log-.txt"),
                     rollingInterval: RollingInterval.Day)
                 .CreateLogger();
         }
@@ -216,6 +216,6 @@ namespace Observatory.UI
             resolver.SetLifetimeScope(container);
 
             return container;
-        } 
+        }
     }
 }
