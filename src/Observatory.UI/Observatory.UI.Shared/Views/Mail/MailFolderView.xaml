@@ -23,6 +23,7 @@
           </ControlTemplate>
         </Setter.Value>
       </Setter>
+      <Setter Property="UseSystemFocusVisuals" Value="False"/>
     </Style>
 
     <ThemeShadow x:Name="FolderNameShadow"/>

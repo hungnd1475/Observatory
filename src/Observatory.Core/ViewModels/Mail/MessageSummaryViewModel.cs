@@ -67,21 +67,17 @@ namespace Observatory.Core.ViewModels.Mail
 
         public MessageDetailViewModel Detail => _detail.Value;
 
-        public ReactiveCommand<Unit, Unit> LoadDetailCommand { get; }
+        public ReactiveCommand<Unit, Unit> Archive { get; }
 
-        public ReactiveCommand<Unit, Unit> ArchiveCommand { get; }
+        public ReactiveCommand<Unit, Unit> Delete { get; }
 
-        public ReactiveCommand<Unit, Unit> DeleteCommand { get; }
+        public ReactiveCommand<Unit, Unit> ToggleFlag { get; }
 
-        public ReactiveCommand<Unit, Unit> ToggleFlagCommand { get; }
+        public ReactiveCommand<Unit, Unit> ToggleRead { get; }
 
-        public ReactiveCommand<Unit, Unit> ToggleReadCommand { get; }
+        public ReactiveCommand<string, Unit> Move { get; }
 
-        public ReactiveCommand<string, Unit> MoveCommand { get; }
-
-        public ReactiveCommand<Unit, Unit> MoveToJunkCommand { get; }
-
-        public ReactiveCommand<Unit, Unit> IgnoreCommand { get; }
+        public ReactiveCommand<Unit, Unit> MoveToJunk { get; }
 
         public MessageSummaryViewModel(MessageSummary state,
             IProfileDataQueryFactory queryFactory,
@@ -92,17 +88,17 @@ namespace Observatory.Core.ViewModels.Mail
             Id = state.Id;
             Refresh(state);
 
-            ToggleFlagCommand = ReactiveCommand.CreateFromTask(async () =>
+            ToggleFlag = ReactiveCommand.CreateFromTask(async () =>
             {
                 IsFlagged = !IsFlagged;
                 await mailService.UpdateMessage(_folderId, Id)
                     .Set(m => m.IsFlagged, IsFlagged)
                     .ExecuteAsync();
             });
-            ToggleFlagCommand.IsExecuting
+            ToggleFlag.IsExecuting
                 .ToPropertyEx(this, x => x.IsTogglingFlag)
                 .DisposeWith(_disposables);
-            ToggleFlagCommand.ThrownExceptions
+            ToggleFlag.ThrownExceptions
                 .Subscribe(ex =>
                 {
                     IsFlagged = !IsFlagged;
@@ -110,14 +106,14 @@ namespace Observatory.Core.ViewModels.Mail
                 })
                 .DisposeWith(_disposables);
 
-            ToggleReadCommand = ReactiveCommand.CreateFromTask(async () =>
+            ToggleRead = ReactiveCommand.CreateFromTask(async () =>
             {
                 IsRead = !IsRead;
                 await mailService.UpdateMessage(_folderId, Id)
                     .Set(m => m.IsRead, IsRead)
                     .ExecuteAsync();
             });
-            ToggleReadCommand.ThrownExceptions
+            ToggleRead.ThrownExceptions
                 .Subscribe(ex =>
                 {
                     IsRead = !IsRead;
@@ -125,7 +121,7 @@ namespace Observatory.Core.ViewModels.Mail
                 })
                 .DisposeWith(_disposables);
 
-            ArchiveCommand = ReactiveCommand.CreateFromTask(() =>
+            Archive = ReactiveCommand.CreateFromTask(() =>
             {
                 return Task.Delay(500);
             });

@@ -10,6 +10,7 @@
       xmlns:ui="using:Observatory.UI"
       xmlns:v="using:Observatory.UI.Views"
       xmlns:vm="using:Observatory.Core.ViewModels"
+      xmlns:wctex="using:Microsoft.Toolkit.Uwp.UI.Extensions"
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
       mc:Ignorable="d">
   <Page.Resources>
@@ -147,7 +148,7 @@
                           Icon="Add"
                           Label="New mail"
                           Visibility="Collapsed"/>
-            <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Synchronize, Mode=OneWay}"
+            <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Synchronize}"
                           Icon="Sync"
                           Label="Sync"/>
             <CommandBar.Content>
@@ -171,36 +172,39 @@
                           Label="Reply all"/>
             <AppBarButton Icon="MailForward"
                           Label="Forward"/>
-            <AppBarButton Label="Archive">
-              <AppBarButton.Icon>
-                <FontIcon Glyph="{StaticResource ArchiveGlyph}"/>
-              </AppBarButton.Icon>
-            </AppBarButton>
-            <AppBarButton Icon="Delete"
+            <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.Archive}"
+                          Icon="{wctex:FontIcon Glyph={StaticResource ArchiveGlyph}}"
+                          Label="Archive"/>
+            <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.Delete}"
+                          Icon="Delete"
                           Label="Delete"/>
+            <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.ToggleFlag}"
+                          Icon="Flag"
+                          Label="Set flag"
+                          Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.SelectedMessage.IsFlagged)}"/>
+            <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.ToggleFlag}"
+                          Icon="Flag"
+                          Label="Clear flag"
+                          Visibility="{x:Bind ViewModel.SelectedMessage.IsFlagged}"/>
             <CommandBar.SecondaryCommands>
-              <AppBarButton Icon="Read"
+              <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.ToggleRead}"
+                            Icon="Read"
                             Label="Mark as read"
                             Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.SelectedMessage.IsRead)}"/>
-              <AppBarButton Icon="Mail"
+              <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.ToggleRead}"
+                            Icon="Mail"
                             Label="Mark as unread"
                             Visibility="{x:Bind ViewModel.SelectedMessage.IsRead}"/>
-              <AppBarButton Icon="MoveToFolder"
+              <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.Move}"
+                            Icon="MoveToFolder"
                             Label="Move"/>
-              <AppBarButton Label="Move to junk">
-                <AppBarButton.Icon>
-                  <FontIcon FontSize="16"
-                            Glyph="&#xF140;"/>
-                </AppBarButton.Icon>
-              </AppBarButton>
+              <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.MoveToJunk}"
+                            Icon="{wctex:FontIcon Glyph={StaticResource MoveToJunkGlyph}}"
+                            Label="Move to junk"/>
               <AppBarButton Icon="Find"
                             Label="Find"/>
-              <AppBarButton Label="Save as">
-                <AppBarButton.Icon>
-                  <FontIcon FontSize="16"
-                            Glyph="&#xE792;"/>
-                </AppBarButton.Icon>
-              </AppBarButton>
+              <AppBarButton Icon="{wctex:FontIcon Glyph={StaticResource SaveAsGlyph}}"
+                            Label="Save as"/>
               <AppBarButton Icon="Print"
                             Label="Print"/>
               <AppBarButton Icon="Zoom"

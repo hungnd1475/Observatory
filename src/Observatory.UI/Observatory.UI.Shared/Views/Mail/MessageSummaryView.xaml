@@ -7,8 +7,10 @@
              xmlns:models="using:Observatory.Core.Models"
              xmlns:triggers="using:Microsoft.Toolkit.Uwp.UI.Triggers"
              xmlns:ui="using:Observatory.UI"
+             xmlns:wctex="using:Microsoft.Toolkit.Uwp.UI.Extensions"
              d:DesignHeight="300"
              d:DesignWidth="400"
+             x:DefaultBindMode="OneWay"
              mc:Ignorable="d">
   <UserControl.Resources>
     <ResourceDictionary>
@@ -179,14 +181,53 @@
       </Style>
     </ResourceDictionary>
   </UserControl.Resources>
+  <UserControl.ContextFlyout>
+    <MenuFlyout>
+      <MenuFlyoutItem Command="{x:Bind ViewModel.Archive}"
+                      Icon="{wctex:FontIcon Glyph={StaticResource ArchiveGlyph}}"
+                      Text="Archive"/>
+      <MenuFlyoutItem Command="{x:Bind ViewModel.Delete}"
+                      Icon="{wctex:FontIcon Glyph={StaticResource DeleteGlyph}}"
+                      Text="Delete"/>
+      <MenuFlyoutItem Command="{x:Bind ViewModel.Move}"
+                      Icon="{wctex:SymbolIcon Symbol=MoveToFolder}"
+                      Text="Move"/>
+      <MenuFlyoutItem Command="{x:Bind ViewModel.ToggleFlag}"
+                      Icon="{wctex:FontIcon Glyph={StaticResource FlagGlyph}}"
+                      Text="Set flag"
+                      Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.IsFlagged)}"/>
+      <MenuFlyoutItem Command="{x:Bind ViewModel.ToggleFlag}"
+                      Icon="{wctex:FontIcon Glyph={StaticResource FlagGlyph}}"
+                      Text="Clear flag"
+                      Visibility="{x:Bind ViewModel.IsFlagged}"/>
+      <MenuFlyoutItem Command="{x:Bind ViewModel.ToggleRead}"
+                      Icon="{wctex:SymbolIcon Symbol=Read}"
+                      Text="Mark as read"
+                      Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.IsRead)}"/>
+      <MenuFlyoutItem Command="{x:Bind ViewModel.ToggleRead}"
+                      Icon="{wctex:SymbolIcon Symbol=Mail}"
+                      Text="Mark as unread"
+                      Visibility="{x:Bind ViewModel.IsRead}"/>
+      <MenuFlyoutSeparator/>
+      <MenuFlyoutItem Command="{x:Bind ViewModel.MoveToJunk}"
+                      Icon="{wctex:FontIcon Glyph={StaticResource MoveToJunkGlyph}}"
+                      Text="Move to Junk"/>
+    </MenuFlyout>
+  </UserControl.ContextFlyout>
   <Grid x:Name="ContentGrid"
-        x:DefaultBindMode="OneWay"
         Background="Transparent"
         Opacity="0">
     <Grid.RowDefinitions>
       <RowDefinition Height="*"/>
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
+    <Rectangle x:Name="ContextOpenIndicator"
+               Grid.RowSpan="2"
+               HorizontalAlignment="Stretch"
+               VerticalAlignment="Stretch"
+               Stroke="{StaticResource UnreadColor}"
+               StrokeThickness="1"
+               Visibility="Collapsed"/>
     <Grid>
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="4"/>
@@ -234,14 +275,14 @@
                     Orientation="Horizontal"
                     Spacing="3"
                     Visibility="{x:Bind IsPointerOver}">
-          <Button Command="{x:Bind ViewModel.ArchiveCommand}"
+          <Button Command="{x:Bind ViewModel.Archive}"
                   Style="{StaticResource MessageSummaryViewArchiveButtonStyle}"
                   ToolTipService.ToolTip="Archive this item"/>
-          <Button Command="{x:Bind ViewModel.DeleteCommand}"
+          <Button Command="{x:Bind ViewModel.Delete}"
                   Style="{StaticResource MessageSummaryViewDeleteButtonStyle}"
                   ToolTipService.ToolTip="Delete this item"/>
           <controls:OneWayToggleButton x:Name="ToggleFlagButton"
-                                       Command="{x:Bind ViewModel.ToggleFlagCommand}"
+                                       Command="{x:Bind ViewModel.ToggleFlag}"
                                        IsChecked="{x:Bind ViewModel.IsFlagged}"
                                        Style="{StaticResource MessageSummaryViewToggleFlagButtonStyle}"
                                        ToolTipService.ToolTip="Set flag on this item"/>
@@ -370,6 +411,17 @@
           </VisualState.StateTriggers>
           <VisualState.Setters>
             <Setter Target="ContentGrid.Opacity" Value="1"/>
+          </VisualState.Setters>
+        </VisualState>
+      </VisualStateGroup>
+
+      <VisualStateGroup>
+        <VisualState>
+          <VisualState.StateTriggers>
+            <StateTrigger IsActive="{x:Bind IsContextMenuOpen}"/>
+          </VisualState.StateTriggers>
+          <VisualState.Setters>
+            <Setter Target="ContextOpenIndicator.Visibility" Value="Visible"/>
           </VisualState.Setters>
         </VisualState>
       </VisualStateGroup>

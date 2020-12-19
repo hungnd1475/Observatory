@@ -25,6 +25,8 @@
       <x:String x:Key="UnflagGlyph">&#xED2E;</x:String>
       <x:String x:Key="LowImportanceGlyph">&#xE7EB;</x:String>
       <x:String x:Key="HighImportanceGlyph">&#xE171;</x:String>
+      <x:String x:Key="MoveToJunkGlyph">&#xF140;</x:String>
+      <x:String x:Key="SaveAsGlyph">&#xE792;</x:String>
 
       <!--  Constants  -->
       <x:Double x:Key="NavigationViewCompactPaneLength">40</x:Double>

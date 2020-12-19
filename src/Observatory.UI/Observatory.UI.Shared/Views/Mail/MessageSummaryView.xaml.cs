@@ -7,6 +7,8 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Uno.Extensions;
+using Uno.Logging;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -40,6 +42,9 @@ namespace Observatory.UI.Views.Mail
         public static DependencyProperty StateNameProperty { get; } =
             DependencyProperty.Register(nameof(StateName), typeof(string), typeof(MessageSummaryView), new PropertyMetadata(STATE_NORMAL));
 
+        public static DependencyProperty IsContextMenuOpenProperty { get; } =
+            DependencyProperty.Register(nameof(IsContextMenuOpen), typeof(bool), typeof(MessageSummaryView), new PropertyMetadata(false));
+
         public MessageSummaryViewModel ViewModel 
         {
             get => (MessageSummaryViewModel)GetValue(ViewModelProperty);
@@ -70,6 +75,12 @@ namespace Observatory.UI.Views.Mail
             set => SetValue(StateNameProperty, value);
         }
 
+        public bool IsContextMenuOpen
+        {
+            get { return (bool)GetValue(IsContextMenuOpenProperty); }
+            set { SetValue(IsContextMenuOpenProperty, value); }
+        }
+
         public MessageSummaryView()
         {
             this.InitializeComponent();
@@ -79,14 +90,19 @@ namespace Observatory.UI.Views.Mail
                     this.WhenAnyValue(x => x.ViewModel.IsFlagged),
                     this.WhenAnyValue(x => x.IsPointerOver),
                     this.WhenAnyValue(x => x.IsSelected),
-                    (isFlagged, isPointerOver, isSelected) => (IsFlagged: isFlagged, IsPointerOver: isPointerOver, IsSelected: isSelected))
+                    this.WhenAnyValue(x => x.IsContextMenuOpen),
+                    (isFlagged, isPointerOver, isSelected, isContextMenuOpen) => 
+                        (IsFlagged: isFlagged, 
+                         IsPointerOver: isPointerOver, 
+                         IsSelected: isSelected,
+                         IsContextMenuOpen: isContextMenuOpen))
                 .Select(state =>
                 {
                     if (state.IsSelected)
                     {
                         return STATE_SELECTED;
                     }
-                    else if (state.IsPointerOver)
+                    else if (state.IsPointerOver || state.IsContextMenuOpen)
                     {
                         return STATE_POINTER_OVER;
                     }
@@ -101,6 +117,13 @@ namespace Observatory.UI.Views.Mail
                 })
                 .BindTo(this, x => x.StateName)
                 .DisposeWith(disposables);
+
+                ContextFlyout.Events().Opened
+                    .Subscribe(_ => IsContextMenuOpen = true)
+                    .DisposeWith(disposables);
+                ContextFlyout.Events().Closed
+                    .Subscribe(_ => IsContextMenuOpen = false)
+                    .DisposeWith(disposables);
             });
         }
 
