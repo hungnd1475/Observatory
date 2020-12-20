@@ -10,6 +10,7 @@ using System.Reactive.Disposables;
 using Windows.ApplicationModel.Store;
 using Uno.Extensions;
 using Uno.Logging;
+using Microsoft.UI.Xaml.Controls;
 
 namespace Observatory.UI.Views.Mail
 {
@@ -46,10 +47,74 @@ namespace Observatory.UI.Views.Mail
 
             this.WhenActivated(disposables =>
             {
+                var viewModel = this.WhenAnyValue(x => x.ViewModel)
+                    .Publish().RefCount();
+
                 this.OneWayBind(ViewModel,
                         x => x.Messages,
                         x => x.MessageList.ItemsSource,
                         value => value?.ToNative())
+                    .DisposeWith(disposables);
+
+                this.OneWayBind(ViewModel,
+                        x => x.MessageFilter,
+                        x => x.ShowButton.Label,
+                        value => value switch
+                        {
+                            MessageFilter.None => "Show: All",
+                            MessageFilter.Unread => "Show: Unread",
+                            MessageFilter.Flagged => "Show: Flagged",
+                            _ => throw new NotSupportedException(),
+                        })
+                    .DisposeWith(disposables);
+
+                this.OneWayBind(ViewModel,
+                        x => x.MessageFilter,
+                        x => x.FilterAllRadio.IsChecked,
+                        value => value == MessageFilter.None)
+                    .DisposeWith(disposables);
+                this.OneWayBind(ViewModel,
+                        x => x.MessageFilter,
+                        x => x.FilterFlaggedRadio.IsChecked,
+                        value => value == MessageFilter.Flagged)
+                    .DisposeWith(disposables);
+                this.OneWayBind(ViewModel,
+                        x => x.MessageFilter,
+                        x => x.FilterUnreadRadio.IsChecked,
+                        value => value == MessageFilter.Unread)
+                    .DisposeWith(disposables);
+
+                FilterAllRadio.Events().Click
+                    .WithLatestFrom(viewModel, (_, vm) => vm)
+                    .Subscribe(vm => vm.MessageFilter = MessageFilter.None)
+                    .DisposeWith(disposables);
+                FilterFlaggedRadio.Events().Click
+                    .WithLatestFrom(viewModel, (_, vm) => vm)
+                    .Subscribe(vm => vm.MessageFilter = MessageFilter.Flagged)
+                    .DisposeWith(disposables);
+                FilterUnreadRadio.Events().Click
+                    .WithLatestFrom(viewModel, (_, vm) => vm)
+                    .Subscribe(vm => vm.MessageFilter = MessageFilter.Unread)
+                    .DisposeWith(disposables);
+
+                this.OneWayBind(ViewModel,
+                        x => x.MessageOrder,
+                        x => x.SortDateRadio.IsChecked,
+                        value => value == MessageOrder.ReceivedDateTime)
+                    .DisposeWith(disposables);
+                this.OneWayBind(ViewModel,
+                        x => x.MessageOrder,
+                        x => x.SortNameRadio.IsChecked,
+                        value => value == MessageOrder.Sender)
+                    .DisposeWith(disposables);
+
+                SortDateRadio.Events().Click
+                    .WithLatestFrom(viewModel, (_, vm) => vm)
+                    .Subscribe(vm => vm.MessageOrder = MessageOrder.ReceivedDateTime)
+                    .DisposeWith(disposables);
+                SortNameRadio.Events().Click
+                    .WithLatestFrom(viewModel, (_, vm) => vm)
+                    .Subscribe(vm => vm.MessageOrder = MessageOrder.Sender)
                     .DisposeWith(disposables);
             });
         }

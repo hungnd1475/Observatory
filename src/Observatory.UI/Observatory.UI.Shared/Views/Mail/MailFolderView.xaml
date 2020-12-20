@@ -40,20 +40,26 @@
                   Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
                   DefaultLabelPosition="Right"
                   IsDynamicOverflowEnabled="False">
-        <AppBarButton Icon="List"
+        <AppBarButton x:Name="ShowButton"
+                      Icon="List"
                       Label="Show: All">
           <AppBarButton.Flyout>
             <MenuFlyout Placement="BottomEdgeAlignedLeft">
-              <muxc:RadioMenuFlyoutItem GroupName="Filter"
+              <muxc:RadioMenuFlyoutItem x:Name="FilterAllRadio"
+                                        GroupName="Filter"
                                         Text="All"/>
-              <muxc:RadioMenuFlyoutItem GroupName="Filter"
+              <muxc:RadioMenuFlyoutItem x:Name="FilterUnreadRadio"
+                                        GroupName="Filter"
                                         Text="Unread"/>
-              <muxc:RadioMenuFlyoutItem GroupName="Filter"
+              <muxc:RadioMenuFlyoutItem x:Name="FilterFlaggedRadio"
+                                        GroupName="Filter"
                                         Text="Flagged"/>
               <MenuFlyoutSeparator/>
-              <muxc:RadioMenuFlyoutItem GroupName="Sort"
+              <muxc:RadioMenuFlyoutItem x:Name="SortDateRadio"
+                                        GroupName="Sort"
                                         Text="Sort By Date"/>
-              <muxc:RadioMenuFlyoutItem GroupName="Sort"
+              <muxc:RadioMenuFlyoutItem x:Name="SortNameRadio"
+                                        GroupName="Sort"
                                         Text="Sort By Name"/>
             </MenuFlyout>
           </AppBarButton.Flyout>

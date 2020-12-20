@@ -38,15 +38,6 @@ namespace Observatory.Core.Virtualization
         }
 
         /// <summary>
-        /// Constructs an instance of <see cref="IndexRange"/> representing only a single index.
-        /// </summary>
-        /// <param name="index">The single index.</param>
-        public IndexRange(int index)
-        {
-            FirstIndex = LastIndex = index;
-        }
-
-        /// <summary>
         /// Tries union with another range.
         /// </summary>
         /// <param name="other">The other range.</param>

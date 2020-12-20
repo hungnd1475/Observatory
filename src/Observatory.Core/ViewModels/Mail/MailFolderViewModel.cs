@@ -15,14 +15,12 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace Observatory.Core.ViewModels.Mail
 {
-    public class MailFolderViewModel : ReactiveObject, IDisposable
+    public class MailFolderViewModel : ReactiveObject, IActivatableViewModel, IDisposable
     {
-        private readonly string _folderId;
-        private readonly IProfileDataQueryFactory _queryFactory;
-        private readonly IMailService _mailService;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly ReadOnlyObservableCollection<MailFolderViewModel> _childFolders;
 
@@ -43,6 +41,12 @@ namespace Observatory.Core.ViewModels.Mail
         public ReadOnlyObservableCollection<MailFolderViewModel> ChildFolders => _childFolders;
 
         [Reactive]
+        public MessageOrder MessageOrder { get; set; } = MessageOrder.ReceivedDateTime;
+
+        [Reactive]
+        public MessageFilter MessageFilter { get; set; } = MessageFilter.None;
+
+        [Reactive]
         public VirtualizingCache<MessageSummary, MessageSummaryViewModel, string> Messages { get; private set; }
 
         public ReactiveCommand<Unit, Unit> Synchronize { get; }
@@ -52,51 +56,24 @@ namespace Observatory.Core.ViewModels.Mail
         [ObservableAsProperty]
         public bool IsSynchronizing { get; }
 
-        public ReactiveCommand<Unit, Unit> Rename => throw new NotImplementedException();
+        public ReactiveCommand<Unit, Unit> Rename { get; }
 
-        public ReactiveCommand<string, Unit> Move => throw new NotImplementedException();
+        public ReactiveCommand<string, Unit> Move { get; }
 
-        public ReactiveCommand<Unit, Unit> Delete => throw new NotImplementedException();
+        public ReactiveCommand<Unit, Unit> Delete { get; }
+
+        public ViewModelActivator Activator { get; } = new ViewModelActivator();
 
         public MailFolderViewModel(Node<MailFolder, string> node,
             IProfileDataQueryFactory queryFactory,
             IMailService mailService)
         {
-            _folderId = node.Item.Id;
-            _queryFactory = queryFactory;
-            _mailService = mailService;
-
-            node.Children.Connect()
-                .Transform(n => new MailFolderViewModel(n, queryFactory, _mailService))
-                .Sort(SortExpressionComparer<MailFolderViewModel>.Ascending(f => f.Name))
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Bind(out _childFolders)
-                .DisposeMany()
-                .Subscribe()
-                .DisposeWith(_disposables);
-
-            _mailService.MessageChanges
-                .Where(d => d.FolderId == _folderId)
-                .SelectMany(_ => CountMessages())
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(x =>
-                {
-                    UnreadCount = x.UnreadCount;
-                    TotalCount = x.TotalCount;
-                })
-                .DisposeWith(_disposables);
-
-            CountMessages()
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(x =>
-                {
-                    UnreadCount = x.UnreadCount;
-                    TotalCount = x.TotalCount;
-                })
-                .DisposeWith(_disposables);
+            Name = node.Item.Name;
+            Type = node.Item.Type;
+            IsFavorite = node.Item.IsFavorite;
 
             Synchronize = ReactiveCommand.CreateFromObservable(() => Observable
-                .StartAsync((token) => _mailService.SynchronizeMessagesAsync(_folderId, token))
+                .StartAsync((token) => mailService.SynchronizeMessagesAsync(node.Item.Id, token))
                 .TakeUntil(CancelSynchronization));
             Synchronize.IsExecuting
                 .ToPropertyEx(this, x => x.IsSynchronizing)
@@ -106,43 +83,155 @@ namespace Observatory.Core.ViewModels.Mail
                 .DisposeWith(_disposables);
             CancelSynchronization = ReactiveCommand.Create(() => { }, Synchronize.IsExecuting);
 
-            Name = node.Item.Name;
-            Type = node.Item.Type;
-            IsFavorite = node.Item.IsFavorite;
-        }
+            node.Children.Connect()
+                .Transform(n => new MailFolderViewModel(n, queryFactory, mailService))
+                .Sort(SortExpressionComparer<MailFolderViewModel>.Ascending(f => f.Name))
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Bind(out _childFolders)
+                .DisposeMany()
+                .Subscribe()
+                .DisposeWith(_disposables);
 
-        private IObservable<(int UnreadCount, int TotalCount)> CountMessages()
-        {
-            return Observable.Start(() =>
+            mailService.MessageChanges
+                .Where(d => d.FolderId == node.Item.Id)
+                .SelectMany(_ => CountMessages(queryFactory, node.Item.Id))
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(x =>
+                {
+                    UnreadCount = x.UnreadCount;
+                    TotalCount = x.TotalCount;
+                })
+                .DisposeWith(_disposables);
+
+            CountMessages(queryFactory, node.Item.Id)
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(x =>
+                {
+                    UnreadCount = x.UnreadCount;
+                    TotalCount = x.TotalCount;
+                })
+                .DisposeWith(_disposables);
+
+            this.WhenActivated(disposables =>
             {
-                using var query = _queryFactory.Connect();
-                var unreadCount = query.MessageSummaries.Count(m => m.FolderId == _folderId && !m.IsRead.Value);
-                var totalCount = query.MessageSummaries.Count(m => m.FolderId == _folderId);
-                return (UnreadCount: unreadCount, TotalCount: totalCount);
-            }, RxApp.TaskpoolScheduler);
-        }
+                Observable.CombineLatest(
+                        this.WhenAnyValue(x => x.MessageOrder),
+                        this.WhenAnyValue(x => x.MessageFilter),
+                        (order, filter) => (Order: order, Filter: filter))
+                    .DistinctUntilChanged()
+                    .Subscribe(x =>
+                    {
+                        this.Log().Debug($"Load messages with filter = {x.Filter}");
+                        var source = new PersistentVirtualizingSource<MessageSummary, string>(queryFactory,
+                                GetItemSpecification(node.Item.Id, x.Order, x.Filter),
+                                GetIndexSpecification(node.Item.Id, x.Order, x.Filter));
+                        Messages?.Dispose();
+                        Messages = new VirtualizingCache<MessageSummary, MessageSummaryViewModel, string>(
+                            source,
+                            mailService.MessageChanges
+                                .Where(d => d.FolderId == node.Item.Id)
+                                .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray()),
+                            state => new MessageSummaryViewModel(state, queryFactory, mailService));
+                    })
+                    .DisposeWith(disposables);
 
-        public void LoadMessages()
-        {
-            Messages = new VirtualizingCache<MessageSummary, MessageSummaryViewModel, string>(
-                new MessageVirtualizingSource(_queryFactory, _folderId),
-                _mailService.MessageChanges
-                    .Where(d => d.FolderId == _folderId)
-                    .Select(d => d.Changes
-                        .Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary()))
-                        .ToArray()),
-                state => new MessageSummaryViewModel(state, _queryFactory, _mailService));
-        }
-
-        public void ClearMessages()
-        {
-            Messages?.Dispose();
-            Messages = null;
+                Disposable.Create(() =>
+                {
+                    MessageFilter = MessageFilter.None;
+                    Messages?.Dispose();
+                    Messages = null;
+                })
+                .DisposeWith(disposables);
+            });
         }
 
         public void Dispose()
         {
             _disposables.Dispose();
         }
+
+        private static IObservable<(int UnreadCount, int TotalCount)> CountMessages(
+            IProfileDataQueryFactory queryFactory, string folderId)
+        {
+            return Observable.Start(() =>
+            {
+                using var query = queryFactory.Connect();
+                var unreadCount = query.MessageSummaries.Count(m => m.FolderId == folderId && !m.IsRead.Value);
+                var totalCount = query.MessageSummaries.Count(m => m.FolderId == folderId);
+                return (UnreadCount: unreadCount, TotalCount: totalCount);
+            },
+            RxApp.TaskpoolScheduler);
+        }
+
+        private static ISpecification<MessageSummary, MessageSummary> GetItemSpecification(
+            string folderId, MessageOrder order, MessageFilter filter)
+        {
+            var specification = Specification.Relay<MessageSummary>(q => q.Where(m => m.FolderId == folderId));
+            switch (filter)
+            {
+                case MessageFilter.Unread:
+                    specification = specification.Chain(q => q.Where(m => !m.IsRead.Value));
+                    break;
+                case MessageFilter.Flagged:
+                    specification = specification.Chain(q => q.Where(m => m.IsFlagged.Value));
+                    break;
+            }
+
+            switch (order)
+            {
+                case MessageOrder.ReceivedDateTime:
+                    specification = specification.Chain(q => q
+                        .OrderByDescending(m => m.ReceivedDateTime)
+                        .ThenBy(m => m.Id));
+                    break;
+                case MessageOrder.Sender:
+                    specification = specification.Chain(q => q
+                        .OrderBy(m => m.Sender.DisplayName)
+                        .ThenBy(m => m.Id));
+                    break;
+            }
+            return specification;
+        }
+
+        private static Func<MessageSummary, ISpecification<MessageSummary, MessageSummary>> GetIndexSpecification(
+            string folderId, MessageOrder order, MessageFilter filter)
+        {
+            return (entity) =>
+            {
+                var specification = Specification.Relay<MessageSummary>(q => q.Where(m => m.FolderId == folderId));
+                switch (filter)
+                {
+                    case MessageFilter.Unread:
+                        specification = specification.Chain(q => q.Where(m => !m.IsRead.Value));
+                        break;
+                    case MessageFilter.Flagged:
+                        specification = specification.Chain(q => q.Where(m => m.IsFlagged.Value));
+                        break;
+                }
+                switch (order)
+                {
+                    case MessageOrder.ReceivedDateTime:
+                        specification = specification.Chain(q => q.Where(m => m.ReceivedDateTime > entity.ReceivedDateTime
+                            || m.ReceivedDateTime == entity.ReceivedDateTime && string.Compare(m.Id, entity.Id) < 0));
+                        break;
+                    case MessageOrder.Sender:
+                        break;
+                }
+                return specification;
+            };
+        }
+    }
+
+    public enum MessageOrder
+    {
+        ReceivedDateTime,
+        Sender,
+    }
+
+    public enum MessageFilter
+    {
+        None,
+        Unread,
+        Flagged,
     }
 }

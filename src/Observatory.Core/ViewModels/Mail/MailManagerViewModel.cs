@@ -66,17 +66,6 @@ namespace Observatory.Core.ViewModels.Mail
                     .Subscribe(f => SelectedFolder = f)
                     .DisposeWith(disposables);
 
-                this.WhenAnyValue(x => x.SelectedFolder)
-                    .DistinctUntilChanged()
-                    .Buffer(2, 1)
-                    .Select(x => (Previous: x[0], Current: x[1]))
-                    .Subscribe(x =>
-                    {
-                        x.Previous?.ClearMessages();
-                        x.Current?.LoadMessages();
-                    })
-                    .DisposeWith(disposables);
-
                 this.WhenAnyValue(x => x.SelectedMessage)
                     .Buffer(2, 1)
                     .Select(x => (Previous: x[0], Current: x[1]))
@@ -116,8 +105,6 @@ namespace Observatory.Core.ViewModels.Mail
                     _profiles = null;
                     _messageMarkingAsReadWhenViewedSubscription?.Dispose();
                     _messageMarkingAsReadWhenViewedSubscription = null;
-
-                    SelectedFolder?.ClearMessages();
 
                     SelectedProfile = null;
                     SelectedFolder = null;

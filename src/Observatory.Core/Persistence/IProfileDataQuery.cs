@@ -28,4 +28,20 @@ namespace Observatory.Core.Persistence
         /// </summary>
         ISpecificationQueryable<MessageDetail> MessageDetails { get; }
     }
+
+    public static class ProfileDataQueryExtensions
+    {
+        private static readonly Dictionary<Type, Func<IProfileDataQuery, object>> QUERY_TYPE_MAPPER =
+            new Dictionary<Type, Func<IProfileDataQuery, object>>()
+            {
+                { typeof(MailFolder), q => q.Folders },
+                { typeof(MessageSummary), q => q.MessageSummaries },
+                { typeof(MessageDetail), q => q.MessageDetails }
+            };
+
+        public static ISpecificationQueryable<T> ForType<T>(this IProfileDataQuery query)
+        {
+            return (ISpecificationQueryable<T>)QUERY_TYPE_MAPPER[typeof(T)](query);
+        }
+    }
 }
