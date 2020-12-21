@@ -18,8 +18,12 @@ namespace Observatory.UI
             builder.RegisterType<MailManagerPage>()
                 .As<IViewFor<MailManagerViewModel>>()
                 .SingleInstance();
-            builder.RegisterType<CalendarManagerPage>().As<IViewFor<CalendarViewModel>>();
-            builder.RegisterType<SettingPage>().As<IViewFor<SettingsViewModel>>();
+            builder.RegisterType<CalendarManagerPage>()
+                .As<IViewFor<CalendarViewModel>>()
+                .SingleInstance();
+            builder.RegisterType<SettingPage>()
+                .As<IViewFor<SettingsViewModel>>()
+                .SingleInstance();
 
             builder.RegisterType<UWPSettingsStore>()
                 .As<ISettingsStore>()

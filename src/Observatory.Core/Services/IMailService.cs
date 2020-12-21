@@ -40,7 +40,7 @@ namespace Observatory.Core.Services
         Task SynchronizeMessagesAsync(string folderId, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Gets an instance of <see cref="IEntityUpdater{TEntity}"/> to update a message given its id.
+        /// Gets an <see cref="IEntityUpdater{TEntity}"/> to update a message given its id.
         /// </summary>
         /// <param name="messageId">The message id.</param>
         /// <returns>An instance of <see cref="IEntityUpdater{TEntity}"/>.</returns>

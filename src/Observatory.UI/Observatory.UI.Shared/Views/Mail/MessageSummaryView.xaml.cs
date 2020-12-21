@@ -45,13 +45,13 @@ namespace Observatory.UI.Views.Mail
         public static DependencyProperty IsContextMenuOpenProperty { get; } =
             DependencyProperty.Register(nameof(IsContextMenuOpen), typeof(bool), typeof(MessageSummaryView), new PropertyMetadata(false));
 
-        public MessageSummaryViewModel ViewModel 
+        public MessageSummaryViewModel ViewModel
         {
             get => (MessageSummaryViewModel)GetValue(ViewModelProperty);
-            set => SetValue(ViewModelProperty, value); 
+            set => SetValue(ViewModelProperty, value);
         }
 
-        object IViewFor.ViewModel 
+        object IViewFor.ViewModel
         {
             get => ViewModel;
             set => ViewModel = (MessageSummaryViewModel)value;
@@ -91,9 +91,9 @@ namespace Observatory.UI.Views.Mail
                     this.WhenAnyValue(x => x.IsPointerOver),
                     this.WhenAnyValue(x => x.IsSelected),
                     this.WhenAnyValue(x => x.IsContextMenuOpen),
-                    (isFlagged, isPointerOver, isSelected, isContextMenuOpen) => 
-                        (IsFlagged: isFlagged, 
-                         IsPointerOver: isPointerOver, 
+                    (isFlagged, isPointerOver, isSelected, isContextMenuOpen) =>
+                        (IsFlagged: isFlagged,
+                         IsPointerOver: isPointerOver,
                          IsSelected: isSelected,
                          IsContextMenuOpen: isContextMenuOpen))
                 .Select(state =>
@@ -118,13 +118,26 @@ namespace Observatory.UI.Views.Mail
                 .BindTo(this, x => x.StateName)
                 .DisposeWith(disposables);
 
-                ContextFlyout.Events().Opened
-                    .Subscribe(_ => IsContextMenuOpen = true)
-                    .DisposeWith(disposables);
-                ContextFlyout.Events().Closed
-                    .Subscribe(_ => IsContextMenuOpen = false)
-                    .DisposeWith(disposables);
+                ContextFlyout.Opened += OpenContextMenu;
+                ContextFlyout.Closed += CloseContextMenu;
+
+                Disposable.Create(() =>
+                {
+                    ContextFlyout.Opened -= OpenContextMenu;
+                    ContextFlyout.Closed -= CloseContextMenu;
+                })
+                .DisposeWith(disposables);
             });
+        }
+
+        private void OpenContextMenu(object sender, object e)
+        {
+            IsContextMenuOpen = true;
+        }
+
+        private void CloseContextMenu(object sender, object e)
+        {
+            IsContextMenuOpen = false;
         }
 
         protected override void OnPointerEntered(PointerRoutedEventArgs e)

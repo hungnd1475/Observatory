@@ -68,12 +68,15 @@ namespace Observatory.UI.Views.Mail
             this.InitializeComponent();
             Settings = Locator.Current.GetService<UISettings>();
 
+#if NETFX_CORE
             WindowTitleRegion.Height = new GridLength(CoreApplication.GetCurrentView().TitleBar.Height);
             ContentGridShadow.Receivers.Add(NavigationPaneRoot);
             TopBarGridShadow.Receivers.Add(NavigationView);
+#endif
 
             this.WhenActivated(disposables => 
             {
+#if NETFX_CORE
                 CoreApplication.GetCurrentView().TitleBar.LayoutMetricsChanged += TitleBar_LayoutMetricsChanged;
                 App.ThemeListener.ThemeChanged += ThemeListener_ThemeChanged;
 
@@ -82,16 +85,20 @@ namespace Observatory.UI.Views.Mail
                         x => x.TitleTextBlock.Text,
                         value => value == null ? "Mail" : $"Mail - {value}")
                     .DisposeWith(disposables);
+#endif
 
                 Disposable.Create(() =>
                 {
+#if NETFX_CORE
                     CoreApplication.GetCurrentView().TitleBar.LayoutMetricsChanged -= TitleBar_LayoutMetricsChanged;
                     App.ThemeListener.ThemeChanged -= ThemeListener_ThemeChanged;
+#endif
                 })
                 .DisposeWith(disposables);
             });
         }
 
+#if NETFX_CORE
         private void ThemeListener_ThemeChanged(Microsoft.Toolkit.Uwp.UI.Helpers.ThemeListener sender)
         {
             var key = sender.CurrentTheme == ApplicationTheme.Light
@@ -104,6 +111,7 @@ namespace Observatory.UI.Views.Mail
         {
             WindowTitleRegion.Height = new GridLength(sender.Height);
         }
+#endif
 
         public void ToggleNavigationPane()
         {

@@ -11,6 +11,7 @@
       xmlns:v="using:Observatory.UI.Views"
       xmlns:vm="using:Observatory.Core.ViewModels"
       xmlns:wctex="using:Microsoft.Toolkit.Uwp.UI.Extensions"
+      xmlns:win="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
       mc:Ignorable="d">
   <Page.Resources>
@@ -86,8 +87,8 @@
                   Symbol="{x:Bind ui:Converters.FunctionalityModeToIcon((vm:FunctionalityMode))}"/>
     </DataTemplate>
 
-    <ThemeShadow x:Name="ContentGridShadow"/>
-    <ThemeShadow x:Name="TopBarGridShadow"/>
+    <win:ThemeShadow x:Name="ContentGridShadow"/>
+    <win:ThemeShadow x:Name="TopBarGridShadow"/>
   </Page.Resources>
 
   <Grid x:Name="LayoutRoot"
@@ -98,18 +99,18 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
     <Grid x:Name="TopBarGrid"
+          win:Shadow="{StaticResource TopBarGridShadow}"
+          win:Translation="0,0,4"
           Background="{ThemeResource SystemControlAccentDark1AcrylicWindowAccentDark1Brush}"
-          RequestedTheme="Dark"
-          Shadow="{StaticResource TopBarGridShadow}"
-          Translation="0,0,4">
+          RequestedTheme="Dark">
       <Grid.RowDefinitions>
-        <RowDefinition x:Name="WindowTitleRegion"
-                       Height="Auto"/>
+        <win:RowDefinition x:Name="WindowTitleRegion"
+                           Height="Auto"/>
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
-      <TextBlock x:Name="TitleTextBlock"
-                 Margin="8,0"
-                 VerticalAlignment="Center"/>
+      <win:TextBlock x:Name="TitleTextBlock"
+                     Margin="8,0"
+                     VerticalAlignment="Center"/>
       <Grid Grid.Row="1">
         <Grid.ColumnDefinitions>
           <ColumnDefinition x:Name="TopBarNavigationPaneRegion"
@@ -438,8 +439,8 @@
               </muxc:TreeView>
             </Grid>
           </SplitView.Pane>
-          <Grid Shadow="{StaticResource ContentGridShadow}"
-                Translation="0,0,4">
+          <Grid win:Shadow="{StaticResource ContentGridShadow}"
+                win:Translation="0,0,4">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="{x:Bind Settings.MessageListWidth, Converter={StaticResource DoubleToGridLengthConverter}, Mode=TwoWay}"
                                 MinWidth="400"

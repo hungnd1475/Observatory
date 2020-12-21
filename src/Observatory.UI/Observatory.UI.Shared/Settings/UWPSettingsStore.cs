@@ -15,25 +15,19 @@ namespace Observatory.UI.Settings
             _settings = ApplicationData.Current.LocalSettings;
         }
 
-        public void SetEntry<T>(string section, string key, T value)
+        public void SetEntry<T>(string className, string propertyName, T value)
         {
-            var composite = _settings.Values.ContainsKey(section)
-                ? (ApplicationDataCompositeValue)_settings.Values[section]
-                : new ApplicationDataCompositeValue();
-            composite[key] = value;
-            _settings.Values[section] = composite;
+            var key = $"{className}.{propertyName}";
+            _settings.Values[key] = value;
         }
 
-        public bool TryGetEntry<T>(string section, string key, out T value)
+        public bool TryGetEntry<T>(string className, string propertyName, out T value)
         {
-            if (_settings.Values.ContainsKey(section))
+            var key = $"{className}.{propertyName}";
+            if (_settings.Values.ContainsKey(key))
             {
-                var composite = (ApplicationDataCompositeValue)_settings.Values[section];
-                if (composite.ContainsKey(key))
-                {
-                    value = (T)composite[key];
-                    return true;
-                }
+                value = (T)_settings.Values[key];
+                return true;
             }
             value = default;
             return false;

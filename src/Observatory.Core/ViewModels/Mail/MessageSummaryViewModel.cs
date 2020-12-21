@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -99,6 +100,7 @@ namespace Observatory.Core.ViewModels.Mail
                 .ToPropertyEx(this, x => x.IsTogglingFlag)
                 .DisposeWith(_disposables);
             ToggleFlag.ThrownExceptions
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(ex =>
                 {
                     IsFlagged = !IsFlagged;
@@ -114,6 +116,7 @@ namespace Observatory.Core.ViewModels.Mail
                     .ExecuteAsync();
             });
             ToggleRead.ThrownExceptions
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(ex =>
                 {
                     IsRead = !IsRead;

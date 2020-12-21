@@ -6,6 +6,7 @@
              xmlns:local="using:Observatory.UI.Views.Mail"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+             xmlns:win="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              d:DesignHeight="600"
              d:DesignWidth="500"
              mc:Ignorable="d">
@@ -26,7 +27,7 @@
       <Setter Property="UseSystemFocusVisuals" Value="False"/>
     </Style>
 
-    <ThemeShadow x:Name="FolderNameShadow"/>
+    <win:ThemeShadow x:Name="FolderNameShadow"/>
   </UserControl.Resources>
   <Grid>
     <Grid.RowDefinitions>
@@ -34,15 +35,15 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
     <Grid Height="{StaticResource NavigationViewCompactPaneLength}"
-          Shadow="{StaticResource FolderNameShadow}"
-          Translation="0,0,4">
+          win:Shadow="{StaticResource FolderNameShadow}"
+          win:Translation="0,0,4">
       <CommandBar VerticalContentAlignment="Center"
                   Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
                   DefaultLabelPosition="Right"
                   IsDynamicOverflowEnabled="False">
-        <AppBarButton x:Name="ShowButton"
-                      Icon="List"
-                      Label="Show: All">
+        <win:AppBarButton x:Name="ShowButton"
+                          Icon="List"
+                          Label="Show: All">
           <AppBarButton.Flyout>
             <MenuFlyout Placement="BottomEdgeAlignedLeft">
               <muxc:RadioMenuFlyoutItem x:Name="FilterAllRadio"
@@ -63,7 +64,7 @@
                                         Text="Sort By Name"/>
             </MenuFlyout>
           </AppBarButton.Flyout>
-        </AppBarButton>
+        </win:AppBarButton>
         <CommandBar.SecondaryCommands>
           <AppBarButton Icon="Edit"
                         Label="Rename"/>

@@ -36,7 +36,7 @@ namespace Observatory.UI
     /// <summary>
     /// Provides application-specific behavior to supplement the default Application class.
     /// </summary>
-    sealed partial class App : Application
+    public sealed partial class App : Application
     {
         public IContainer Container { get; }
 
@@ -64,18 +64,24 @@ namespace Observatory.UI
         protected async override void OnLaunched(LaunchActivatedEventArgs e)
         {
 #if DEBUG
-            if (Debugger.IsAttached)
+            if (System.Diagnostics.Debugger.IsAttached)
             {
                 // this.DebugSettings.EnableFrameRateCounter = true;
             }
 #endif
-
             var profileRegistration = Container.Resolve<IProfileRegistrationService>();
             await profileRegistration.InitializeAsync();
 
+#if NET5_0 && WINDOWS
+            var window = new Window();
+            window.Activate();
+#else
+            var window = Windows.UI.Xaml.Window.Current;
+
+#endif
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active
-            if (!(Window.Current.Content is Frame rootFrame))
+            if (!(window.Content is Frame rootFrame))
             {
                 // Create a Frame to act as the navigation context and navigate to the first page
                 rootFrame = new Frame();
@@ -88,10 +94,12 @@ namespace Observatory.UI
                 }
 
                 // Place the frame in the current Window
-                Window.Current.Content = rootFrame;
+                window.Content = rootFrame;
             }
 
-            if (!e.PrelaunchActivated)
+#if !(NET5_0 && WINDOWS)
+            if (e.PrelaunchActivated == false)
+#endif
             {
                 if (rootFrame.Content == null)
                 {
@@ -101,7 +109,7 @@ namespace Observatory.UI
                     rootFrame.Navigate(typeof(MainPage), e.Arguments);
                 }
                 // Ensure the current window is active
-                Window.Current.Activate();
+                window.Activate();
             }
         }
 

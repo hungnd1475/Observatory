@@ -43,7 +43,9 @@ namespace Observatory.UI.Views.Mail
         public MailFolderView()
         {
             this.InitializeComponent();
+#if NETFX_CORE
             FolderNameShadow.Receivers.Add(MessageListGrid);
+#endif
 
             this.WhenActivated(disposables =>
             {
@@ -56,6 +58,7 @@ namespace Observatory.UI.Views.Mail
                         value => value?.ToNative())
                     .DisposeWith(disposables);
 
+#if NETFX_CORE
                 this.OneWayBind(ViewModel,
                         x => x.MessageFilter,
                         x => x.ShowButton.Label,
@@ -116,6 +119,7 @@ namespace Observatory.UI.Views.Mail
                     .WithLatestFrom(viewModel, (_, vm) => vm)
                     .Subscribe(vm => vm.MessageOrder = MessageOrder.Sender)
                     .DisposeWith(disposables);
+#endif
             });
         }
     }

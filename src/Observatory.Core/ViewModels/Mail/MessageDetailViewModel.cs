@@ -5,13 +5,8 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Observatory.Core.ViewModels.Mail
 {
@@ -63,18 +58,6 @@ namespace Observatory.Core.ViewModels.Mail
         [Reactive]
         public bool IsLoading { get; private set; }
 
-        public ReactiveCommand<Unit, Unit> Archive { get; }
-
-        public ReactiveCommand<Unit, Unit> Delete { get; }
-
-        public ReactiveCommand<Unit, Unit> ToggleFlag { get; }
-
-        public ReactiveCommand<Unit, Unit> ToggleRead { get; }
-
-        public ReactiveCommand<string, Unit> Move { get; }
-
-        public ReactiveCommand<Unit, Unit> MoveToJunk { get; }
-
         public MessageDetailViewModel(MessageSummary summary, IProfileDataQueryFactory queryFactory)
         {
             _id = summary.Id;
@@ -85,23 +68,6 @@ namespace Observatory.Core.ViewModels.Mail
 
         public void Refresh(MessageSummary summary)
         {
-            _loadSubscription?.Dispose();
-            _loadSubscription = Observable.Start(() =>
-            {
-                using var query = _queryFactory.Connect();
-                return query.MessageDetails.FirstOrDefault(m => m.Id == _id && m.FolderId == _folderId);
-            }, RxApp.TaskpoolScheduler)
-            .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(r =>
-            {
-                if (r != null)
-                {
-                    Body = r.Body;
-                    BodyType = r.BodyType.Value;
-                }
-                IsLoading = false;
-            });
-
             IsLoading = true;
             Subject = summary.Subject;
             IsRead = summary.IsRead.Value;
@@ -116,7 +82,26 @@ namespace Observatory.Core.ViewModels.Mail
             FormattedReceivedDateTime = FormatReceivedDateTime(summary.ReceivedDateTime.Value);
             Body = "";
             BodyType = ContentType.Html;
+            LoadBody();
+        }
+
+        private void LoadBody()
+        {
             IsLoading = true;
+            _loadSubscription?.Dispose();
+            _loadSubscription = Observable.Start(() =>
+            {
+                using var query = _queryFactory.Connect();
+                return query.MessageDetails.FirstOrDefault(m => m.Id == _id && m.FolderId == _folderId);
+            }, RxApp.TaskpoolScheduler)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Do(_ => IsLoading = false)
+            .Where(x => x != null)
+            .Subscribe(x =>
+            {
+                Body = x.Body;
+                BodyType = x.BodyType.Value;
+            });
         }
 
         private string FormatRecipient(Recipient recipient, bool isFull)

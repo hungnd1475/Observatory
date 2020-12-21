@@ -38,15 +38,16 @@ namespace Observatory.UI.Views
             this.InitializeComponent();
             ViewModel = Locator.Current.GetService<MainViewModel>();
 
+#if NETFX_CORE
             var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
             coreTitleBar.ExtendViewIntoTitleBar = true;
-
             var appTitlebar = ApplicationView.GetForCurrentView().TitleBar;
             appTitlebar.ButtonBackgroundColor = Colors.Transparent;
             appTitlebar.ButtonInactiveBackgroundColor = Colors.Transparent;            
             appTitlebar.ButtonForegroundColor = Colors.White;
             appTitlebar.ButtonHoverForegroundColor = Colors.White;
             appTitlebar.ButtonPressedForegroundColor = Colors.White;
+#endif
 
             this.WhenActivated(disposables => 
             {
