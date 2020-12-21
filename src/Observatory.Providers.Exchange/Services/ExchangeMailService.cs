@@ -248,7 +248,7 @@ namespace Observatory.Providers.Exchange.Services
                 if (deltaMessages.Count > 0)
                 {
                     var updatedMessages = await store.Messages
-                        .Where(m => m.FolderId == folderId && deltaMessages.Keys.Contains(m.Id))
+                        .Where(m => deltaMessages.Keys.Contains(m.Id))
                         .ToDictionaryAsync(m => m.Id);
                     var newMessages = deltaMessages
                         .Where(m => !updatedMessages.Keys.Contains(m.Key))
@@ -318,7 +318,7 @@ namespace Observatory.Providers.Exchange.Services
 
                 using var store = _storeFactory.Invoke(_register.DataFilePath, true);
                 var originalMessage = await store.Messages
-                    .FindAsync(messageId, folderId)
+                    .FindAsync(messageId)
                     .ConfigureAwait(false);
                 foreach (var (propertyExpression, value) in setExpressions)
                 {

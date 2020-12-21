@@ -82,13 +82,21 @@ namespace Observatory.Core.ViewModels.Mail
                                         .ObserveOn(RxApp.MainThreadScheduler)
                                         .Subscribe(_ =>
                                         {
-                                            x.Current.ToggleRead
-                                                .Execute()
-                                                .Subscribe();
+                                            if (!x.Current.IsRead)
+                                            {
+                                                x.Current.ToggleRead
+                                                    .Execute()
+                                                    .Subscribe();
+                                            }
                                         });
+                                }
+                                else
+                                {
+                                    _messageMarkingAsReadWhenViewedSubscription = null;
                                 }
                                 break;
                             case MarkingAsReadBehavior.WhenSelectionChanged:
+                                _messageMarkingAsReadWhenViewedSubscription = null;
                                 if (x.Previous != null && !x.Previous.IsRead)
                                 {
                                     x.Previous.ToggleRead

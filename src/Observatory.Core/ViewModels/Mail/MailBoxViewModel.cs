@@ -58,6 +58,8 @@ namespace Observatory.Core.ViewModels.Mail
                 .Bind(out _favoriteFolders)
                 .Subscribe()
                 .DisposeWith(_disposables);
+            folderChanges.Connect()
+                .DisposeWith(_disposables);
 
             var folderCollection = folderChanges
                 .ToCollection()
@@ -66,9 +68,6 @@ namespace Observatory.Core.ViewModels.Mail
                 .Select(folders => folders.FirstOrDefault(f => f.Type == FolderType.Inbox))
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .ToPropertyEx(this, x => x.Inbox)
-                .DisposeWith(_disposables);
-
-            folderChanges.Connect()
                 .DisposeWith(_disposables);
             folderCollection.Connect()
                 .DisposeWith(_disposables);

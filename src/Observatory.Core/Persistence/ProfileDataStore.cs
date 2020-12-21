@@ -53,7 +53,7 @@ namespace Observatory.Core.Persistence
 
             modelBuilder.Entity<Message>(entity =>
             {
-                entity.HasKey(m => new { m.Id, m.FolderId });
+                entity.HasKey(m => m.Id);
                 entity.Property(m => m.ReceivedDateTime)
                     .HasConversion(new DateTimeOffsetToBytesConverter());
                 entity.Property(m => m.Sender)
@@ -103,7 +103,6 @@ namespace Observatory.Core.Persistence
                 entity.ToQuery(() => Messages.Select(m => new MessageDetail()
                 {
                     Id = m.Id,
-                    FolderId = m.FolderId,
                     Body = m.Body,
                     BodyType = m.BodyType
                 }));

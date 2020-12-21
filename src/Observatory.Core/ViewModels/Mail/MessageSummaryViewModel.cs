@@ -23,7 +23,6 @@ namespace Observatory.Core.ViewModels.Mail
 
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly Lazy<MessageDetailViewModel> _detail;
-        private readonly string _folderId;
 
         public string Id { get; }
 
@@ -85,14 +84,13 @@ namespace Observatory.Core.ViewModels.Mail
             IMailService mailService)
         {
             _detail = new Lazy<MessageDetailViewModel>(() => new MessageDetailViewModel(state, queryFactory));
-            _folderId = state.FolderId;
             Id = state.Id;
             Refresh(state);
 
             ToggleFlag = ReactiveCommand.CreateFromTask(async () =>
             {
                 IsFlagged = !IsFlagged;
-                await mailService.UpdateMessage(_folderId, Id)
+                await mailService.UpdateMessage(state.FolderId, Id)
                     .Set(m => m.IsFlagged, IsFlagged)
                     .ExecuteAsync();
             });
@@ -111,7 +109,7 @@ namespace Observatory.Core.ViewModels.Mail
             ToggleRead = ReactiveCommand.CreateFromTask(async () =>
             {
                 IsRead = !IsRead;
-                await mailService.UpdateMessage(_folderId, Id)
+                await mailService.UpdateMessage(state.FolderId, Id)
                     .Set(m => m.IsRead, IsRead)
                     .ExecuteAsync();
             });

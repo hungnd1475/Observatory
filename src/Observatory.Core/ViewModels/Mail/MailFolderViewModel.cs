@@ -119,15 +119,14 @@ namespace Observatory.Core.ViewModels.Mail
                         this.WhenAnyValue(x => x.MessageFilter),
                         (order, filter) => (Order: order, Filter: filter))
                     .DistinctUntilChanged()
+                    .Where(x => x.Order != MessageOrder.Sender)
                     .Subscribe(x =>
                     {
-                        this.Log().Debug($"Load messages with filter = {x.Filter}");
-                        var source = new PersistentVirtualizingSource<MessageSummary, string>(queryFactory,
-                                GetItemSpecification(node.Item.Id, x.Order, x.Filter),
-                                GetIndexSpecification(node.Item.Id, x.Order, x.Filter));
                         Messages?.Dispose();
                         Messages = new VirtualizingCache<MessageSummary, MessageSummaryViewModel, string>(
-                            source,
+                            new PersistentVirtualizingSource<MessageSummary, string>(queryFactory,
+                                GetItemSpecification(node.Item.Id, x.Order, x.Filter),
+                                GetIndexSpecification(node.Item.Id, x.Order, x.Filter)),
                             mailService.MessageChanges
                                 .Where(d => d.FolderId == node.Item.Id)
                                 .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray()),
@@ -185,9 +184,6 @@ namespace Observatory.Core.ViewModels.Mail
                         .ThenBy(m => m.Id));
                     break;
                 case MessageOrder.Sender:
-                    specification = specification.Chain(q => q
-                        .OrderBy(m => m.Sender.DisplayName)
-                        .ThenBy(m => m.Id));
                     break;
             }
             return specification;

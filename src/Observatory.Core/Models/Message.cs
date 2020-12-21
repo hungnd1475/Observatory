@@ -46,7 +46,6 @@ namespace Observatory.Core.Models
         public MessageDetail Detail() => new MessageDetail()
         {
             Id = Id,
-            FolderId = FolderId,
             Body = Body,
             BodyType = BodyType,
         };

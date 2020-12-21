@@ -12,7 +12,7 @@ namespace Observatory.Core.ViewModels.Mail
 {
     public class MessageDetailViewModel : ReactiveObject, IDisposable
     {
-        private readonly string _id, _folderId;
+        private readonly string _id;
         private readonly IProfileDataQueryFactory _queryFactory;
         private IDisposable _loadSubscription = null;
 
@@ -61,7 +61,6 @@ namespace Observatory.Core.ViewModels.Mail
         public MessageDetailViewModel(MessageSummary summary, IProfileDataQueryFactory queryFactory)
         {
             _id = summary.Id;
-            _folderId = summary.FolderId;
             _queryFactory = queryFactory;
             Refresh(summary);
         }
@@ -92,7 +91,7 @@ namespace Observatory.Core.ViewModels.Mail
             _loadSubscription = Observable.Start(() =>
             {
                 using var query = _queryFactory.Connect();
-                return query.MessageDetails.FirstOrDefault(m => m.Id == _id && m.FolderId == _folderId);
+                return query.MessageDetails.FirstOrDefault(m => m.Id == _id);
             }, RxApp.TaskpoolScheduler)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Do(_ => IsLoading = false)
