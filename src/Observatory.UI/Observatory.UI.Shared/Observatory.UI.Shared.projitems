@@ -26,6 +26,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Views\FunctionalityModeSelector.xaml.cs">
       <DependentUpon>FunctionalityModeSelector.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\Mail\MailFolderSelector.xaml.cs">
+      <DependentUpon>MailFolderSelector.xaml</DependentUpon>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Views\Mail\MailFolderView.xaml.cs">
       <DependentUpon>MailFolderView.xaml</DependentUpon>
     </Compile>
@@ -66,6 +69,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="$(MSBuildThisFileDirectory)Views\FunctionalityModeSelector.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Views\Mail\MailFolderSelector.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

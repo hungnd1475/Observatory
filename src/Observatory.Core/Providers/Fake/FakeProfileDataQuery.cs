@@ -30,8 +30,8 @@ namespace Observatory.Core.Providers.Fake
                 new MailFolder() { Id = "folder-03", Name = "Sent", IsFavorite = true, Type = FolderType.SentItems },
                 new MailFolder() { Id = "folder-04", Name = "Archive", IsFavorite = true, Type = FolderType.Archive },
                 new MailFolder() { Id = "folder-05", Name = "Deleted", IsFavorite = true, Type = FolderType.DeletedItems },
-                new MailFolder() { Id = "folder-06", Name = "Junk", IsFavorite = false, Type = FolderType.None },
-                new MailFolder() { Id = "folder-07", Name = "Newsletter", IsFavorite = false, Type = FolderType.None },
+                new MailFolder() { Id = "folder-06", Name = "Junk", IsFavorite = false, Type = FolderType.Normal },
+                new MailFolder() { Id = "folder-07", Name = "Newsletter", IsFavorite = false, Type = FolderType.Normal },
             }.AsReadOnly();
             _messageSummaries = new List<MessageSummary>()
             {

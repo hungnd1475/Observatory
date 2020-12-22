@@ -1,15 +1,11 @@
-﻿using Autofac.Features.Indexed;
-using DynamicData;
+﻿using DynamicData;
 using Observatory.Core.Models.Settings;
-using Observatory.Core.Services;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -18,7 +14,6 @@ namespace Observatory.Core.ViewModels.Mail
     public class MailManagerViewModel : ReactiveObject, IFunctionalityViewModel
     {
         private ReadOnlyObservableCollection<ProfileViewModelBase> _profiles;
-        private IDisposable _messageMarkingAsReadWhenViewedSubscription;
 
         public ReadOnlyObservableCollection<ProfileViewModelBase> Profiles => _profiles;
 
@@ -43,6 +38,8 @@ namespace Observatory.Core.ViewModels.Mail
         {
             this.WhenActivated(disposables =>
             {
+                var messageMarkingAsReadWhenViewedSubscription = new SerialDisposable();
+
                 HostScreen.Profiles
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Bind(out _profiles)
@@ -69,15 +66,14 @@ namespace Observatory.Core.ViewModels.Mail
                 this.WhenAnyValue(x => x.SelectedMessage)
                     .Buffer(2, 1)
                     .Select(x => (Previous: x[0], Current: x[1]))
-                    .Subscribe(x =>
+                    .Do(x =>
                     {
-                        _messageMarkingAsReadWhenViewedSubscription?.Dispose();
                         switch (settings.MarkingAsReadBehavior)
                         {
                             case MarkingAsReadBehavior.WhenViewed:
                                 if (x.Current != null && !x.Current.IsRead)
                                 {
-                                    _messageMarkingAsReadWhenViewedSubscription = Observable
+                                    messageMarkingAsReadWhenViewedSubscription.Disposable = Observable
                                         .Timer(TimeSpan.FromSeconds(settings.MarkingAsReadWhenViewedSeconds))
                                         .ObserveOn(RxApp.MainThreadScheduler)
                                         .Subscribe(_ =>
@@ -90,13 +86,8 @@ namespace Observatory.Core.ViewModels.Mail
                                             }
                                         });
                                 }
-                                else
-                                {
-                                    _messageMarkingAsReadWhenViewedSubscription = null;
-                                }
                                 break;
                             case MarkingAsReadBehavior.WhenSelectionChanged:
-                                _messageMarkingAsReadWhenViewedSubscription = null;
                                 if (x.Previous != null && !x.Previous.IsRead)
                                 {
                                     x.Previous.ToggleRead
@@ -106,14 +97,13 @@ namespace Observatory.Core.ViewModels.Mail
                                 break;
                         }
                     })
+                    .Finally(() => messageMarkingAsReadWhenViewedSubscription.Dispose())
+                    .Subscribe()
                     .DisposeWith(disposables);
 
                 Disposable.Create(() =>
                 {
                     _profiles = null;
-                    _messageMarkingAsReadWhenViewedSubscription?.Dispose();
-                    _messageMarkingAsReadWhenViewedSubscription = null;
-
                     SelectedProfile = null;
                     SelectedFolder = null;
                     SelectedMessage = null;

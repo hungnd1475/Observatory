@@ -7,14 +7,12 @@
                Title="Add an account"
                SecondaryButtonText="Cancel"
                mc:Ignorable="d">
-  <Grid>
+  <Grid RowSpacing="8">
     <Grid.RowDefinitions>
-      <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
-    <TextBlock Margin="0,0,0,8"
-               Text="Select a provider:"/>
+    <TextBlock Text="Select a provider:"/>
     <ListView Grid.Row="1"
               IsItemClickEnabled="True"
               ItemClick="SelectProvider"

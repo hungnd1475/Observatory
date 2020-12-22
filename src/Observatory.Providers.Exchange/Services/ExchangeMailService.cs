@@ -19,6 +19,15 @@ namespace Observatory.Providers.Exchange.Services
 {
     public class ExchangeMailService : IMailService, IEnableLogger
     {
+        static class SpecialFolders
+        {
+            public const string ROOT = "msgfolderroot";
+            public const string ARCHIVE = "archive";
+            public const string CONVERSATION_HISTORY = "conversationhistory";
+            public const string JUNK = "junkemail";
+            public const string OUTBOX = "outbox";
+        }
+
         public const string MESSAGES_SELECT_QUERY = "Subject,Sender,ReceivedDateTime,IsRead,Importance," +
             "HasAttachments,Flag,ToRecipients,CcRecipients,Body," +
             "ConversationId,ConversationIndex,IsDraft,ParentFolderId," +
@@ -26,6 +35,8 @@ namespace Observatory.Providers.Exchange.Services
 
         public const string PREFER_HEADER = "Prefer";
         public const string MAX_PAGE_SIZE = "odata.maxpagesize";
+
+        public const string MAIL_FOLDER_ROOT = "msgfolderroot";
 
         private readonly ProfileRegister _register;
         private readonly ExchangeProfileDataStore.Factory _storeFactory;
@@ -90,10 +101,15 @@ namespace Observatory.Providers.Exchange.Services
                 }
 
                 var specialFolders = await Task.WhenAll(
+                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.ROOT], FolderType.Root, false, mapper),
                     RequestSpecialFolder(_client.Me.MailFolders.Inbox, FolderType.Inbox, true, mapper),
                     RequestSpecialFolder(_client.Me.MailFolders.SentItems, FolderType.SentItems, true, mapper),
                     RequestSpecialFolder(_client.Me.MailFolders.Drafts, FolderType.Drafts, true, mapper),
-                    RequestSpecialFolder(_client.Me.MailFolders.DeletedItems, FolderType.DeletedItems, true, mapper));
+                    RequestSpecialFolder(_client.Me.MailFolders.DeletedItems, FolderType.DeletedItems, true, mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.ARCHIVE], FolderType.Archive, true, mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.JUNK], FolderType.OtherSpecial, false, mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.OUTBOX], FolderType.OtherSpecial, false, mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.CONVERSATION_HISTORY], FolderType.OtherSpecial, false, mapper));
                 var specialIds = new HashSet<string>(specialFolders.Select(f => f.Id));
                 var folders = new List<MailFolder>(specialFolders);
 

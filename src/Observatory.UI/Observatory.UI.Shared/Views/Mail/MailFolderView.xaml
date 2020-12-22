@@ -9,6 +9,7 @@
              xmlns:win="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              d:DesignHeight="600"
              d:DesignWidth="500"
+             x:DefaultBindMode="OneWay"
              mc:Ignorable="d">
   <UserControl.Resources>
     <Style TargetType="controls:MessageListViewItem">
@@ -70,7 +71,8 @@
                         Label="Rename"/>
           <AppBarButton Icon="Delete"
                         Label="Delete"/>
-          <AppBarButton Icon="MoveToFolder"
+          <AppBarButton Command="{x:Bind ViewModel.Move}"
+                        Icon="MoveToFolder"
                         Label="Move"/>
           <AppBarSeparator/>
           <AppBarButton Icon="Favorite"
@@ -83,7 +85,7 @@
                      VerticalAlignment="Center"
                      FontSize="18"
                      FontWeight="SemiBold"
-                     Text="{x:Bind ViewModel.Name, Mode=OneWay}"/>
+                     Text="{x:Bind ViewModel.Name}"/>
         </CommandBar.Content>
       </CommandBar>
     </Grid>

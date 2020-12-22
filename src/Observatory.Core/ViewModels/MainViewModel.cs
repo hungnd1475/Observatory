@@ -1,10 +1,8 @@
 ﻿using Autofac.Features.Indexed;
 using DynamicData;
-using Observatory.Core.Models;
+using Observatory.Core.Interactivity;
 using Observatory.Core.Persistence;
 using Observatory.Core.Services;
-using Observatory.Core.ViewModels.Calendar;
-using Observatory.Core.ViewModels.Mail;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
@@ -12,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace Observatory.Core.ViewModels
@@ -19,9 +18,6 @@ namespace Observatory.Core.ViewModels
     public class MainViewModel : ReactiveObject, IScreen, IActivatableViewModel
     {
         public IObservable<IChangeSet<ProfileViewModelBase>> Profiles { get; }
-
-        public Interaction<IEnumerable<IProfileProvider>, IProfileProvider> ProviderSelection { get; } =
-            new Interaction<IEnumerable<IProfileProvider>, IProfileProvider>();
 
         public ReactiveCommand<Unit, Unit> AddProfile { get; }
 
@@ -44,7 +40,7 @@ namespace Observatory.Core.ViewModels
             ProfilePersistenceConfiguration profilePersistenceConfiguration,
             IEnumerable<IProfileProvider> allProviders,
             IIndex<string, IProfileProvider> indexedProviders,
-            IIndex<FunctionalityMode, IFunctionalityViewModel> functionalityViewModels)
+            IIndex<FunctionalityMode, Func<IFunctionalityViewModel>> functionalityViewModels)
         {
             Profiles = profileRegistration.Connect()
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -54,7 +50,7 @@ namespace Observatory.Core.ViewModels
 
             AddProfile = ReactiveCommand.CreateFromTask(async () =>
             {
-                var provider = await ProviderSelection.Handle(allProviders);
+                var provider = await Interactions.ProviderSelection.Handle(allProviders);
                 if (provider != null)
                 {
                     var profile = await provider.CreateRegisterAsync(profilePersistenceConfiguration.ProfileDataDirectory);
@@ -64,20 +60,19 @@ namespace Observatory.Core.ViewModels
             AddProfile.ThrownExceptions
                 .Subscribe(ex => this.Log().Error(ex));
 
-            SelectMode = ReactiveCommand.Create<FunctionalityMode, Unit>(mode =>
+            SelectMode = ReactiveCommand.Create<FunctionalityMode>(mode =>
             {
                 CurrentMode = mode;
-                return Unit.Default;
             });
 
-            this.WhenAnyValue(x => x.CurrentMode)
-                .DistinctUntilChanged()
-                .Subscribe(mode =>
-                {
-                    var viewModel = functionalityViewModels[mode];
-                    viewModel.HostScreen = this;
-                    Router.NavigateAndReset.Execute(viewModel);
-                });
+            this.WhenActivated(disposables =>
+            {
+                this.WhenAnyValue(x => x.CurrentMode)
+                    .DistinctUntilChanged()
+                    .Select(mode => functionalityViewModels[mode].Invoke())
+                    .InvokeCommand<IRoutableViewModel, IRoutableViewModel>(Router.NavigateAndReset)
+                    .DisposeWith(disposables);
+            });
         }
     }
 }

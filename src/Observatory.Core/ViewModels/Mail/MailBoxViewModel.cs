@@ -1,5 +1,6 @@
 ﻿using DynamicData;
 using DynamicData.Binding;
+using Observatory.Core.Interactivity;
 using Observatory.Core.Models;
 using Observatory.Core.Persistence;
 using Observatory.Core.Persistence.Specifications;
@@ -13,6 +14,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 
 namespace Observatory.Core.ViewModels.Mail
 {
@@ -25,6 +27,7 @@ namespace Observatory.Core.ViewModels.Mail
         private readonly ReadOnlyObservableCollection<MailFolderViewModel> _allFolders;
         private readonly ReadOnlyObservableCollection<MailFolderViewModel> _favoriteFolders;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly MailFolderSelectionViewModel _mailFolderSelectionViewModel;
 
         public ReadOnlyObservableCollection<MailFolderViewModel> AllFolders => _allFolders;
         public ReadOnlyObservableCollection<MailFolderViewModel> FavoriteFolders => _favoriteFolders;
@@ -40,12 +43,14 @@ namespace Observatory.Core.ViewModels.Mail
         {
             _queryFactory = queryFactory;
             _mailService = mailService;
+            _mailFolderSelectionViewModel = new MailFolderSelectionViewModel(_sourceFolders.AsObservableCache());
 
-            var folderChanges = _sourceFolders.Connect()
+            var folderChanges = _sourceFolders.Connect(f => f.Type != FolderType.Root)
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Sort(SortExpressionComparer<MailFolder>.Ascending(f => f.Type).ThenByAscending(f => f.Name))
                 .TransformToTree(f => f.ParentId)
-                .Transform(n => new MailFolderViewModel(n, queryFactory, mailService))
+                .Transform(n => new MailFolderViewModel(n, this, queryFactory, mailService))
+                .DisposeMany()
                 .Publish();
             folderChanges
                 .ObserveOn(RxApp.MainThreadScheduler)
@@ -113,6 +118,16 @@ namespace Observatory.Core.ViewModels.Mail
                 .DisposeWith(_disposables);
         }
 
+        public async Task<MailFolderSelectionResult> PromptUserToSelectFolder(string titleText,
+            string promptText, bool includeRoot, Func<MailFolderSelectionItem, bool> canMoveTo)
+        {
+            _mailFolderSelectionViewModel.TitleText = titleText;
+            _mailFolderSelectionViewModel.PromptText = promptText;
+            _mailFolderSelectionViewModel.IncludeRoot = includeRoot;
+            _mailFolderSelectionViewModel.CanMoveTo = canMoveTo;
+            return await Interactions.MailFolderSelection.Handle(_mailFolderSelectionViewModel);
+        }
+
         public void Restore()
         {
             Observable.Start(() =>
@@ -131,6 +146,7 @@ namespace Observatory.Core.ViewModels.Mail
 
         public void Dispose()
         {
+            _mailFolderSelectionViewModel.Dispose();
             _disposables.Dispose();
         }
     }

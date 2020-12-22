@@ -50,12 +50,15 @@ namespace Observatory.Core
                 .AsSelf().SingleInstance();
             builder.RegisterType<MailManagerViewModel>()
                 .Keyed<IFunctionalityViewModel>(FunctionalityMode.Mail)
+                .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
                 .SingleInstance();
             builder.RegisterType<CalendarViewModel>()
                 .Keyed<IFunctionalityViewModel>(FunctionalityMode.Calendar)
+                .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
                 .SingleInstance();
             builder.RegisterType<SettingsViewModel>()
                 .Keyed<IFunctionalityViewModel>(FunctionalityMode.Setup)
+                .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
                 .SingleInstance();
 
             builder.RegisterType<MailSettings>()

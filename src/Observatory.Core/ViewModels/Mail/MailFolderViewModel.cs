@@ -1,5 +1,6 @@
 ﻿using DynamicData;
 using DynamicData.Binding;
+using Observatory.Core.Interactivity;
 using Observatory.Core.Models;
 using Observatory.Core.Persistence;
 using Observatory.Core.Persistence.Specifications;
@@ -23,6 +24,10 @@ namespace Observatory.Core.ViewModels.Mail
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly ReadOnlyObservableCollection<MailFolderViewModel> _childFolders;
+
+        public string Id { get; }
+
+        public string ParentId { get; }
 
         [Reactive]
         public string Name { get; private set; }
@@ -58,16 +63,19 @@ namespace Observatory.Core.ViewModels.Mail
 
         public ReactiveCommand<Unit, Unit> Rename { get; }
 
-        public ReactiveCommand<string, Unit> Move { get; }
+        public ReactiveCommand<Unit, Unit> Move { get; }
 
         public ReactiveCommand<Unit, Unit> Delete { get; }
 
         public ViewModelActivator Activator { get; } = new ViewModelActivator();
 
         public MailFolderViewModel(Node<MailFolder, string> node,
+            MailBoxViewModel mailBox,
             IProfileDataQueryFactory queryFactory,
             IMailService mailService)
         {
+            Id = node.Item.Id;
+            ParentId = node.Item.ParentId;
             Name = node.Item.Name;
             Type = node.Item.Type;
             IsFavorite = node.Item.IsFavorite;
@@ -83,8 +91,25 @@ namespace Observatory.Core.ViewModels.Mail
                 .DisposeWith(_disposables);
             CancelSynchronization = ReactiveCommand.Create(() => { }, Synchronize.IsExecuting);
 
+            Move = ReactiveCommand.CreateFromTask(async () =>
+            {
+                var result = await mailBox.PromptUserToSelectFolder(
+                    "Move a folder",
+                    "Select another folder to move to:",
+                    includeRoot: true,
+                    CanMoveTo);
+                if (result.IsCancelled)
+                {
+                    this.Log().Debug("Cancelled.");
+                }
+                else
+                {
+                    this.Log().Debug($"Folder {result.DestinationFolder.Id} selected.");
+                }
+            });
+
             node.Children.Connect()
-                .Transform(n => new MailFolderViewModel(n, queryFactory, mailService))
+                .Transform(n => new MailFolderViewModel(n, mailBox, queryFactory, mailService))
                 .Sort(SortExpressionComparer<MailFolderViewModel>.Ascending(f => f.Name))
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Bind(out _childFolders)
@@ -142,6 +167,13 @@ namespace Observatory.Core.ViewModels.Mail
                 })
                 .DisposeWith(disposables);
             });
+        }
+
+        private bool CanMoveTo(MailFolderSelectionItem destinationFolder)
+        {
+            return destinationFolder != null &&
+                destinationFolder.Id != Id &&
+                destinationFolder.Id != ParentId;
         }
 
         public void Dispose()
