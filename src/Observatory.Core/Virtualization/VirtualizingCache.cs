@@ -325,6 +325,8 @@ namespace Observatory.Core.Virtualization
         /// </summary>
         public void Clear()
         {
+            _keySubject.OnNext(null);
+
             foreach (var t in _targetCache.Values)
             {
                 (t as IDisposable)?.Dispose();

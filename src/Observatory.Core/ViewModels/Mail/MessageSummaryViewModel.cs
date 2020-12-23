@@ -75,11 +75,12 @@ namespace Observatory.Core.ViewModels.Mail
 
         public ReactiveCommand<Unit, Unit> ToggleRead { get; }
 
-        public ReactiveCommand<string, Unit> Move { get; }
+        public ReactiveCommand<Unit, Unit> Move { get; }
 
         public ReactiveCommand<Unit, Unit> MoveToJunk { get; }
 
         public MessageSummaryViewModel(MessageSummary state,
+            ReactiveCommand<Unit, Unit> move,
             IProfileDataQueryFactory queryFactory,
             IMailService mailService)
         {
@@ -126,6 +127,8 @@ namespace Observatory.Core.ViewModels.Mail
             {
                 return Task.Delay(500);
             });
+
+            Move = move;
         }
 
         public void Refresh(MessageSummary state)
@@ -171,11 +174,11 @@ namespace Observatory.Core.ViewModels.Mail
 
         public void Dispose()
         {
-            _disposables.Dispose();
             if (_detail.IsValueCreated)
             {
                 _detail.Value.Dispose();
             }
+            _disposables.Dispose();
         }
     }
 }

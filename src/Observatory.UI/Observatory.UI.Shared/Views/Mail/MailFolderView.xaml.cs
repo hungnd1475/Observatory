@@ -53,14 +53,14 @@ namespace Observatory.UI.Views.Mail
                     .Publish().RefCount();
 
                 this.OneWayBind(ViewModel,
-                        x => x.Messages,
+                        x => x.Messages.Cache,
                         x => x.MessageList.ItemsSource,
                         value => value?.ToNative())
                     .DisposeWith(disposables);
 
 #if NETFX_CORE
                 this.OneWayBind(ViewModel,
-                        x => x.MessageFilter,
+                        x => x.Messages.Filter,
                         x => x.ShowButton.Label,
                         value => value switch
                         {
@@ -72,52 +72,52 @@ namespace Observatory.UI.Views.Mail
                     .DisposeWith(disposables);
 
                 this.OneWayBind(ViewModel,
-                        x => x.MessageFilter,
+                        x => x.Messages.Filter,
                         x => x.FilterAllRadio.IsChecked,
                         value => value == MessageFilter.None)
                     .DisposeWith(disposables);
                 this.OneWayBind(ViewModel,
-                        x => x.MessageFilter,
+                        x => x.Messages.Filter,
                         x => x.FilterFlaggedRadio.IsChecked,
                         value => value == MessageFilter.Flagged)
                     .DisposeWith(disposables);
                 this.OneWayBind(ViewModel,
-                        x => x.MessageFilter,
+                        x => x.Messages.Filter,
                         x => x.FilterUnreadRadio.IsChecked,
                         value => value == MessageFilter.Unread)
                     .DisposeWith(disposables);
 
                 FilterAllRadio.Events().Click
                     .WithLatestFrom(viewModel, (_, vm) => vm)
-                    .Subscribe(vm => vm.MessageFilter = MessageFilter.None)
+                    .Subscribe(vm => vm.Messages.Filter = MessageFilter.None)
                     .DisposeWith(disposables);
                 FilterFlaggedRadio.Events().Click
                     .WithLatestFrom(viewModel, (_, vm) => vm)
-                    .Subscribe(vm => vm.MessageFilter = MessageFilter.Flagged)
+                    .Subscribe(vm => vm.Messages.Filter = MessageFilter.Flagged)
                     .DisposeWith(disposables);
                 FilterUnreadRadio.Events().Click
                     .WithLatestFrom(viewModel, (_, vm) => vm)
-                    .Subscribe(vm => vm.MessageFilter = MessageFilter.Unread)
+                    .Subscribe(vm => vm.Messages.Filter = MessageFilter.Unread)
                     .DisposeWith(disposables);
 
                 this.OneWayBind(ViewModel,
-                        x => x.MessageOrder,
+                        x => x.Messages.Order,
                         x => x.SortDateRadio.IsChecked,
                         value => value == MessageOrder.ReceivedDateTime)
                     .DisposeWith(disposables);
                 this.OneWayBind(ViewModel,
-                        x => x.MessageOrder,
+                        x => x.Messages.Order,
                         x => x.SortNameRadio.IsChecked,
                         value => value == MessageOrder.Sender)
                     .DisposeWith(disposables);
 
                 SortDateRadio.Events().Click
                     .WithLatestFrom(viewModel, (_, vm) => vm)
-                    .Subscribe(vm => vm.MessageOrder = MessageOrder.ReceivedDateTime)
+                    .Subscribe(vm => vm.Messages.Order = MessageOrder.ReceivedDateTime)
                     .DisposeWith(disposables);
                 SortNameRadio.Events().Click
                     .WithLatestFrom(viewModel, (_, vm) => vm)
-                    .Subscribe(vm => vm.MessageOrder = MessageOrder.Sender)
+                    .Subscribe(vm => vm.Messages.Order = MessageOrder.Sender)
                     .DisposeWith(disposables);
 #endif
             });

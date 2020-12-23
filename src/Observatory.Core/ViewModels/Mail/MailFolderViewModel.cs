@@ -45,14 +45,7 @@ namespace Observatory.Core.ViewModels.Mail
 
         public ReadOnlyObservableCollection<MailFolderViewModel> ChildFolders => _childFolders;
 
-        [Reactive]
-        public MessageOrder MessageOrder { get; set; } = MessageOrder.ReceivedDateTime;
-
-        [Reactive]
-        public MessageFilter MessageFilter { get; set; } = MessageFilter.None;
-
-        [Reactive]
-        public VirtualizingCache<MessageSummary, MessageSummaryViewModel, string> Messages { get; private set; }
+        public MessageListViewModel Messages { get; }
 
         public ReactiveCommand<Unit, Unit> Synchronize { get; }
 
@@ -79,6 +72,8 @@ namespace Observatory.Core.ViewModels.Mail
             Name = node.Item.Name;
             Type = node.Item.Type;
             IsFavorite = node.Item.IsFavorite;
+            Messages = new MessageListViewModel(node.Item.Id, mailBox,
+                queryFactory, mailService, Activator);
 
             Synchronize = ReactiveCommand.CreateFromObservable(() => Observable
                 .StartAsync((token) => mailService.SynchronizeMessagesAsync(node.Item.Id, token))
@@ -98,14 +93,7 @@ namespace Observatory.Core.ViewModels.Mail
                     "Select another folder to move to:",
                     includeRoot: true,
                     CanMoveTo);
-                if (result.IsCancelled)
-                {
-                    this.Log().Debug("Cancelled.");
-                }
-                else
-                {
-                    this.Log().Debug($"Folder {result.DestinationFolder.Id} selected.");
-                }
+                this.Log().Debug(result);
             });
 
             node.Children.Connect()
@@ -136,37 +124,6 @@ namespace Observatory.Core.ViewModels.Mail
                     TotalCount = x.TotalCount;
                 })
                 .DisposeWith(_disposables);
-
-            this.WhenActivated(disposables =>
-            {
-                Observable.CombineLatest(
-                        this.WhenAnyValue(x => x.MessageOrder),
-                        this.WhenAnyValue(x => x.MessageFilter),
-                        (order, filter) => (Order: order, Filter: filter))
-                    .DistinctUntilChanged()
-                    .Where(x => x.Order != MessageOrder.Sender)
-                    .Subscribe(x =>
-                    {
-                        Messages?.Dispose();
-                        Messages = new VirtualizingCache<MessageSummary, MessageSummaryViewModel, string>(
-                            new PersistentVirtualizingSource<MessageSummary, string>(queryFactory,
-                                GetItemSpecification(node.Item.Id, x.Order, x.Filter),
-                                GetIndexSpecification(node.Item.Id, x.Order, x.Filter)),
-                            mailService.MessageChanges
-                                .Where(d => d.FolderId == node.Item.Id)
-                                .Select(d => d.Changes.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray()),
-                            state => new MessageSummaryViewModel(state, queryFactory, mailService));
-                    })
-                    .DisposeWith(disposables);
-
-                Disposable.Create(() =>
-                {
-                    MessageFilter = MessageFilter.None;
-                    Messages?.Dispose();
-                    Messages = null;
-                })
-                .DisposeWith(disposables);
-            });
         }
 
         private bool CanMoveTo(MailFolderSelectionItem destinationFolder)
@@ -193,73 +150,5 @@ namespace Observatory.Core.ViewModels.Mail
             },
             RxApp.TaskpoolScheduler);
         }
-
-        private static ISpecification<MessageSummary, MessageSummary> GetItemSpecification(
-            string folderId, MessageOrder order, MessageFilter filter)
-        {
-            var specification = Specification.Relay<MessageSummary>(q => q.Where(m => m.FolderId == folderId));
-            switch (filter)
-            {
-                case MessageFilter.Unread:
-                    specification = specification.Chain(q => q.Where(m => !m.IsRead.Value));
-                    break;
-                case MessageFilter.Flagged:
-                    specification = specification.Chain(q => q.Where(m => m.IsFlagged.Value));
-                    break;
-            }
-
-            switch (order)
-            {
-                case MessageOrder.ReceivedDateTime:
-                    specification = specification.Chain(q => q
-                        .OrderByDescending(m => m.ReceivedDateTime)
-                        .ThenBy(m => m.Id));
-                    break;
-                case MessageOrder.Sender:
-                    break;
-            }
-            return specification;
-        }
-
-        private static Func<MessageSummary, ISpecification<MessageSummary, MessageSummary>> GetIndexSpecification(
-            string folderId, MessageOrder order, MessageFilter filter)
-        {
-            return (entity) =>
-            {
-                var specification = Specification.Relay<MessageSummary>(q => q.Where(m => m.FolderId == folderId));
-                switch (filter)
-                {
-                    case MessageFilter.Unread:
-                        specification = specification.Chain(q => q.Where(m => !m.IsRead.Value));
-                        break;
-                    case MessageFilter.Flagged:
-                        specification = specification.Chain(q => q.Where(m => m.IsFlagged.Value));
-                        break;
-                }
-                switch (order)
-                {
-                    case MessageOrder.ReceivedDateTime:
-                        specification = specification.Chain(q => q.Where(m => m.ReceivedDateTime > entity.ReceivedDateTime
-                            || m.ReceivedDateTime == entity.ReceivedDateTime && string.Compare(m.Id, entity.Id) < 0));
-                        break;
-                    case MessageOrder.Sender:
-                        break;
-                }
-                return specification;
-            };
-        }
-    }
-
-    public enum MessageOrder
-    {
-        ReceivedDateTime,
-        Sender,
-    }
-
-    public enum MessageFilter
-    {
-        None,
-        Unread,
-        Flagged,
     }
 }

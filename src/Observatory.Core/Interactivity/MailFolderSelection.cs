@@ -111,5 +111,11 @@ namespace Observatory.Core.Interactivity
             IsCancelled = isCancelled;
             DestinationFolder = destinationFolder;
         }
+
+        public override string ToString()
+        {
+            return IsCancelled ? $"{nameof(MailFolderSelectionResult)} {{ {nameof(IsCancelled)} = {IsCancelled} }}"
+                : $"{nameof(MailFolderSelectionResult)} {{ {nameof(DestinationFolder)} = '{DestinationFolder.Id}' }}";
+        }
     }
 }
