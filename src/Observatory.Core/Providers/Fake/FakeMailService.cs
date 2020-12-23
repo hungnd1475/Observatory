@@ -1,5 +1,6 @@
 ﻿using Observatory.Core.Models;
 using Observatory.Core.Services;
+using Observatory.Core.Services.ChangeTracking;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
@@ -11,11 +12,11 @@ namespace Observatory.Core.Providers.Fake
 {
     public class FakeMailService : IMailService
     {
-        public IObservable<IEnumerable<DeltaEntity<MailFolder>>> FolderChanges { get; } =
-            Observable.Empty<IEnumerable<DeltaEntity<MailFolder>>>();
+        public IObservable<DeltaSet<MailFolder>> FolderChanges { get; } =
+            Observable.Empty<DeltaSet<MailFolder>>();
 
-        public IObservable<(string FolderId, IEnumerable<DeltaEntity<Message>> Changes)> MessageChanges { get; } =
-            Observable.Empty<(string FolderId, IEnumerable<DeltaEntity<Message>> Changes)>();
+        public IObservable<DeltaSet<Message>> MessageChanges { get; } =
+            Observable.Empty<DeltaSet<Message>>();
 
         public Task SynchronizeFoldersAsync(CancellationToken cancellationToken = default)
         {
@@ -27,7 +28,7 @@ namespace Observatory.Core.Providers.Fake
             throw new NotImplementedException();
         }
 
-        public IEntityUpdater<Message> UpdateMessage(string folderId, string messageId)
+        public IEntityUpdater<Message> UpdateMessage(string messageId)
         {
             throw new NotImplementedException();
         }

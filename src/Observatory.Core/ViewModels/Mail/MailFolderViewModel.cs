@@ -5,6 +5,7 @@ using Observatory.Core.Models;
 using Observatory.Core.Persistence;
 using Observatory.Core.Persistence.Specifications;
 using Observatory.Core.Services;
+using Observatory.Core.Services.ChangeTracking;
 using Observatory.Core.Virtualization;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -106,7 +107,7 @@ namespace Observatory.Core.ViewModels.Mail
                 .DisposeWith(_disposables);
 
             mailService.MessageChanges
-                .Where(d => d.FolderId == node.Item.Id)
+                .Where(changes => changes.AffectsFolder(node.Item.Id))
                 .SelectMany(_ => CountMessages(queryFactory, node.Item.Id))
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x =>

@@ -91,7 +91,7 @@ namespace Observatory.Core.ViewModels.Mail
             ToggleFlag = ReactiveCommand.CreateFromTask(async () =>
             {
                 IsFlagged = !IsFlagged;
-                await mailService.UpdateMessage(state.FolderId, Id)
+                await mailService.UpdateMessage(Id)
                     .Set(m => m.IsFlagged, IsFlagged)
                     .ExecuteAsync();
             });
@@ -110,7 +110,7 @@ namespace Observatory.Core.ViewModels.Mail
             ToggleRead = ReactiveCommand.CreateFromTask(async () =>
             {
                 IsRead = !IsRead;
-                await mailService.UpdateMessage(state.FolderId, Id)
+                await mailService.UpdateMessage(Id)
                     .Set(m => m.IsRead, IsRead)
                     .ExecuteAsync();
             });

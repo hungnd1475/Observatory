@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Observatory.Core.Models;
 using Observatory.Core.Services;
+using Observatory.Core.Services.ChangeTracking;
 using Observatory.Providers.Exchange.Models;
 using Observatory.Providers.Exchange.Persistence;
 using Splat;
@@ -41,14 +42,12 @@ namespace Observatory.Providers.Exchange.Services
         private readonly ProfileRegister _register;
         private readonly ExchangeProfileDataStore.Factory _storeFactory;
         private readonly MG.GraphServiceClient _client;
-        private readonly Subject<IEnumerable<DeltaEntity<MailFolder>>> _folderChanges =
-            new Subject<IEnumerable<DeltaEntity<MailFolder>>>();
-        private readonly Subject<(string FolderId, IEnumerable<DeltaEntity<Message>> Changes)> _messageChanges =
-            new Subject<(string FolderId, IEnumerable<DeltaEntity<Message>> Changes)>();
+        private readonly Subject<DeltaSet<MailFolder>> _folderChanges = new Subject<DeltaSet<MailFolder>>();
+        private readonly Subject<DeltaSet<Message>> _messageChanges = new Subject<DeltaSet<Message>>();
 
-        public IObservable<IEnumerable<DeltaEntity<MailFolder>>> FolderChanges => _folderChanges.AsObservable();
+        public IObservable<DeltaSet<MailFolder>> FolderChanges => _folderChanges.AsObservable();
 
-        public IObservable<(string FolderId, IEnumerable<DeltaEntity<Message>> Changes)> MessageChanges => _messageChanges.AsObservable();
+        public IObservable<DeltaSet<Message>> MessageChanges => _messageChanges.AsObservable();
 
         public ExchangeMailService(ProfileRegister register,
             ExchangeProfileDataStore.Factory storeFactory,
@@ -144,9 +143,10 @@ namespace Observatory.Providers.Exchange.Services
 
                         if (folders.Count > 0 && _folderChanges.HasObservers)
                         {
-                            _folderChanges.OnNext(folders
+                            var changes = new DeltaSet<MailFolder>(folders
                                 .Select(f => DeltaEntity.Added(f))
                                 .ToList().AsEnumerable());
+                            _folderChanges.OnNext(changes);
                         }
                         break;
                     }
@@ -178,7 +178,7 @@ namespace Observatory.Providers.Exchange.Services
                     }
                 }
 
-                var changes = new List<DeltaEntity<MailFolder>>();
+                var changes = new DeltaSet<MailFolder>();
 
                 if (deltaFolders.Count > 0)
                 {
@@ -214,7 +214,7 @@ namespace Observatory.Providers.Exchange.Services
 
                 if (_folderChanges.HasObservers)
                 {
-                    _folderChanges.OnNext(changes.AsEnumerable());
+                    _folderChanges.OnNext(changes);
                 }
             }
         }
@@ -308,7 +308,7 @@ namespace Observatory.Providers.Exchange.Services
                     var changes = store.GetChanges<Message>();
                     if (changes.Count > 0)
                     {
-                        _messageChanges.OnNext((FolderId: folderId, Changes: changes));
+                        _messageChanges.OnNext(changes);
                     }
                 }
 
@@ -316,9 +316,9 @@ namespace Observatory.Providers.Exchange.Services
             }
         }
 
-        public IEntityUpdater<Message> UpdateMessage(string folderId, string messageId)
+        public IEntityUpdater<Message> UpdateMessage(string messageId)
         {
-            return new DelegateEntityUpdater<Message>(async setExpressions =>
+            return new RelayEntityUpdater<Message>(async setExpressions =>
             {
                 var mapper = ExchangeModule.MapperConfiguration.CreateMapper();
                 var sourceMessage = new Message();
@@ -345,7 +345,11 @@ namespace Observatory.Providers.Exchange.Services
 
                 if (_messageChanges.HasObservers)
                 {
-                    _messageChanges.OnNext((folderId, new DeltaEntity<Message>[] { DeltaEntity.Updated(originalMessage) }));
+                    var changes = new DeltaSet<Message>()
+                    {
+                        DeltaEntity.Updated(originalMessage)
+                    };
+                    _messageChanges.OnNext(changes);
                 }
             });
         }

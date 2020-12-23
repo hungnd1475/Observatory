@@ -1,5 +1,6 @@
 ﻿using Observatory.Core.Persistence.Specifications;
 using Observatory.Core.Services;
+using Observatory.Core.Services.ChangeTracking;
 using ReactiveUI;
 using Splat;
 using System;

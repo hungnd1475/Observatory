@@ -3,6 +3,7 @@ using Observatory.Core.Models;
 using Observatory.Core.Persistence;
 using Observatory.Core.Persistence.Specifications;
 using Observatory.Core.Services;
+using Observatory.Core.Services.ChangeTracking;
 using Observatory.Core.Virtualization;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -78,8 +79,7 @@ namespace Observatory.Core.ViewModels.Mail
                             GetItemSpecification(_folderId, x.Order, x.Filter),
                             GetIndexSpecification(_folderId, x.Order, x.Filter)),
                         mailService.MessageChanges
-                            .Where(d => d.FolderId == _folderId)
-                            .Select(d => FilterChanges(d.Changes, x.Filter)),
+                            .Select(changes => FilterChanges(changes.ForFolder(folderId), x.Filter)),
                         state => new MessageSummaryViewModel(state,
                             ReactiveCommand.CreateFromObservable(() => Move.Execute(new[] { state.Id })),
                             queryFactory, mailService));
@@ -113,7 +113,9 @@ namespace Observatory.Core.ViewModels.Mail
                 MessageFilter.Flagged => changes.Where(f => f.Entity.IsFlagged.Value),
                 _ => throw new NotSupportedException(),
             };
-            return filteredChanges.Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary())).ToArray();
+            return filteredChanges
+                .Select(e => new DeltaEntity<MessageSummary>(e.State, e.Entity.Summary()))
+                .ToArray();
         }
 
         private static ISpecification<MessageSummary, MessageSummary> GetItemSpecification(

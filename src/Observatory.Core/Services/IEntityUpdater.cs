@@ -12,12 +12,12 @@ namespace Observatory.Core.Services
         Task ExecuteAsync();
     }
 
-    public class DelegateEntityUpdater<TEntity> : IEntityUpdater<TEntity>
+    public class RelayEntityUpdater<TEntity> : IEntityUpdater<TEntity>
     {
         private readonly List<(LambdaExpression, object)> _setExpressions = new List<(LambdaExpression, object)>();
         private readonly Func<List<(LambdaExpression, object)>, Task> _executeCallback;
 
-        public DelegateEntityUpdater(Func<List<(LambdaExpression, object)>, Task> executeCallback)
+        public RelayEntityUpdater(Func<List<(LambdaExpression, object)>, Task> executeCallback)
         {
             _executeCallback = executeCallback;
         }

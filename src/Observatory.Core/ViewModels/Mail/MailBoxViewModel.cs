@@ -5,6 +5,7 @@ using Observatory.Core.Models;
 using Observatory.Core.Persistence;
 using Observatory.Core.Persistence.Specifications;
 using Observatory.Core.Services;
+using Observatory.Core.Services.ChangeTracking;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;

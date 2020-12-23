@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Observatory.Core.Services
+namespace Observatory.Core.Services.ChangeTracking
 {
     public struct DeltaEntity<T>
     {

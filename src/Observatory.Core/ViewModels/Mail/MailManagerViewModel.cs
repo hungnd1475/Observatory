@@ -64,10 +64,12 @@ namespace Observatory.Core.ViewModels.Mail
                     .DisposeWith(disposables);
 
                 this.WhenAnyValue(x => x.SelectedMessage)
+                    .DistinctUntilChanged()
                     .Buffer(2, 1)
                     .Select(x => (Previous: x[0], Current: x[1]))
                     .Do(x =>
                     {
+                        messageMarkingAsReadWhenViewedSubscription.Disposable = null;
                         switch (settings.MarkingAsReadBehavior)
                         {
                             case MarkingAsReadBehavior.WhenViewed:

@@ -1,6 +1,7 @@
 ﻿using DynamicData;
 using Observatory.Core.Models;
 using Observatory.Core.Persistence;
+using Observatory.Core.Services.ChangeTracking;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -17,12 +18,12 @@ namespace Observatory.Core.Services
         /// <summary>
         /// Gets an observable of changes to the mail folders.
         /// </summary>
-        IObservable<IEnumerable<DeltaEntity<MailFolder>>> FolderChanges { get; }
+        IObservable<DeltaSet<MailFolder>> FolderChanges { get; }
 
         /// <summary>
         /// Gets an observable of changes to the message summaries.
         /// </summary>
-        IObservable<(string FolderId, IEnumerable<DeltaEntity<Message>> Changes)> MessageChanges { get; }
+        IObservable<DeltaSet<Message>> MessageChanges { get; }
 
         /// <summary>
         /// Synchronizes the mail folders. All changes will be published to <see cref="FolderChanges"/>.
@@ -42,9 +43,8 @@ namespace Observatory.Core.Services
         /// <summary>
         /// Gets an <see cref="IEntityUpdater{TEntity}"/> to update a message given its id.
         /// </summary>
-        /// <param name="folderId">The folder id where the operation originates from.</param>
         /// <param name="messageId">The message id.</param>
         /// <returns>An instance of <see cref="IEntityUpdater{TEntity}"/>.</returns>
-        IEntityUpdater<Message> UpdateMessage(string folderId, string messageId);
+        IEntityUpdater<Message> UpdateMessage(string messageId);
     }
 }

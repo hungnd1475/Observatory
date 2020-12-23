@@ -40,30 +40,7 @@ namespace Observatory.Providers.Exchange.Persistence
                 entity.Property(e => e.TimeLastSync)
                     .HasConversion(new DateTimeOffsetToBytesConverter())
                     .IsRequired(false);
-            });                
-        }
-
-        public IReadOnlyCollection<DeltaEntity<T>> GetChanges<T>()
-            where T: class
-        {
-            var changes = new List<DeltaEntity<T>>();
-            foreach (var entry in ChangeTracker.Entries<T>()
-                .Where(e => e.State != EntityState.Unchanged && e.State != EntityState.Detached))
-            {
-                switch (entry.State)
-                {
-                    case EntityState.Modified:
-                        changes.Add(DeltaEntity.Updated(entry.Entity));
-                        break;
-                    case EntityState.Added:
-                        changes.Add(DeltaEntity.Added(entry.Entity));
-                        break;
-                    case EntityState.Deleted:
-                        changes.Add(DeltaEntity.Removed(entry.Entity));
-                        break;
-                }
-            }
-            return changes.AsReadOnly();
+            });
         }
     }
 }
