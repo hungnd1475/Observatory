@@ -38,8 +38,6 @@ namespace Observatory.Core.ViewModels.Mail
         {
             this.WhenActivated(disposables =>
             {
-                var messageMarkingAsReadWhenViewedSubscription = new SerialDisposable();
-
                 HostScreen.Profiles
                     .ObserveOn(RxApp.MainThreadScheduler)
                     .Bind(out _profiles)
@@ -69,37 +67,17 @@ namespace Observatory.Core.ViewModels.Mail
                     .Select(x => (Previous: x[0], Current: x[1]))
                     .Do(x =>
                     {
-                        messageMarkingAsReadWhenViewedSubscription.Disposable = null;
                         switch (settings.MarkingAsReadBehavior)
                         {
                             case MarkingAsReadBehavior.WhenViewed:
-                                if (x.Current != null && !x.Current.IsRead)
-                                {
-                                    messageMarkingAsReadWhenViewedSubscription.Disposable = Observable
-                                        .Timer(TimeSpan.FromSeconds(settings.MarkingAsReadWhenViewedSeconds))
-                                        .ObserveOn(RxApp.MainThreadScheduler)
-                                        .Subscribe(_ =>
-                                        {
-                                            if (!x.Current.IsRead)
-                                            {
-                                                x.Current.ToggleRead
-                                                    .Execute()
-                                                    .Subscribe();
-                                            }
-                                        });
-                                }
+                                x.Previous?.StopMarkingAsRead();
+                                x.Current?.StartMarkingAsRead(settings.MarkingAsReadWhenViewedSeconds);
                                 break;
                             case MarkingAsReadBehavior.WhenSelectionChanged:
-                                if (x.Previous != null && !x.Previous.IsRead)
-                                {
-                                    x.Previous.ToggleRead
-                                        .Execute()
-                                        .Subscribe();
-                                }
+                                x.Previous?.StartMarkingAsRead();
                                 break;
                         }
                     })
-                    .Finally(() => messageMarkingAsReadWhenViewedSubscription.Dispose())
                     .Subscribe()
                     .DisposeWith(disposables);
 

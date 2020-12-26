@@ -112,7 +112,7 @@ namespace Observatory.Core.ViewModels.Mail
                             GetIndexSpecification(_folderId, x.Order, x.Filter)),
                         mailService.MessageChanges
                             .Select(changes => FilterChanges(changes.ForFolder(folderId), x.Filter)),
-                        state => new MessageSummaryViewModel(state, this, queryFactory, mailService));
+                        state => new MessageSummaryViewModel(state, this, queryFactory));
                 })
                 .DisposeWith(disposables);
 

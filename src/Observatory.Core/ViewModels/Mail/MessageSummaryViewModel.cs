@@ -21,6 +21,7 @@ namespace Observatory.Core.ViewModels.Mail
         private static readonly Regex NEWLINE_PATTERN = new Regex("\\r?\n|\u200B|\u200C|\u200D", RegexOptions.Compiled);
         private static readonly Regex SPACES_PATTERN = new Regex("\\s\\s+", RegexOptions.Compiled);
 
+        private readonly SerialDisposable _markingAsReadSubscription = new SerialDisposable();
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly Lazy<MessageDetailViewModel> _detail;
 
@@ -80,9 +81,8 @@ namespace Observatory.Core.ViewModels.Mail
         public ReactiveCommand<Unit, Unit> MoveToJunk { get; }
 
         public MessageSummaryViewModel(MessageSummary state,
-            MessageListViewModel container,
-            IProfileDataQueryFactory queryFactory,
-            IMailService mailService)
+            MessageListViewModel list,
+            IProfileDataQueryFactory queryFactory)
         {
             _detail = new Lazy<MessageDetailViewModel>(() => new MessageDetailViewModel(state, queryFactory));
             Id = state.Id;
@@ -90,7 +90,7 @@ namespace Observatory.Core.ViewModels.Mail
 
             ToggleFlag = ReactiveCommand.CreateFromObservable(() =>
             {
-                var command = IsFlagged ? container.ClearFlag : container.SetFlag;
+                var command = IsFlagged ? list.ClearFlag : list.SetFlag;
                 IsFlagged = !IsFlagged;
                 return command.Execute(new[] { Id });
             });
@@ -106,12 +106,12 @@ namespace Observatory.Core.ViewModels.Mail
                 })
                 .DisposeWith(_disposables);
 
-            ToggleRead = ReactiveCommand.CreateFromTask(async () =>
+            ToggleRead = ReactiveCommand.CreateFromObservable(() =>
             {
+                var command = IsRead ? list.MarkAsUnread : list.MarkAsRead;
                 IsRead = !IsRead;
-                await mailService.UpdateMessage(Id)
-                    .Set(m => m.IsRead, IsRead)
-                    .ExecuteAsync();
+                return command.Execute(new[] { Id })
+                    .Do(_ => _markingAsReadSubscription.Disposable = null);
             });
             ToggleRead.ThrownExceptions
                 .ObserveOn(RxApp.MainThreadScheduler)
@@ -126,6 +126,21 @@ namespace Observatory.Core.ViewModels.Mail
             {
                 return Task.Delay(500);
             });
+        }
+
+        public void StartMarkingAsRead(int seconds = 0)
+        {
+            if (IsRead) return;
+            _markingAsReadSubscription.Disposable = Observable
+                .Timer(TimeSpan.FromSeconds(seconds))
+                .Select(_ => Unit.Default)
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .InvokeCommand(ToggleRead);
+        }
+
+        public void StopMarkingAsRead()
+        {
+            _markingAsReadSubscription.Disposable = null;
         }
 
         public void Refresh(MessageSummary state)
