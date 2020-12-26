@@ -35,7 +35,8 @@ namespace Observatory.Providers.Exchange
 
         public ExchangeProfileViewModel(ProfileRegister register,
             ExchangeProfileDataStore.Factory storeFactory,
-            ExchangeAuthenticationService authenticationService)
+            ExchangeAuthenticationService authenticationService,
+            AutoMapper.IMapper mapper)
             : base(register)
         {
             _storeFactory = storeFactory;
@@ -55,7 +56,7 @@ namespace Observatory.Providers.Exchange
                         this.Log().Error(ex, $"Failed to silently authenticate {EmailAddress}.");
                     }
                 }));
-            _mailService = new ExchangeMailService(register, _storeFactory, _client);
+            _mailService = new ExchangeMailService(register, _storeFactory, _client, mapper);
 
             var queryFactory = new RelayProfileDataQueryFactory(register.DataFilePath, path => storeFactory.Invoke(path, false));
             MailBox = new MailBoxViewModel(queryFactory, _mailService);

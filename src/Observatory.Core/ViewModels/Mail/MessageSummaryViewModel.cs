@@ -134,19 +134,19 @@ namespace Observatory.Core.ViewModels.Mail
         public void Refresh(MessageSummary state)
         {
             Subject = state.Subject;
-            IsRead = state.IsRead.Value;
-            Importance = state.Importance.Value;
-            HasAttachments = state.HasAttachments.Value;
-            IsDraft = state.IsDraft.Value;
+            IsRead = state.IsRead;
+            Importance = state.Importance;
+            HasAttachments = state.HasAttachments;
+            IsDraft = state.IsDraft;
             Preview = state.BodyPreview != null
                 ? SPACES_PATTERN.Replace(NEWLINE_PATTERN.Replace(state.BodyPreview, " "), " ")
                 : null;
-            IsFlagged = state.IsFlagged.Value;
-            Correspondents = state.IsDraft.Value
+            IsFlagged = state.IsFlagged;
+            Correspondents = state.IsDraft
                 ? string.Join(", ", state.ToRecipients.Select(r => r.DisplayName))
                 : state.Sender.DisplayName;
-            ReceivedDateTime = state.ReceivedDateTime.Value;
-            FormattedReceivedDateTime = FormatReceivedDateTime(state.ReceivedDateTime.Value);
+            ReceivedDateTime = state.ReceivedDateTime;
+            FormattedReceivedDateTime = FormatReceivedDateTime(state.ReceivedDateTime);
 
             if (_detail.IsValueCreated)
             {

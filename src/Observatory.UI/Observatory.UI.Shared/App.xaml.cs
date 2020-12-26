@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Toolkit.Uwp.UI.Helpers;
@@ -212,6 +213,18 @@ namespace Observatory.UI
             builder.RegisterModule(new UIModule());
             builder.RegisterInstance(loggerFactory)
                 .As<ILoggerFactory>()
+                .SingleInstance();
+
+            var mapperConfiguration = new MapperConfiguration(cfg =>
+            {
+                cfg.AddMaps(new[]
+                {
+                    typeof(CoreModule),
+                    typeof(ExchangeModule)
+                });
+            });
+            builder.RegisterInstance(mapperConfiguration.CreateMapper())
+                .As<IMapper>()
                 .SingleInstance();
 
             var resolver = builder.UseAutofacDependencyResolver();

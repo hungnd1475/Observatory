@@ -1,6 +1,7 @@
 ﻿using Observatory.Core.Models;
 using Observatory.Core.Services;
 using Observatory.Core.Services.ChangeTracking;
+using Observatory.Core.Services.Models;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
@@ -28,7 +29,7 @@ namespace Observatory.Core.Providers.Fake
             throw new NotImplementedException();
         }
 
-        public IEntityUpdater<Message> UpdateMessage(string messageId)
+        public IEntityUpdater<UpdatableMessage> UpdateMessage(string messageId)
         {
             throw new NotImplementedException();
         }

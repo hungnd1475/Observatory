@@ -109,8 +109,8 @@ namespace Observatory.Core.ViewModels.Mail
             var filteredChanges = filter switch
             {
                 MessageFilter.None => changes,
-                MessageFilter.Unread => changes.Where(f => !f.Entity.IsRead.Value),
-                MessageFilter.Flagged => changes.Where(f => f.Entity.IsFlagged.Value),
+                MessageFilter.Unread => changes.Where(f => !f.Entity.IsRead),
+                MessageFilter.Flagged => changes.Where(f => f.Entity.IsFlagged),
                 _ => throw new NotSupportedException(),
             };
             return filteredChanges
@@ -125,10 +125,10 @@ namespace Observatory.Core.ViewModels.Mail
             switch (filter)
             {
                 case MessageFilter.Unread:
-                    specification = specification.Chain(q => q.Where(m => !m.IsRead.Value));
+                    specification = specification.Chain(q => q.Where(m => !m.IsRead));
                     break;
                 case MessageFilter.Flagged:
-                    specification = specification.Chain(q => q.Where(m => m.IsFlagged.Value));
+                    specification = specification.Chain(q => q.Where(m => m.IsFlagged));
                     break;
             }
 
@@ -154,10 +154,10 @@ namespace Observatory.Core.ViewModels.Mail
                 switch (filter)
                 {
                     case MessageFilter.Unread:
-                        specification = specification.Chain(q => q.Where(m => !m.IsRead.Value));
+                        specification = specification.Chain(q => q.Where(m => !m.IsRead));
                         break;
                     case MessageFilter.Flagged:
-                        specification = specification.Chain(q => q.Where(m => m.IsFlagged.Value));
+                        specification = specification.Chain(q => q.Where(m => m.IsFlagged));
                         break;
                 }
                 switch (order)

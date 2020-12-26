@@ -69,16 +69,16 @@ namespace Observatory.Core.ViewModels.Mail
         {
             IsLoading = true;
             Subject = summary.Subject;
-            IsRead = summary.IsRead.Value;
-            Importance = summary.Importance.Value;
-            HasAttachments = summary.HasAttachments.Value;
-            IsDraft = summary.IsDraft.Value;
-            IsFlagged = summary.IsFlagged.Value;
+            IsRead = summary.IsRead;
+            Importance = summary.Importance;
+            HasAttachments = summary.HasAttachments;
+            IsDraft = summary.IsDraft;
+            IsFlagged = summary.IsFlagged;
             Sender = FormatRecipient(summary.Sender, true);
             CcRecipients = FormatRecipients(summary.CcRecipients);
             ToRecipients = FormatRecipients(summary.ToRecipients);
-            ReceivedDateTime = summary.ReceivedDateTime.Value;
-            FormattedReceivedDateTime = FormatReceivedDateTime(summary.ReceivedDateTime.Value);
+            ReceivedDateTime = summary.ReceivedDateTime;
+            FormattedReceivedDateTime = FormatReceivedDateTime(summary.ReceivedDateTime);
             Body = "";
             BodyType = ContentType.Html;
             LoadBody();
@@ -99,7 +99,7 @@ namespace Observatory.Core.ViewModels.Mail
             .Subscribe(x =>
             {
                 Body = x.Body;
-                BodyType = x.BodyType.Value;
+                BodyType = x.BodyType;
             });
         }
 
