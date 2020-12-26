@@ -18,12 +18,15 @@ namespace Observatory.Providers.Exchange
         public const string PROVIDER_ID = "Exchange";
         private readonly ExchangeAuthenticationService _authenticationService;
         private readonly ExchangeProfileDataStore.Factory _storeFactory;
+        private readonly AutoMapper.IMapper _mapper;
 
         public ExchangeProfileProvider(ExchangeAuthenticationService authenticationService,
-            ExchangeProfileDataStore.Factory storeFactory)
+            ExchangeProfileDataStore.Factory storeFactory,
+            AutoMapper.IMapper mapper)
         {
             _authenticationService = authenticationService;
             _storeFactory = storeFactory;
+            _mapper = mapper;
         }
 
         public string DisplayName { get; } = "Microsoft Exchange";
@@ -46,12 +49,12 @@ namespace Observatory.Providers.Exchange
 
         public async Task<ProfileViewModelBase> CreateViewModelAsync(ProfileRegister register)
         {
-            var profile = new ExchangeProfileViewModel(register, _storeFactory, _authenticationService);
+            var profile = new ExchangeProfileViewModel(register, _storeFactory, _authenticationService, _mapper);
             await profile.RestoreAsync();
             return profile;
         }
 
-        public Stream ReadIcon()
+        public Stream LoadIconStream()
         {
             return Assembly.GetExecutingAssembly().GetManifestResourceStream("Observatory.Providers.Exchange.logo.png");
         }

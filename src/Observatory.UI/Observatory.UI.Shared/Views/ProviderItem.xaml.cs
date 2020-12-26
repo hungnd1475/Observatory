@@ -37,7 +37,7 @@ namespace Observatory.UI.Views
 
         public async void LogoLoaded(object sender, RoutedEventArgs e)
         {
-            using var iconStream = Provider.ReadIcon();
+            using var iconStream = Provider.LoadIconStream();
             var image = sender as Image;
             var bitmap = new BitmapImage();
             await bitmap.SetSourceAsync(iconStream.AsRandomAccessStream());

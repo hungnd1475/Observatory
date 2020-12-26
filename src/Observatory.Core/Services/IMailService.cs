@@ -2,6 +2,7 @@
 using Observatory.Core.Models;
 using Observatory.Core.Persistence;
 using Observatory.Core.Services.ChangeTracking;
+using Observatory.Core.Services.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -45,6 +46,6 @@ namespace Observatory.Core.Services
         /// </summary>
         /// <param name="messageId">The message id.</param>
         /// <returns>An instance of <see cref="IEntityUpdater{TEntity}"/>.</returns>
-        IEntityUpdater<Message> UpdateMessage(string messageId);
+        IEntityUpdater<UpdatableMessage> UpdateMessage(string messageId);
     }
 }

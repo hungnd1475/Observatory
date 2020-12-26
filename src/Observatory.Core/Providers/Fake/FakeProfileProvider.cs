@@ -47,7 +47,7 @@ namespace Observatory.Core.Providers.Fake
             return Task.FromResult<ProfileViewModelBase>(_viewModel);
         }
 
-        public Stream ReadIcon()
+        public Stream LoadIconStream()
         {
             throw new NotImplementedException();
         }

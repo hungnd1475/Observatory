@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Observatory.Core.Models;
 using Observatory.Core.Services;
 using Observatory.Core.Services.ChangeTracking;
+using Observatory.Core.Services.Models;
 using Observatory.Providers.Exchange.Models;
 using Observatory.Providers.Exchange.Persistence;
 using Splat;
@@ -15,6 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static Microsoft.Graph.HeaderHelper;
 using MG = Microsoft.Graph;
+using AM = AutoMapper;
 
 namespace Observatory.Providers.Exchange.Services
 {
@@ -42,6 +44,7 @@ namespace Observatory.Providers.Exchange.Services
         private readonly ProfileRegister _register;
         private readonly ExchangeProfileDataStore.Factory _storeFactory;
         private readonly MG.GraphServiceClient _client;
+        private readonly AM.IMapper _mapper;
         private readonly Subject<DeltaSet<MailFolder>> _folderChanges = new Subject<DeltaSet<MailFolder>>();
         private readonly Subject<DeltaSet<Message>> _messageChanges = new Subject<DeltaSet<Message>>();
 
@@ -51,11 +54,13 @@ namespace Observatory.Providers.Exchange.Services
 
         public ExchangeMailService(ProfileRegister register,
             ExchangeProfileDataStore.Factory storeFactory,
-            MG.GraphServiceClient client)
+            MG.GraphServiceClient client,
+            AM.IMapper mapper)
         {
             _register = register;
             _storeFactory = storeFactory;
             _client = client;
+            _mapper = mapper;
         }
 
         public async Task InitializeAsync()
@@ -81,13 +86,12 @@ namespace Observatory.Providers.Exchange.Services
         {
             using var store = _storeFactory.Invoke(_register.DataFilePath, false);
             var syncState = await store.FolderSynchronizationStates.FirstAsync();
-            var mapper = ExchangeModule.MapperConfiguration.CreateMapper();
 
             if (syncState.DeltaLink == null)
             {
                 static async Task<MailFolder> RequestSpecialFolder(MG.IMailFolderRequestBuilder requestBuilder,
                     FolderType type, bool isFavorite,
-                    AutoMapper.IMapper mapper)
+                    AM.IMapper mapper)
                 {
                     var folder = await requestBuilder.Request()
                         .GetAsync()
@@ -100,15 +104,15 @@ namespace Observatory.Providers.Exchange.Services
                 }
 
                 var specialFolders = await Task.WhenAll(
-                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.ROOT], FolderType.Root, false, mapper),
-                    RequestSpecialFolder(_client.Me.MailFolders.Inbox, FolderType.Inbox, true, mapper),
-                    RequestSpecialFolder(_client.Me.MailFolders.SentItems, FolderType.SentItems, true, mapper),
-                    RequestSpecialFolder(_client.Me.MailFolders.Drafts, FolderType.Drafts, true, mapper),
-                    RequestSpecialFolder(_client.Me.MailFolders.DeletedItems, FolderType.DeletedItems, true, mapper),
-                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.ARCHIVE], FolderType.Archive, true, mapper),
-                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.JUNK], FolderType.OtherSpecial, false, mapper),
-                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.OUTBOX], FolderType.OtherSpecial, false, mapper),
-                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.CONVERSATION_HISTORY], FolderType.OtherSpecial, false, mapper));
+                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.ROOT], FolderType.Root, false, _mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders.Inbox, FolderType.Inbox, true, _mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders.SentItems, FolderType.SentItems, true, _mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders.Drafts, FolderType.Drafts, true, _mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders.DeletedItems, FolderType.DeletedItems, true, _mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.ARCHIVE], FolderType.Archive, true, _mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.JUNK], FolderType.OtherSpecial, false, _mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.OUTBOX], FolderType.OtherSpecial, false, _mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.CONVERSATION_HISTORY], FolderType.OtherSpecial, false, _mapper));
                 var specialIds = new HashSet<string>(specialFolders.Select(f => f.Id));
                 var folders = new List<MailFolder>(specialFolders);
 
@@ -124,7 +128,7 @@ namespace Observatory.Providers.Exchange.Services
                         .ConfigureAwait(false);
                     folders.AddRange(page
                         .Where(f => !specialIds.Contains(f.Id))
-                        .Select(f => mapper.Map<MG.MailFolder, MailFolder>(f)));
+                        .Select(f => _mapper.Map<MG.MailFolder, MailFolder>(f)));
 
                     if (page.NextPageRequest != null)
                     {
@@ -187,11 +191,11 @@ namespace Observatory.Providers.Exchange.Services
                         .ToDictionaryAsync(f => f.Id);
                     var newFolders = deltaFolders.Values
                         .Where(f => !updatedFolders.ContainsKey(f.Id))
-                        .Select(f => mapper.Map<MG.MailFolder, MailFolder>(f))
+                        .Select(f => _mapper.Map<MG.MailFolder, MailFolder>(f))
                         .ToList();
                     foreach (var f in updatedFolders)
                     {
-                        mapper.Map(deltaFolders[f.Key], f.Value);
+                        _mapper.Map(deltaFolders[f.Key], f.Value);
                     }
 
                     store.AddRange(newFolders);
@@ -222,7 +226,6 @@ namespace Observatory.Providers.Exchange.Services
         public async Task SynchronizeMessagesAsync(string folderId, CancellationToken cancellationToken = default)
         {
             using var store = _storeFactory.Invoke(_register.DataFilePath, true);
-            var mapper = ExchangeModule.MapperConfiguration.CreateMapper();
             var syncState = await store.MessageSynchronizationStates.FindAsync(folderId);
 
             MG.IMessageDeltaRequest request = null;
@@ -268,12 +271,12 @@ namespace Observatory.Providers.Exchange.Services
                         .ToDictionaryAsync(m => m.Id);
                     var newMessages = deltaMessages
                         .Where(m => !updatedMessages.Keys.Contains(m.Key))
-                        .Select(m => mapper.Map<MG.Message, Message>(m.Value))
+                        .Select(m => _mapper.Map<MG.Message, Message>(m.Value))
                         .ToArray();
 
                     foreach (var m in updatedMessages)
                     {
-                        mapper.Map(deltaMessages[m.Key], m.Value);
+                        _mapper.Map(deltaMessages[m.Key], m.Value);
                     }
 
                     store.AddRange(newMessages);
@@ -316,17 +319,11 @@ namespace Observatory.Providers.Exchange.Services
             }
         }
 
-        public IEntityUpdater<Message> UpdateMessage(string messageId)
+        public IEntityUpdater<UpdatableMessage> UpdateMessage(string messageId)
         {
-            return new RelayEntityUpdater<Message>(async setExpressions =>
+            return new RelayEntityUpdater<UpdatableMessage>(async sourceMessage =>
             {
-                var mapper = ExchangeModule.MapperConfiguration.CreateMapper();
-                var sourceMessage = new Message();
-                foreach (var (propertyExperssion, value) in setExpressions)
-                {
-                    propertyExperssion.GetPropertyAccess().SetValue(sourceMessage, value);
-                }
-                var targetMessage = mapper.Map<Message, MG.Message>(sourceMessage);
+                var targetMessage = _mapper.Map<UpdatableMessage, MG.Message>(sourceMessage);
                 await _client.Me.Messages[messageId]
                     .Request()
                     .UpdateAsync(targetMessage)
@@ -336,10 +333,7 @@ namespace Observatory.Providers.Exchange.Services
                 var originalMessage = await store.Messages
                     .FindAsync(messageId)
                     .ConfigureAwait(false);
-                foreach (var (propertyExpression, value) in setExpressions)
-                {
-                    propertyExpression.GetPropertyAccess().SetValue(originalMessage, value);
-                }
+                _mapper.Map(sourceMessage, originalMessage);
                 await store.SaveChangesAsync()
                     .ConfigureAwait(false);
 

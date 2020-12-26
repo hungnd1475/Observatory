@@ -145,7 +145,7 @@ namespace Observatory.Core.ViewModels.Mail
             return Observable.Start(() =>
             {
                 using var query = queryFactory.Connect();
-                var unreadCount = query.MessageSummaries.Count(m => m.FolderId == folderId && !m.IsRead.Value);
+                var unreadCount = query.MessageSummaries.Count(m => m.FolderId == folderId && !m.IsRead);
                 var totalCount = query.MessageSummaries.Count(m => m.FolderId == folderId);
                 return (UnreadCount: unreadCount, TotalCount: totalCount);
             },

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
@@ -13,23 +14,25 @@ namespace Observatory.Core.Services
     }
 
     public class RelayEntityUpdater<TEntity> : IEntityUpdater<TEntity>
+        where TEntity : class, new()
     {
-        private readonly List<(LambdaExpression, object)> _setExpressions = new List<(LambdaExpression, object)>();
-        private readonly Func<List<(LambdaExpression, object)>, Task> _executeCallback;
+        private readonly TEntity _entity;
+        private readonly Func<TEntity, Task> _executeCallback;
 
-        public RelayEntityUpdater(Func<List<(LambdaExpression, object)>, Task> executeCallback)
+        public RelayEntityUpdater(Func<TEntity, Task> executeCallback)
         {
+            _entity = new TEntity();
             _executeCallback = executeCallback;
         }
 
         public async Task ExecuteAsync()
         {
-            await _executeCallback(_setExpressions);
+            await _executeCallback(_entity);
         }
 
         public IEntityUpdater<TEntity> Set<TProperty>(Expression<Func<TEntity, TProperty>> propertyExpression, TProperty value)
         {
-            _setExpressions.Add((propertyExpression, value));
+            propertyExpression.GetPropertyAccess().SetValue(_entity, value);
             return this;
         }
     }
