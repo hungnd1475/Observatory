@@ -80,7 +80,7 @@ namespace Observatory.Core.ViewModels.Mail
         public ReactiveCommand<Unit, Unit> MoveToJunk { get; }
 
         public MessageSummaryViewModel(MessageSummary state,
-            ReactiveCommand<Unit, Unit> move,
+            MessageListViewModel container,
             IProfileDataQueryFactory queryFactory,
             IMailService mailService)
         {
@@ -88,12 +88,11 @@ namespace Observatory.Core.ViewModels.Mail
             Id = state.Id;
             Refresh(state);
 
-            ToggleFlag = ReactiveCommand.CreateFromTask(async () =>
+            ToggleFlag = ReactiveCommand.CreateFromObservable(() =>
             {
+                var command = IsFlagged ? container.ClearFlag : container.SetFlag;
                 IsFlagged = !IsFlagged;
-                await mailService.UpdateMessage(Id)
-                    .Set(m => m.IsFlagged, IsFlagged)
-                    .ExecuteAsync();
+                return command.Execute(new[] { Id });
             });
             ToggleFlag.IsExecuting
                 .ToPropertyEx(this, x => x.IsTogglingFlag)
@@ -127,8 +126,6 @@ namespace Observatory.Core.ViewModels.Mail
             {
                 return Task.Delay(500);
             });
-
-            Move = move;
         }
 
         public void Refresh(MessageSummary state)

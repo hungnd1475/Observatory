@@ -17,6 +17,8 @@ using System.Threading.Tasks;
 using static Microsoft.Graph.HeaderHelper;
 using MG = Microsoft.Graph;
 using AM = AutoMapper;
+using System.Net.Http;
+using static Microsoft.Graph.SerializerExtentions;
 
 namespace Observatory.Providers.Exchange.Services
 {
@@ -319,30 +321,44 @@ namespace Observatory.Providers.Exchange.Services
             }
         }
 
-        public IEntityUpdater<UpdatableMessage> UpdateMessage(string messageId)
+        public IEntityUpdater<UpdatableMessage> UpdateMessage(params string[] messageIds)
         {
             return new RelayEntityUpdater<UpdatableMessage>(async sourceMessage =>
             {
+                var serializer = new MG.Serializer();
                 var targetMessage = _mapper.Map<UpdatableMessage, MG.Message>(sourceMessage);
-                await _client.Me.Messages[messageId]
-                    .Request()
-                    .UpdateAsync(targetMessage)
-                    .ConfigureAwait(false);
+                await Task.WhenAll(messageIds.Paginate(20).Select(async page =>
+                {
+                    var batch = new MG.BatchRequestContent();
+                    foreach (var id in page)
+                    {
+                        var request = _client.Me.Messages[id]
+                            .Request()
+                            .GetHttpRequestMessage();
+                        request.Method = new HttpMethod("PATCH");
+                        request.Content = serializer.SerializeAsJsonContent(targetMessage);
+                        batch.AddBatchRequestStep(request);
+                    }
+                    await _client.Batch.Request()
+                        .PostAsync(batch)
+                        .ConfigureAwait(false);
+                }));
 
                 using var store = _storeFactory.Invoke(_register.DataFilePath, true);
-                var originalMessage = await store.Messages
-                    .FindAsync(messageId)
-                    .ConfigureAwait(false);
-                _mapper.Map(sourceMessage, originalMessage);
+                var originalMessages = await store.Messages
+                    .Where(m => messageIds.Contains(m.Id))
+                    .ToArrayAsync();
+                foreach (var m in originalMessages)
+                {
+                    _mapper.Map(sourceMessage, m);
+                }
                 await store.SaveChangesAsync()
                     .ConfigureAwait(false);
 
                 if (_messageChanges.HasObservers)
                 {
-                    var changes = new DeltaSet<Message>()
-                    {
-                        DeltaEntity.Updated(originalMessage)
-                    };
+                    var changes = new DeltaSet<Message>(originalMessages
+                        .Select(m => DeltaEntity.Updated(m)));
                     _messageChanges.OnNext(changes);
                 }
             });

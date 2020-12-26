@@ -44,8 +44,8 @@ namespace Observatory.Core.Services
         /// <summary>
         /// Gets an <see cref="IEntityUpdater{TEntity}"/> to update a message given its id.
         /// </summary>
-        /// <param name="messageId">The message id.</param>
+        /// <param name="messageIds">The message id.</param>
         /// <returns>An instance of <see cref="IEntityUpdater{TEntity}"/>.</returns>
-        IEntityUpdater<UpdatableMessage> UpdateMessage(string messageId);
+        IEntityUpdater<UpdatableMessage> UpdateMessage(params string[] messageIds);
     }
 }

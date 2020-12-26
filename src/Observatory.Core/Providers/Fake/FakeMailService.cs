@@ -29,7 +29,7 @@ namespace Observatory.Core.Providers.Fake
             throw new NotImplementedException();
         }
 
-        public IEntityUpdater<UpdatableMessage> UpdateMessage(string messageId)
+        public IEntityUpdater<UpdatableMessage> UpdateMessage(string[] messageIds)
         {
             throw new NotImplementedException();
         }

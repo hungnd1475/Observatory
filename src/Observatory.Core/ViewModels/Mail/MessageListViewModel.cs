@@ -30,17 +30,21 @@ namespace Observatory.Core.ViewModels.Mail
         [Reactive]
         public VirtualizingCache<MessageSummary, MessageSummaryViewModel, string> Cache { get; private set; }
 
-        public ReactiveCommand<IReadOnlyCollection<string>, Unit> Archive { get; }
+        public ReactiveCommand<string[], Unit> Archive { get; }
 
-        public ReactiveCommand<IReadOnlyCollection<string>, Unit> Delete { get; }
+        public ReactiveCommand<string[], Unit> Delete { get; }
 
-        public ReactiveCommand<IEnumerable<string>, Unit> ToggleFlag { get; }
+        public ReactiveCommand<string[], Unit> SetFlag { get; }
 
-        public ReactiveCommand<IEnumerable<string>, Unit> ToggleRead { get; }
+        public ReactiveCommand<string[], Unit> ClearFlag { get; }
 
-        public ReactiveCommand<IReadOnlyCollection<string>, Unit> Move { get; }
+        public ReactiveCommand<string[], Unit> MarkAsRead { get; }
 
-        public ReactiveCommand<IEnumerable<string>, Unit> MoveToJunk { get; }
+        public ReactiveCommand<string[], Unit> MarkAsUnread { get; }
+
+        public ReactiveCommand<string[], Unit> Move { get; }
+
+        public ReactiveCommand<string[], Unit> MoveToJunk { get; }
 
         public ViewModelActivator Activator { get; }
 
@@ -53,10 +57,38 @@ namespace Observatory.Core.ViewModels.Mail
             _folderId = folderId;
             Activator = activator;
 
-            Move = ReactiveCommand.CreateFromTask<IReadOnlyCollection<string>>(async (messageIds) =>
+            MarkAsRead = ReactiveCommand.Create<string[]>(async messageIds =>
+            {
+                await mailService.UpdateMessage(messageIds)
+                    .Set(m => m.IsRead, true)
+                    .ExecuteAsync();
+            });
+
+            MarkAsUnread = ReactiveCommand.Create<string[]>(async messageIds =>
+            {
+                await mailService.UpdateMessage(messageIds)
+                    .Set(m => m.IsRead, false)
+                    .ExecuteAsync();
+            });
+
+            SetFlag = ReactiveCommand.Create<string[]>(async messageIds =>
+            {
+                await mailService.UpdateMessage(messageIds)
+                    .Set(m => m.IsFlagged, true)
+                    .ExecuteAsync();
+            });
+
+            ClearFlag = ReactiveCommand.Create<string[]>(async messageIds =>
+            {
+                await mailService.UpdateMessage(messageIds)
+                    .Set(m => m.IsFlagged, false)
+                    .ExecuteAsync();
+            });
+
+            Move = ReactiveCommand.CreateFromTask<string[]>(async (messageIds) =>
             {
                 var result = await mailBox.PromptUserToSelectFolder(
-                    messageIds.Count == 1 ? "Move a message" : "Move messages",
+                    messageIds.Length == 1 ? "Move a message" : "Move messages",
                     "Select another folder to move to:",
                     includeRoot: false,
                     CanMoveTo);
@@ -80,9 +112,7 @@ namespace Observatory.Core.ViewModels.Mail
                             GetIndexSpecification(_folderId, x.Order, x.Filter)),
                         mailService.MessageChanges
                             .Select(changes => FilterChanges(changes.ForFolder(folderId), x.Filter)),
-                        state => new MessageSummaryViewModel(state,
-                            ReactiveCommand.CreateFromObservable(() => Move.Execute(new[] { state.Id })),
-                            queryFactory, mailService));
+                        state => new MessageSummaryViewModel(state, this, queryFactory, mailService));
                 })
                 .DisposeWith(disposables);
 
