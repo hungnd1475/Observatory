@@ -38,6 +38,6 @@ namespace Observatory.Core.Virtualization
         /// Gets all keys from source.
         /// </summary>
         /// <returns></returns>
-        List<TKey> GetAllKeys();
+        IReadOnlyList<TKey> GetAllKeys();
     }
 }

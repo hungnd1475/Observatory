@@ -28,11 +28,12 @@ namespace Observatory.Core.Virtualization
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly Subject<IndexRange[]> _rangeSubject = new Subject<IndexRange[]>();
-        private readonly Subject<IVirtualizingCacheEvent<TSource>> _cacheSubject =
-            new Subject<IVirtualizingCacheEvent<TSource>>();
-        private readonly BehaviorSubject<List<TKey>> _keySubject = new BehaviorSubject<List<TKey>>(null);
+        private readonly Subject<IVirtualizingCacheEvent<TSource>> _eventSubject
+            = new Subject<IVirtualizingCacheEvent<TSource>>();
         private readonly object _lock = new object();
-
+        private readonly List<TKey> _keys = new List<TKey>();
+        private readonly BehaviorSubject<IndexRange[]> _selectionSubject
+            = new BehaviorSubject<IndexRange[]>(new IndexRange[0]);
         private readonly Dictionary<TKey, TTarget> _targetCache = new Dictionary<TKey, TTarget>();
         private readonly Func<TSource, TTarget> _targetFactory;
 
@@ -46,7 +47,12 @@ namespace Observatory.Core.Virtualization
         /// <summary>
         /// Gets an observable stream of <see cref="IVirtualizingCacheEvent{T}"/> fired whenever there are changes happened in the cache.
         /// </summary>
-        public IObservable<IVirtualizingCacheEvent<TSource>> CacheChanged => _cacheSubject.AsObservable();
+        public IObservable<IVirtualizingCacheEvent<TSource>> CacheChanged => _eventSubject.AsObservable();
+
+        /// <summary>
+        /// Gets an observable stream of selected ranges.
+        /// </summary>
+        public IObservable<IReadOnlyList<IndexRange>> SelectionChanged => _selectionSubject.AsObservable();
 
         public int Count { get; set; }
 
@@ -62,7 +68,7 @@ namespace Observatory.Core.Virtualization
         {
             get
             {
-                var key = _keySubject.Value[index];
+                var key = _keys[index];
                 return _targetCache.ContainsKey(key) ? _targetCache[key] : null;
             }
             set => throw new NotImplementedException();
@@ -88,31 +94,29 @@ namespace Observatory.Core.Virtualization
             _rangeSubject
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Throttle(TimeSpan.FromMilliseconds(20))
-                .Select(Normalize)
+                .Select(newRanges => newRanges.Normalize())
                 .Synchronize(_lock)
                 .Where(newRanges => Differs(CurrentBlocks, newRanges))
                 .Subscribe(newRanges =>
                 {
                     var discardedItems = Purge(CurrentBlocks, newRanges);
                     CurrentBlocks = UpdateBlocks(CurrentBlocks, newRanges, source);
-                    _cacheSubject.OnNext(new VirtualizingCacheRangesUpdatedEvent<TSource>(discardedItems));
+                    _eventSubject.OnNext(new VirtualizingCacheRangesUpdatedEvent<TSource>(discardedItems));
                     foreach (var b in CurrentBlocks)
-                    {
-                        b.Subscribe(_cacheSubject);
-                    }
+                        b.Subscribe(_eventSubject);
+
                     this.Log().Debug($"Tracking {CurrentBlocks.Length} block(s): [{string.Join(",", CurrentBlocks.Select(b => b.Range))}]");
                 })
                 .DisposeWith(_disposables);
 
             sourceChanged
                 .ObserveOn(RxApp.TaskpoolScheduler)
-                .WithLatestFrom(_keySubject, (changes, keys) => (Changes: changes, Keys: keys))
-                .SkipWhile(x => x.Keys == null)
                 .Synchronize(_lock)
-                .Subscribe(x =>
+                .SkipWhile(_ => _keys == null)
+                .Subscribe(changes =>
                 {
                     var totalCount = source.GetTotalCount();
-                    var logicalChanges = x.Changes.Select(c =>
+                    var logicalChanges = changes.Select(c =>
                     {
                         int currentIndex, previousIndex;
                         switch (c.State)
@@ -121,11 +125,11 @@ namespace Observatory.Core.Virtualization
                                 currentIndex = source.IndexOf(c.Entity);
                                 return LogicalChange.Addition(c.Entity, currentIndex);
                             case DeltaState.Remove:
-                                previousIndex = x.Keys.IndexOf(c.Entity.Id);
+                                previousIndex = _keys.IndexOf(c.Entity.Id);
                                 return LogicalChange.Removal(this[previousIndex], previousIndex);
                             case DeltaState.Update:
                                 currentIndex = source.IndexOf(c.Entity);
-                                previousIndex = x.Keys.IndexOf(c.Entity.Id);
+                                previousIndex = _keys.IndexOf(c.Entity.Id);
                                 return LogicalChange.Update(c.Entity, currentIndex, this[previousIndex], previousIndex);
                             default:
                                 throw new NotSupportedException($"{c.State} is not supported.");
@@ -141,34 +145,30 @@ namespace Observatory.Core.Virtualization
                         switch (c.State)
                         {
                             case DeltaState.Add:
-                                x.Keys.Insert(c.CurrentIndex.Value, c.CurrentItem.Id);
+                                _keys.Insert(c.CurrentIndex.Value, c.CurrentItem.Id);
                                 break;
                             case DeltaState.Remove:
-                                x.Keys.RemoveAt(c.PreviousIndex.Value);
+                                _keys.RemoveAt(c.PreviousIndex.Value);
                                 break;
                             case DeltaState.Update:
                                 if (c.PreviousIndex.Value != c.CurrentIndex.Value)
                                 {
-                                    x.Keys.RemoveAt(c.PreviousIndex.Value);
-                                    x.Keys.Insert(c.CurrentIndex.Value, c.CurrentItem.Id);
+                                    _keys.RemoveAt(c.PreviousIndex.Value);
+                                    _keys.Insert(c.CurrentIndex.Value, c.CurrentItem.Id);
                                 }
                                 break;
                         }
                     }
 
-                    _keySubject.OnNext(x.Keys);
-                    _cacheSubject.OnNext(new VirtualizingCacheSourceUpdatedEvent<TSource>(discardedItems, serializedChanges, totalCount));
-
+                    _eventSubject.OnNext(new VirtualizingCacheSourceUpdatedEvent<TSource>(discardedItems, serializedChanges, totalCount));
                     foreach (var b in CurrentBlocks)
-                    {
-                        b.Subscribe(_cacheSubject);
-                    }
+                        b.Subscribe(_eventSubject);
 
                     this.Log().Debug($"Changes:\n{string.Join("\n", serializedChanges)}");
                 })
                 .DisposeWith(_disposables);
 
-            _cacheSubject
+            _eventSubject
                 .ObserveOn(RxApp.TaskpoolScheduler)
                 .Select(e => e.Process(this))
                 .ObserveOn(RxApp.MainThreadScheduler)
@@ -184,8 +184,8 @@ namespace Observatory.Core.Virtualization
             Observable.Start(() => source.GetAllKeys(), RxApp.TaskpoolScheduler)
                 .Subscribe(keys =>
                 {
-                    _keySubject.OnNext(keys);
-                    _cacheSubject.OnNext(new VirtualizingCacheInitializedEvent<TSource>(keys.Count));
+                    _keys.AddRange(keys);
+                    _eventSubject.OnNext(new VirtualizingCacheInitializedEvent<TSource>(keys.Count));
                 })
                 .DisposeWith(_disposables);
         }
@@ -200,6 +200,30 @@ namespace Observatory.Core.Virtualization
         {
             _rangeSubject.OnNext(newRanges);
         }
+
+        public void SelectRange(IndexRange range)
+        {
+            if (range.Length == 0) return;
+            _selectionSubject.OnNext(_selectionSubject.Value.Merge(range));
+            this.Log().Debug($"Selected {range}.");
+        }
+
+        public void DeselectRange(IndexRange range)
+        {
+            if (range.Length == 0) return;
+            _selectionSubject.OnNext(_selectionSubject.Value.Subtract(range));
+            this.Log().Debug($"Deselected {range}.");
+        }
+
+        public bool IsSelected(int index) => _selectionSubject.Value.Contains(index);
+
+        public IReadOnlyList<IndexRange> GetSelectedRanges()
+        {
+            this.Log().Debug($"Current selection: {string.Join(", ", _selectionSubject.Value)}.");
+            return _selectionSubject.Value;
+        }
+
+        public IReadOnlyList<TKey> GetSelectedKeys() => _selectionSubject.Value.EnumerateIndex().Select(i => _keys[i]).ToArray();
 
         #region ++ IVirtualizingCacheEventProcessor ++
 
@@ -319,15 +343,13 @@ namespace Observatory.Core.Virtualization
         /// </summary>
         /// <param name="key">The item to get the index.</param>
         /// <returns>The index if found, otherwise -1.</returns>
-        public int IndexOf(TKey key) => _keySubject.Value?.IndexOf(key) ?? -1;
+        public int IndexOf(TTarget item) => _keys.IndexOf(item.Id);
 
         /// <summary>
         /// Clears the cache.
         /// </summary>
         public void Clear()
         {
-            _keySubject.OnNext(null);
-
             foreach (var t in _targetCache.Values)
             {
                 (t as IDisposable)?.Dispose();
@@ -339,6 +361,9 @@ namespace Observatory.Core.Virtualization
                 b.Unsubscribe();
             }
             CurrentBlocks = new VirtualizingCacheBlock<TSource>[0];
+
+            _keys.Clear();
+            _selectionSubject.OnNext(new IndexRange[0]);
         }
 
         /// <summary>
@@ -352,9 +377,17 @@ namespace Observatory.Core.Virtualization
 
         public int Add(object value) => throw new NotImplementedException();
 
-        public bool Contains(object value) => IndexOf((value as TTarget).Id) != -1;
+        public bool Contains(object value) => IndexOf(value as TTarget) != -1;
 
-        public int IndexOf(object value) => IndexOf((value as TTarget).Id);
+        public int IndexOf(object value)
+        {
+            return value switch
+            {
+                TTarget x => IndexOf(x),
+                VirtualizingCachePlaceholder x => x.Index,
+                _ => -1,
+            };
+        }
 
         public void Insert(int index, object value) => throw new NotImplementedException();
 
@@ -763,33 +796,33 @@ namespace Observatory.Core.Virtualization
         /// </summary>
         /// <param name="ranges">The ranges.</param>
         /// <returns>A new array of ranges that are sorted and compacted.</returns>
-        private static IndexRange[] Normalize(IndexRange[] ranges)
-        {
-            var sortedRanges = ranges.OrderBy(r => r.FirstIndex).ToList();
-            var normalizedRanges = new List<IndexRange>();
-            if (sortedRanges.Count > 0)
-            {
-                var anchor = sortedRanges[0];
-                var index = 1;
+        //private static IndexRange[] Normalize(IndexRange[] ranges)
+        //{
+        //    var sortedRanges = ranges.OrderBy(r => r.FirstIndex).ToList();
+        //    var normalizedRanges = new List<IndexRange>();
+        //    if (sortedRanges.Count > 0)
+        //    {
+        //        var anchor = sortedRanges[0];
+        //        var index = 1;
 
-                while (true)
-                {
-                    if (index >= sortedRanges.Count)
-                    {
-                        normalizedRanges.Add(anchor);
-                        break;
-                    }
+        //        while (true)
+        //        {
+        //            if (index >= sortedRanges.Count)
+        //            {
+        //                normalizedRanges.Add(anchor);
+        //                break;
+        //            }
 
-                    var current = sortedRanges[index++];
-                    if (!anchor.TryUnion(current, ref anchor))
-                    {
-                        normalizedRanges.Add(anchor);
-                        anchor = current;
-                    }
-                }
-            }
-            return normalizedRanges.ToArray();
-        }
+        //            var current = sortedRanges[index++];
+        //            if (!anchor.TryUnion(current, ref anchor))
+        //            {
+        //                normalizedRanges.Add(anchor);
+        //                anchor = current;
+        //            }
+        //        }
+        //    }
+        //    return normalizedRanges.ToArray();
+        //}
 
         /// <summary>
         /// Performs binary search on the current blocks to get the item at a given index.

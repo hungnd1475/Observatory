@@ -139,7 +139,8 @@
           </CommandBar>
         </Grid>
         <Grid Grid.Column="1">
-          <CommandBar HorizontalContentAlignment="Stretch"
+          <CommandBar x:Name="DefaultMailFolderToolBar"
+                      HorizontalContentAlignment="Stretch"
                       VerticalContentAlignment="Center"
                       Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
                       DefaultLabelPosition="Right"
@@ -159,6 +160,38 @@
                        PlaceholderText="Search"
                        RequestedTheme="Light"/>
             </CommandBar.Content>
+          </CommandBar>
+          <CommandBar x:Name="BatchMailFolderToolBar"
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Center"
+                      Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
+                      CommandBarOverflowPresenterStyle="{StaticResource LightCommandBarOverflowPresenterStyle}"
+                      DefaultLabelPosition="Right"
+                      IsDynamicOverflowEnabled="False"
+                      Visibility="Collapsed">
+            <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.Archive}"
+                          Icon="{wctex:FontIcon Glyph={StaticResource ArchiveGlyph}}"
+                          Label="Archive"/>
+            <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.Delete}"
+                          Icon="Delete"
+                          Label="Delete"/>
+            <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.Move}"
+                          Icon="MoveToFolder"
+                          Label="Move"/>
+            <CommandBar.SecondaryCommands>
+              <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.SetFlag}"
+                            Icon="Flag"
+                            Label="Set flag"/>
+              <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.ClearFlag}"
+                            Icon="Flag"
+                            Label="Clear flag"/>
+              <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.MarkAsRead}"
+                            Icon="Read"
+                            Label="Mark as read"/>
+              <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.MarkAsUnread}"
+                            Icon="Mail"
+                            Label="Mark as unread"/>
+            </CommandBar.SecondaryCommands>
           </CommandBar>
         </Grid>
         <Grid Grid.Column="2"
@@ -485,6 +518,18 @@
           <Setter Target="CompactNavigationPane.Visibility" Value="Visible"/>
           <Setter Target="CompactNewMailButton.Visibility" Value="Visible"/>
           <Setter Target="TopBarNavigationPaneRegion.Width" Value="{StaticResource NavigationViewCompactPaneLength}"/>
+        </VisualState.Setters>
+      </VisualState>
+    </VisualStateGroup>
+
+    <VisualStateGroup>
+      <VisualState>
+        <VisualState.StateTriggers>
+          <StateTrigger IsActive="{x:Bind ViewModel.SelectedFolder.Messages.IsSelecting, Mode=OneWay}"/>
+        </VisualState.StateTriggers>
+        <VisualState.Setters>
+          <Setter Target="DefaultMailFolderToolBar.Visibility" Value="Collapsed"/>
+          <Setter Target="BatchMailFolderToolBar.Visibility" Value="Visible"/>
         </VisualState.Setters>
       </VisualState>
     </VisualStateGroup>

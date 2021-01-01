@@ -11,6 +11,9 @@ using Windows.ApplicationModel.Store;
 using Uno.Extensions;
 using Uno.Logging;
 using Microsoft.UI.Xaml.Controls;
+using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Controls.Primitives;
+using Microsoft.Toolkit.Uwp.UI.Extensions;
 
 namespace Observatory.UI.Views.Mail
 {
@@ -40,9 +43,18 @@ namespace Observatory.UI.Views.Mail
             set => ViewModel = (MailFolderViewModel)value;
         }
 
+        private readonly Binding _selectedMessageBinding;
+
         public MailFolderView()
         {
             this.InitializeComponent();
+            _selectedMessageBinding = new Binding()
+            {
+                Source = this,
+                Path = new PropertyPath(nameof(SelectedMessage)),
+                Mode = BindingMode.TwoWay,
+            };
+
 #if NETFX_CORE
             FolderNameShadow.Receivers.Add(MessageListGrid);
 #endif
@@ -120,7 +132,57 @@ namespace Observatory.UI.Views.Mail
                     .Subscribe(vm => vm.Messages.Order = MessageOrder.Sender)
                     .DisposeWith(disposables);
 #endif
+
+                this.OneWayBind(ViewModel,
+                        x => x.Messages.IsSelecting,
+                        x => x.MessageList.SelectionMode,
+                        value => value ? ListViewSelectionMode.Multiple : ListViewSelectionMode.Single)
+                    .DisposeWith(disposables);
+
+                this.WhenAnyValue(x => x.ViewModel.Messages.IsSelecting)
+                    .Do(isSelecting =>
+                    {
+                        if (isSelecting)
+                        {
+                            MessageList.ClearValue(Selector.SelectedValueProperty);
+                            SelectedMessage = null;
+                        }
+                        else
+                        {
+                            BindingOperations.SetBinding(MessageList, 
+                                Selector.SelectedValueProperty, 
+                                _selectedMessageBinding);
+                        }
+                    })
+                    .Subscribe()
+                    .DisposeWith(disposables);
+
+                this.OneWayBind(ViewModel,
+                        x => x.Messages.SelectionCount,
+                        x => x.SelectionCountTextBlock.Text,
+                        value => $"({value})")
+                    .DisposeWith(disposables);
+
+                Observable.CombineLatest(
+                        this.WhenAnyValue(x => x.ViewModel.Messages.IsSelecting),
+                        this.WhenAnyValue(x => x.ViewModel.Messages.SelectionCount),
+                        (isSelecting, selectionCount) => isSelecting && selectionCount > 0)
+                    .Select(x => x ? Visibility.Visible : Visibility.Collapsed)
+                    .BindTo(this, x => x.SelectionCountTextBlock.Visibility)
+                    .DisposeWith(disposables);
             });
+        }
+
+        public void SelectAllCheckBox_Clicked(object sender, RoutedEventArgs e)
+        {
+            if (SelectAllCheckBox.IsChecked ?? false)
+            {
+                MessageList.SelectAll();
+            }
+            else
+            {
+                MessageList.DeselectAll();
+            }
         }
     }
 }

@@ -214,7 +214,7 @@
                       Text="Move to Junk"/>
     </MenuFlyout>
   </UserControl.ContextFlyout>
-  <Grid x:Name="ContentGrid"
+  <Grid x:Name="ContentRootGrid"
         Background="Transparent"
         Opacity="0">
     <Grid.RowDefinitions>
@@ -230,15 +230,44 @@
                Visibility="Collapsed"/>
     <Grid>
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="4"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
         <ColumnDefinition Width="*"/>
       </Grid.ColumnDefinitions>
-      <Rectangle HorizontalAlignment="Stretch"
-                 VerticalAlignment="Stretch"
-                 Fill="{ThemeResource UnreadColor}"
-                 Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.IsRead)}"/>
-      <Grid Grid.Column="1"
-            Margin="16,8">
+      <Border Width="4"
+              Margin="0,0,8,0">
+        <Rectangle VerticalAlignment="Stretch"
+                   Fill="{ThemeResource UnreadColor}"
+                   Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.IsRead)}"/>
+      </Border>
+      <Border x:Name="MultiSelectionBox"
+              Grid.Column="1"
+              Width="18"
+              Height="18"
+              Margin="0,12"
+              VerticalAlignment="Top"
+              Background="Transparent"
+              BorderBrush="{ThemeResource SystemControlForegroundBaseMediumHighBrush}"
+              BorderThickness="2"
+              RenderTransformOrigin="0,0"
+              Visibility="Collapsed">
+        <Border.RenderTransform>
+          <CompositeTransform x:Name="MultiSelectionBoxTransform"/>
+        </Border.RenderTransform>
+        <FontIcon x:Name="MultiSelectionBoxCheckMark"
+                  Grid.Column="1"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  FontSize="14"
+                  Glyph="{StaticResource CheckMark}"
+                  Visibility="Collapsed"/>
+      </Border>
+      <Grid x:Name="ContentGrid"
+            Grid.Column="2"
+            Margin="8,8,16,8">
+        <Grid.RenderTransform>
+          <TranslateTransform x:Name="ContentGridTranslateTransform"/>
+        </Grid.RenderTransform>
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto"/>
           <RowDefinition Height="Auto"/>
@@ -321,7 +350,7 @@
                                           To="PointerOver"/>
           </VisualState.StateTriggers>
           <VisualState.Setters>
-            <Setter Target="ContentGrid.Background" Value="{ThemeResource SystemControlHighlightListLowBrush}"/>
+            <Setter Target="ContentRootGrid.Background" Value="{ThemeResource SystemControlHighlightListLowBrush}"/>
           </VisualState.Setters>
         </VisualState>
 
@@ -331,7 +360,7 @@
                                           To="Selected"/>
           </VisualState.StateTriggers>
           <VisualState.Setters>
-            <Setter Target="ContentGrid.Background" Value="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
+            <Setter Target="ContentRootGrid.Background" Value="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
           </VisualState.Setters>
         </VisualState>
 
@@ -341,7 +370,7 @@
                                           To="Flagged"/>
           </VisualState.StateTriggers>
           <VisualState.Setters>
-            <Setter Target="ContentGrid.Background" Value="{ThemeResource FlaggedColor}"/>
+            <Setter Target="ContentRootGrid.Background" Value="{ThemeResource FlaggedColor}"/>
           </VisualState.Setters>
         </VisualState>
       </VisualStateGroup>
@@ -410,7 +439,7 @@
                                              To="{x:Null}"/>
           </VisualState.StateTriggers>
           <VisualState.Setters>
-            <Setter Target="ContentGrid.Opacity" Value="1"/>
+            <Setter Target="ContentRootGrid.Opacity" Value="1"/>
           </VisualState.Setters>
         </VisualState>
       </VisualStateGroup>
@@ -422,6 +451,40 @@
           </VisualState.StateTriggers>
           <VisualState.Setters>
             <Setter Target="ContextOpenIndicator.Visibility" Value="Visible"/>
+          </VisualState.Setters>
+        </VisualState>
+      </VisualStateGroup>
+
+      <VisualStateGroup>
+        <VisualState>
+          <VisualState.StateTriggers>
+            <StateTrigger IsActive="{x:Bind IsMultiSelectionEnabled}"/>
+          </VisualState.StateTriggers>
+          <Storyboard>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="MultiSelectionBoxTransform"
+                                           Storyboard.TargetProperty="TranslateX">
+              <EasingDoubleKeyFrame KeyTime="0:0:0"
+                                    Value="-20"/>
+              <SplineDoubleKeyFrame KeySpline="0.1,0.9,0.2,1"
+                                    KeyTime="0:0:0.333"
+                                    Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="MultiSelectionBox"
+                                           Storyboard.TargetProperty="Visibility">
+              <DiscreteObjectKeyFrame KeyTime="0"
+                                      Value="Visible"/>
+            </ObjectAnimationUsingKeyFrames>
+          </Storyboard>
+        </VisualState>
+      </VisualStateGroup>
+
+      <VisualStateGroup>
+        <VisualState>
+          <VisualState.StateTriggers>
+            <StateTrigger IsActive="{x:Bind IsSelected}"/>
+          </VisualState.StateTriggers>
+          <VisualState.Setters>
+            <Setter Target="MultiSelectionBoxCheckMark.Visibility" Value="Visible"/>
           </VisualState.Setters>
         </VisualState>
       </VisualStateGroup>

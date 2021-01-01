@@ -14,12 +14,14 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace Observatory.Core.ViewModels.Mail
 {
     public class MessageListViewModel : ReactiveObject, IActivatableViewModel
     {
         private readonly string _folderId;
+        private readonly IConnectableObservable<bool> _canOperationExecuted;
 
         [Reactive]
         public MessageOrder Order { get; set; } = MessageOrder.ReceivedDateTime;
@@ -30,21 +32,27 @@ namespace Observatory.Core.ViewModels.Mail
         [Reactive]
         public VirtualizingCache<MessageSummary, MessageSummaryViewModel, string> Cache { get; private set; }
 
-        public ReactiveCommand<string[], Unit> Archive { get; }
+        [Reactive]
+        public bool IsSelecting { get; set; } = false;
 
-        public ReactiveCommand<string[], Unit> Delete { get; }
+        [Reactive]
+        public int SelectionCount { get; set; }
 
-        public ReactiveCommand<string[], Unit> SetFlag { get; }
+        public ReactiveCommand<IReadOnlyList<string>, Unit> Archive { get; }
 
-        public ReactiveCommand<string[], Unit> ClearFlag { get; }
+        public ReactiveCommand<IReadOnlyList<string>, Unit> Delete { get; }
 
-        public ReactiveCommand<string[], Unit> MarkAsRead { get; }
+        public ReactiveCommand<IReadOnlyList<string>, Unit> SetFlag { get; }
 
-        public ReactiveCommand<string[], Unit> MarkAsUnread { get; }
+        public ReactiveCommand<IReadOnlyList<string>, Unit> ClearFlag { get; }
 
-        public ReactiveCommand<string[], Unit> Move { get; }
+        public ReactiveCommand<IReadOnlyList<string>, Unit> MarkAsRead { get; }
 
-        public ReactiveCommand<string[], Unit> MoveToJunk { get; }
+        public ReactiveCommand<IReadOnlyList<string>, Unit> MarkAsUnread { get; }
+
+        public ReactiveCommand<IReadOnlyList<string>, Unit> Move { get; }
+
+        public ReactiveCommand<IReadOnlyList<string>, Unit> MoveToJunk { get; }
 
         public ViewModelActivator Activator { get; }
 
@@ -57,46 +65,58 @@ namespace Observatory.Core.ViewModels.Mail
             _folderId = folderId;
             Activator = activator;
 
-            MarkAsRead = ReactiveCommand.Create<string[]>(async messageIds =>
+            _canOperationExecuted = this.WhenAnyObservable(x => x.Cache.SelectionChanged)
+                .Select(x => x.Sum(r => r.Length) > 0)
+                .Publish();
+
+            MarkAsRead = ReactiveCommand.Create<IReadOnlyList<string>>(async messageIds =>
             {
+                PrepareMessageIds(ref messageIds);
                 await mailService.UpdateMessage(messageIds)
                     .Set(m => m.IsRead, true)
                     .ExecuteAsync();
-            });
+            }, _canOperationExecuted);
 
-            MarkAsUnread = ReactiveCommand.Create<string[]>(async messageIds =>
+            MarkAsUnread = ReactiveCommand.Create<IReadOnlyList<string>>(async messageIds =>
             {
+                PrepareMessageIds(ref messageIds);
                 await mailService.UpdateMessage(messageIds)
                     .Set(m => m.IsRead, false)
                     .ExecuteAsync();
-            });
+            }, _canOperationExecuted);
 
-            SetFlag = ReactiveCommand.Create<string[]>(async messageIds =>
+            SetFlag = ReactiveCommand.Create<IReadOnlyList<string>>(async messageIds =>
             {
+                PrepareMessageIds(ref messageIds);
                 await mailService.UpdateMessage(messageIds)
                     .Set(m => m.IsFlagged, true)
                     .ExecuteAsync();
-            });
+            }, _canOperationExecuted);
 
-            ClearFlag = ReactiveCommand.Create<string[]>(async messageIds =>
+            ClearFlag = ReactiveCommand.Create<IReadOnlyList<string>>(async messageIds =>
             {
+                PrepareMessageIds(ref messageIds);
                 await mailService.UpdateMessage(messageIds)
                     .Set(m => m.IsFlagged, false)
                     .ExecuteAsync();
-            });
+            }, _canOperationExecuted);
 
-            Move = ReactiveCommand.CreateFromTask<string[]>(async (messageIds) =>
+            Move = ReactiveCommand.CreateFromTask<IReadOnlyList<string>>(async (messageIds) =>
             {
+                PrepareMessageIds(ref messageIds);
                 var result = await mailBox.PromptUserToSelectFolder(
-                    messageIds.Length == 1 ? "Move a message" : "Move messages",
+                    messageIds.Count == 1 ? "Move a message" : $"Move {messageIds.Count} messages",
                     "Select another folder to move to:",
                     includeRoot: false,
                     CanMoveTo);
                 this.Log().Debug(result);
-            });
+            }, _canOperationExecuted);
 
             this.WhenActivated(disposables =>
             {
+                _canOperationExecuted.Connect()
+                    .DisposeWith(disposables);
+
                 Observable.CombineLatest(
                     this.WhenAnyValue(x => x.Order),
                     this.WhenAnyValue(x => x.Filter),
@@ -116,11 +136,19 @@ namespace Observatory.Core.ViewModels.Mail
                 })
                 .DisposeWith(disposables);
 
+                this.WhenAnyObservable(x => x.Cache.SelectionChanged)
+                    .Select(ranges => ranges.Sum(r => r.Length))
+                    .Do(x => SelectionCount = x)
+                    .Subscribe()
+                    .DisposeWith(disposables);
+
                 Disposable.Create(() =>
                 {
                     Filter = MessageFilter.None;
                     Cache?.Dispose();
                     Cache = null;
+                    IsSelecting = false;
+                    SelectionCount = 0;
                 })
                 .DisposeWith(disposables);
             });
@@ -130,6 +158,14 @@ namespace Observatory.Core.ViewModels.Mail
         {
             return destinationFolder != null &&
                 destinationFolder.Id != _folderId;
+        }
+
+        private void PrepareMessageIds(ref IReadOnlyList<string> messageIds)
+        {
+            if (messageIds == null || messageIds.Count == 0)
+            {
+                messageIds = Cache.GetSelectedKeys();
+            }
         }
 
         public static DeltaEntity<MessageSummary>[] FilterChanges(

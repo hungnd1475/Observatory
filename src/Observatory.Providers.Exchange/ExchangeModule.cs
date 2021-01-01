@@ -2,6 +2,9 @@
 using Observatory.Core.Services;
 using Observatory.Providers.Exchange.Persistence;
 using Observatory.Providers.Exchange.Services;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("Observatory.Core.Tests")]
 
 namespace Observatory.Providers.Exchange
 {

@@ -105,6 +105,7 @@ namespace Observatory.UI.Views.Mail
                 ? "LightCommandBarOverflowPresenterStyle"
                 : "DarkCommandBarOverflowPresenterStyle";
             MessageDetailCommandBar.CommandBarOverflowPresenterStyle = (Style)Resources[key];
+            BatchMailFolderToolBar.CommandBarOverflowPresenterStyle = (Style)Resources[key];
         }
 
         private void TitleBar_LayoutMetricsChanged(CoreApplicationViewTitleBar sender, object args)

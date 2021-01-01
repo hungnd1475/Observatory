@@ -16,6 +16,7 @@
 
       <!--  Converters  -->
       <mctkconverters:BoolNegationConverter x:Key="BoolNegationConverter"/>
+      <mctkconverters:FormatStringConverter x:Key="FormatStringConverter"/>
       <localconverters:DoubleToGridLengthConverter x:Key="DoubleToGridLengthConverter"/>
 
       <!--  Icons  -->
@@ -27,11 +28,18 @@
       <x:String x:Key="HighImportanceGlyph">&#xE171;</x:String>
       <x:String x:Key="MoveToJunkGlyph">&#xF140;</x:String>
       <x:String x:Key="SaveAsGlyph">&#xE792;</x:String>
+      <x:String x:Key="UncheckedBoxGlyph">&#xE739;</x:String>
+      <x:String x:Key="CheckedBoxGlyph">&#xE73A;</x:String>
+      <x:String x:Key="CheckMark">&#xE73E;</x:String>
 
       <!--  Constants  -->
       <x:Double x:Key="NavigationViewCompactPaneLength">40</x:Double>
 
       <!--  Styles  -->
+      <Style TargetType="ToolTip">
+        <Setter Property="CornerRadius" Value="0"/>
+      </Style>
+
       <Style x:Key="NavigationPaneButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
         <Setter Property="BorderBrush" Value="{ThemeResource SystemControlTransparentRevealBorderBrush}"/>

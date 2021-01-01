@@ -34,7 +34,7 @@ namespace Observatory.Core.Virtualization
             _indexSpecification = indexSpecification;
         }
 
-        public List<TKey> GetAllKeys()
+        public IReadOnlyList<TKey> GetAllKeys()
         {
             using var query = _queryFactory.Connect();
             return query.ForType<TEntity>().ToList(

@@ -25,5 +25,7 @@ namespace Observatory.UI.Controls
             base.PrepareContainerForItemOverride(element, item);
             ((MessageListViewItem)element).Prepare(item as MessageSummaryViewModel);
         }
+
+        protected override bool IsItemItsOwnContainerOverride(object item) => false;
     }
 }

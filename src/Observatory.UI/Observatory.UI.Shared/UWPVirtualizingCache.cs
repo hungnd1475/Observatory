@@ -10,7 +10,7 @@ using Windows.UI.Xaml.Data;
 
 namespace Observatory.UI
 {
-    public class UWPVirtualizingCache<TSource, TTarget, TKey> : IList, INotifyCollectionChanged, IItemsRangeInfo
+    public class UWPVirtualizingCache<TSource, TTarget, TKey> : IList, INotifyCollectionChanged, IItemsRangeInfo, ISelectionInfo
         where TSource : class, IVirtualizableSource<TKey>
         where TTarget : class, IVirtualizableTarget<TSource, TKey>
         where TKey : IEquatable<TKey>
@@ -22,83 +22,73 @@ namespace Observatory.UI
             _cache = cache;
         }
 
-        public object this[int index] { get => ((IList)_cache)[index]; set => ((IList)_cache)[index] = value; }
+        public object this[int index] 
+        { 
+            get => ((IList)_cache)[index]; 
+            set => throw new NotSupportedException(); 
+        }
 
-        public bool IsFixedSize => ((IList)_cache).IsFixedSize;
+        public bool IsFixedSize => _cache.IsFixedSize;
 
-        public bool IsReadOnly => ((IList)_cache).IsReadOnly;
+        public bool IsReadOnly => _cache.IsReadOnly;
 
-        public int Count => ((ICollection)_cache).Count;
+        public int Count => _cache.Count;
 
-        public bool IsSynchronized => ((ICollection)_cache).IsSynchronized;
+        public bool IsSynchronized => _cache.IsSynchronized;
 
-        public object SyncRoot => ((ICollection)_cache).SyncRoot;
+        public object SyncRoot => _cache.SyncRoot;
 
         public event NotifyCollectionChangedEventHandler CollectionChanged
         {
-            add
-            {
-                ((INotifyCollectionChanged)_cache).CollectionChanged += value;
-            }
-
-            remove
-            {
-                ((INotifyCollectionChanged)_cache).CollectionChanged -= value;
-            }
+            add => _cache.CollectionChanged += value;
+            remove => _cache.CollectionChanged -= value;
         }
 
-        public int Add(object value)
-        {
-            return ((IList)_cache).Add(value);
-        }
+        public int Add(object value) => _cache.Add(value);
 
-        public void Clear()
-        {
-            ((IList)_cache).Clear();
-        }
+        public void Clear() => _cache.Clear();
 
-        public bool Contains(object value)
-        {
-            return ((IList)_cache).Contains(value);
-        }
+        public bool Contains(object value) => _cache.Contains(value);
 
-        public void CopyTo(Array array, int index)
-        {
-            ((ICollection)_cache).CopyTo(array, index);
-        }
+        public void CopyTo(Array array, int index) => _cache.CopyTo(array, index);
 
-        public void Dispose()
-        {
-        }
+        public void Dispose() => _cache.Dispose();
 
-        public IEnumerator GetEnumerator()
-        {
-            return ((IEnumerable)_cache).GetEnumerator();
-        }
+        public IEnumerator GetEnumerator() => _cache.GetEnumerator();
 
-        public int IndexOf(object value)
-        {
-            return ((IList)_cache).IndexOf(value);
-        }
+        public int IndexOf(object value) => _cache.IndexOf(value);
 
-        public void Insert(int index, object value)
-        {
-            ((IList)_cache).Insert(index, value);
-        }
+        public void Insert(int index, object value) => _cache.Insert(index, value);
+
+        public void Remove(object value) => _cache.Remove(value);
+
+        public void RemoveAt(int index) => _cache.RemoveAt(index);
 
         public void RangesChanged(ItemIndexRange visibleRange, IReadOnlyList<ItemIndexRange> trackedItems)
         {
             _cache.UpdateRanges(trackedItems.Select(i => new IndexRange(i.FirstIndex, i.LastIndex)).ToArray());
         }
 
-        public void Remove(object value)
+        public void SelectRange(ItemIndexRange itemIndexRange)
         {
-            ((IList)_cache).Remove(value);
+            _cache.SelectRange(new IndexRange(itemIndexRange.FirstIndex, itemIndexRange.LastIndex));
         }
 
-        public void RemoveAt(int index)
+        public void DeselectRange(ItemIndexRange itemIndexRange)
         {
-            ((IList)_cache).RemoveAt(index);
+            _cache.DeselectRange(new IndexRange(itemIndexRange.FirstIndex, itemIndexRange.LastIndex));
+        }
+
+        public bool IsSelected(int index)
+        {
+            return _cache.IsSelected(index);
+        }
+
+        public IReadOnlyList<ItemIndexRange> GetSelectedRanges()
+        {
+            return _cache.GetSelectedRanges()
+                .Select(r => new ItemIndexRange(r.FirstIndex, (uint)r.Length))
+                .ToArray();
         }
     }
 

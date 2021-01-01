@@ -321,7 +321,7 @@ namespace Observatory.Providers.Exchange.Services
             }
         }
 
-        public IEntityUpdater<UpdatableMessage> UpdateMessage(params string[] messageIds)
+        public IEntityUpdater<UpdatableMessage> UpdateMessage(IReadOnlyList<string> messageIds)
         {
             return new RelayEntityUpdater<UpdatableMessage>(async sourceMessage =>
             {

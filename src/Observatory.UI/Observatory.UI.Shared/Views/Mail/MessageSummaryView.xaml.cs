@@ -45,6 +45,9 @@ namespace Observatory.UI.Views.Mail
         public static DependencyProperty IsContextMenuOpenProperty { get; } =
             DependencyProperty.Register(nameof(IsContextMenuOpen), typeof(bool), typeof(MessageSummaryView), new PropertyMetadata(false));
 
+        public static DependencyProperty IsMultiSelectionEnabledProperty { get; } =
+            DependencyProperty.Register(nameof(IsMultiSelectionEnabled), typeof(bool), typeof(MessageSummaryView), new PropertyMetadata(false));
+
         public MessageSummaryViewModel ViewModel
         {
             get => (MessageSummaryViewModel)GetValue(ViewModelProperty);
@@ -79,6 +82,12 @@ namespace Observatory.UI.Views.Mail
         {
             get { return (bool)GetValue(IsContextMenuOpenProperty); }
             set { SetValue(IsContextMenuOpenProperty, value); }
+        }
+
+        public bool IsMultiSelectionEnabled
+        {
+            get { return (bool)GetValue(IsMultiSelectionEnabledProperty); }
+            set { SetValue(IsMultiSelectionEnabledProperty, value); }
         }
 
         public MessageSummaryView()
@@ -138,18 +147,6 @@ namespace Observatory.UI.Views.Mail
         private void CloseContextMenu(object sender, object e)
         {
             IsContextMenuOpen = false;
-        }
-
-        protected override void OnPointerEntered(PointerRoutedEventArgs e)
-        {
-            base.OnPointerEntered(e);
-            IsPointerOver = true;
-        }
-
-        protected override void OnPointerExited(PointerRoutedEventArgs e)
-        {
-            base.OnPointerExited(e);
-            IsPointerOver = false;
         }
     }
 }
