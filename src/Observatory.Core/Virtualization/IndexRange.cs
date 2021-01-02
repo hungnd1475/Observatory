@@ -345,7 +345,7 @@ namespace Observatory.Core.Virtualization
         /// </summary>
         /// <param name="ranges"></param>
         /// <returns></returns>
-        public static IEnumerable<int> EnumerateIndex(this IndexRange[] ranges)
+        public static IEnumerable<int> EnumerateIndex(this IEnumerable<IndexRange> ranges)
         {
             foreach (var r in ranges)
             {
@@ -354,6 +354,16 @@ namespace Observatory.Core.Virtualization
                     yield return i;
                 }
             }
+        }
+
+        /// <summary>
+        /// Counts the number of indices tracked by the collection of ranges.
+        /// </summary>
+        /// <param name="ranges">The collection of ranges.</param>
+        /// <returns></returns>
+        public static int IndexCount(this IEnumerable<IndexRange> ranges)
+        {
+            return ranges.Sum(r => r.Length);
         }
     }
 

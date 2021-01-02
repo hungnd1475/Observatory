@@ -446,7 +446,7 @@
               </Grid>
               <muxc:TreeView x:Name="FolderTreeView"
                              Grid.Row="1"
-                             ItemInvoked="{x:Bind SelectFolder, Mode=OneTime}"
+                             ItemInvoked="SelectFolder"
                              ItemsSource="{x:Bind ViewModel.SelectedProfile.MailBox.AllFolders}"
                              SelectedItem="{x:Bind ViewModel.SelectedFolder}">
                 <muxc:TreeView.ItemTemplate>

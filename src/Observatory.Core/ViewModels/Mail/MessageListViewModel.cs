@@ -21,7 +21,6 @@ namespace Observatory.Core.ViewModels.Mail
     public class MessageListViewModel : ReactiveObject, IActivatableViewModel
     {
         private readonly string _folderId;
-        private readonly IConnectableObservable<bool> _canOperationExecuted;
 
         [Reactive]
         public MessageOrder Order { get; set; } = MessageOrder.ReceivedDateTime;
@@ -65,8 +64,8 @@ namespace Observatory.Core.ViewModels.Mail
             _folderId = folderId;
             Activator = activator;
 
-            _canOperationExecuted = this.WhenAnyObservable(x => x.Cache.SelectionChanged)
-                .Select(x => x.Sum(r => r.Length) > 0)
+            var canExecute = this.WhenAnyObservable(x => x.Cache.SelectionChanged)
+                .Select(x => x.IndexCount() > 0)
                 .Publish();
 
             MarkAsRead = ReactiveCommand.Create<IReadOnlyList<string>>(async messageIds =>
@@ -75,7 +74,7 @@ namespace Observatory.Core.ViewModels.Mail
                 await mailService.UpdateMessage(messageIds)
                     .Set(m => m.IsRead, true)
                     .ExecuteAsync();
-            }, _canOperationExecuted);
+            }, canExecute);
 
             MarkAsUnread = ReactiveCommand.Create<IReadOnlyList<string>>(async messageIds =>
             {
@@ -83,7 +82,7 @@ namespace Observatory.Core.ViewModels.Mail
                 await mailService.UpdateMessage(messageIds)
                     .Set(m => m.IsRead, false)
                     .ExecuteAsync();
-            }, _canOperationExecuted);
+            }, canExecute);
 
             SetFlag = ReactiveCommand.Create<IReadOnlyList<string>>(async messageIds =>
             {
@@ -91,7 +90,7 @@ namespace Observatory.Core.ViewModels.Mail
                 await mailService.UpdateMessage(messageIds)
                     .Set(m => m.IsFlagged, true)
                     .ExecuteAsync();
-            }, _canOperationExecuted);
+            }, canExecute);
 
             ClearFlag = ReactiveCommand.Create<IReadOnlyList<string>>(async messageIds =>
             {
@@ -99,7 +98,7 @@ namespace Observatory.Core.ViewModels.Mail
                 await mailService.UpdateMessage(messageIds)
                     .Set(m => m.IsFlagged, false)
                     .ExecuteAsync();
-            }, _canOperationExecuted);
+            }, canExecute);
 
             Move = ReactiveCommand.CreateFromTask<IReadOnlyList<string>>(async (messageIds) =>
             {
@@ -110,11 +109,11 @@ namespace Observatory.Core.ViewModels.Mail
                     includeRoot: false,
                     CanMoveTo);
                 this.Log().Debug(result);
-            }, _canOperationExecuted);
+            }, canExecute);
 
             this.WhenActivated(disposables =>
             {
-                _canOperationExecuted.Connect()
+                canExecute.Connect()
                     .DisposeWith(disposables);
 
                 Observable.CombineLatest(

@@ -4,8 +4,10 @@
              xmlns:controls="using:Observatory.UI.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="using:Observatory.UI.Views.Mail"
+             xmlns:mailvm="using:Observatory.Core.ViewModels.Mail"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+             xmlns:ui="using:Observatory.UI"
              xmlns:win="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              d:DesignHeight="600"
              d:DesignWidth="500"
@@ -529,26 +531,35 @@
                   Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
                   DefaultLabelPosition="Right"
                   IsDynamicOverflowEnabled="False">
-        <win:AppBarButton x:Name="ShowButton"
-                          Icon="List"
-                          Label="Show: All">
+        <win:AppBarButton Icon="List"
+                          Label="{x:Bind FormatFilterText(ViewModel.Messages.Filter), FallbackValue=''}">
           <win:AppBarButton.Flyout>
             <MenuFlyout Placement="BottomEdgeAlignedLeft">
-              <muxc:RadioMenuFlyoutItem x:Name="FilterAllRadio"
+              <muxc:RadioMenuFlyoutItem Click="FilterRadioButton_Click"
                                         GroupName="Filter"
+                                        IsChecked="{x:Bind ui:Converters.Equality(ViewModel.Messages.Filter, mailvm:MessageFilter.None)}"
+                                        Tag="{x:Bind mailvm:MessageFilter.None, Mode=OneTime}"
                                         Text="All"/>
-              <muxc:RadioMenuFlyoutItem x:Name="FilterUnreadRadio"
+              <muxc:RadioMenuFlyoutItem Click="FilterRadioButton_Click"
                                         GroupName="Filter"
+                                        IsChecked="{x:Bind ui:Converters.Equality(ViewModel.Messages.Filter, mailvm:MessageFilter.Unread)}"
+                                        Tag="{x:Bind mailvm:MessageFilter.Unread, Mode=OneTime}"
                                         Text="Unread"/>
-              <muxc:RadioMenuFlyoutItem x:Name="FilterFlaggedRadio"
+              <muxc:RadioMenuFlyoutItem Click="FilterRadioButton_Click"
                                         GroupName="Filter"
+                                        IsChecked="{x:Bind ui:Converters.Equality(ViewModel.Messages.Filter, mailvm:MessageFilter.Flagged)}"
+                                        Tag="{x:Bind mailvm:MessageFilter.Flagged, Mode=OneTime}"
                                         Text="Flagged"/>
               <MenuFlyoutSeparator/>
-              <muxc:RadioMenuFlyoutItem x:Name="SortDateRadio"
+              <muxc:RadioMenuFlyoutItem Click="SortRadioButton_Click"
                                         GroupName="Sort"
+                                        IsChecked="{x:Bind ui:Converters.Equality(ViewModel.Messages.Order, mailvm:MessageOrder.ReceivedDateTime)}"
+                                        Tag="{x:Bind mailvm:MessageOrder.ReceivedDateTime, Mode=OneTime}"
                                         Text="Sort By Date"/>
-              <muxc:RadioMenuFlyoutItem x:Name="SortNameRadio"
+              <muxc:RadioMenuFlyoutItem Click="SortRadioButton_Click"
                                         GroupName="Sort"
+                                        IsChecked="{x:Bind ui:Converters.Equality(ViewModel.Messages.Order, mailvm:MessageOrder.Sender)}"
+                                        Tag="{x:Bind mailvm:MessageOrder.Sender, Mode=OneTime}"
                                         Text="Sort By Name"/>
             </MenuFlyout>
           </win:AppBarButton.Flyout>
@@ -584,7 +595,7 @@
                     Padding="12,0,0,0"
                     Visibility="Collapsed">
               <CheckBox x:Name="SelectAllCheckBox"
-                        Click="{x:Bind SelectAllCheckBox_Clicked}"
+                        Click="SelectAllCheckBox_Click"
                         Style="{StaticResource SelectAllCheckBoxStyle}">
                 <CheckBox.RenderTransform>
                   <CompositeTransform x:Name="SelectAllCheckBoxTransform"/>

@@ -43,12 +43,10 @@ namespace Observatory.UI.Views.Mail
             set => ViewModel = (MailFolderViewModel)value;
         }
 
-        private readonly Binding _selectedMessageBinding;
-
         public MailFolderView()
         {
             this.InitializeComponent();
-            _selectedMessageBinding = new Binding()
+            var selectedMessageBinding = new Binding()
             {
                 Source = this,
                 Path = new PropertyPath(nameof(SelectedMessage)),
@@ -61,77 +59,11 @@ namespace Observatory.UI.Views.Mail
 
             this.WhenActivated(disposables =>
             {
-                var viewModel = this.WhenAnyValue(x => x.ViewModel)
-                    .Publish().RefCount();
-
                 this.OneWayBind(ViewModel,
                         x => x.Messages.Cache,
                         x => x.MessageList.ItemsSource,
                         value => value?.ToNative())
                     .DisposeWith(disposables);
-
-#if NETFX_CORE
-                this.OneWayBind(ViewModel,
-                        x => x.Messages.Filter,
-                        x => x.ShowButton.Label,
-                        value => value switch
-                        {
-                            MessageFilter.None => "Show: All",
-                            MessageFilter.Unread => "Show: Unread",
-                            MessageFilter.Flagged => "Show: Flagged",
-                            _ => throw new NotSupportedException(),
-                        })
-                    .DisposeWith(disposables);
-
-                this.OneWayBind(ViewModel,
-                        x => x.Messages.Filter,
-                        x => x.FilterAllRadio.IsChecked,
-                        value => value == MessageFilter.None)
-                    .DisposeWith(disposables);
-                this.OneWayBind(ViewModel,
-                        x => x.Messages.Filter,
-                        x => x.FilterFlaggedRadio.IsChecked,
-                        value => value == MessageFilter.Flagged)
-                    .DisposeWith(disposables);
-                this.OneWayBind(ViewModel,
-                        x => x.Messages.Filter,
-                        x => x.FilterUnreadRadio.IsChecked,
-                        value => value == MessageFilter.Unread)
-                    .DisposeWith(disposables);
-
-                FilterAllRadio.Events().Click
-                    .WithLatestFrom(viewModel, (_, vm) => vm)
-                    .Subscribe(vm => vm.Messages.Filter = MessageFilter.None)
-                    .DisposeWith(disposables);
-                FilterFlaggedRadio.Events().Click
-                    .WithLatestFrom(viewModel, (_, vm) => vm)
-                    .Subscribe(vm => vm.Messages.Filter = MessageFilter.Flagged)
-                    .DisposeWith(disposables);
-                FilterUnreadRadio.Events().Click
-                    .WithLatestFrom(viewModel, (_, vm) => vm)
-                    .Subscribe(vm => vm.Messages.Filter = MessageFilter.Unread)
-                    .DisposeWith(disposables);
-
-                this.OneWayBind(ViewModel,
-                        x => x.Messages.Order,
-                        x => x.SortDateRadio.IsChecked,
-                        value => value == MessageOrder.ReceivedDateTime)
-                    .DisposeWith(disposables);
-                this.OneWayBind(ViewModel,
-                        x => x.Messages.Order,
-                        x => x.SortNameRadio.IsChecked,
-                        value => value == MessageOrder.Sender)
-                    .DisposeWith(disposables);
-
-                SortDateRadio.Events().Click
-                    .WithLatestFrom(viewModel, (_, vm) => vm)
-                    .Subscribe(vm => vm.Messages.Order = MessageOrder.ReceivedDateTime)
-                    .DisposeWith(disposables);
-                SortNameRadio.Events().Click
-                    .WithLatestFrom(viewModel, (_, vm) => vm)
-                    .Subscribe(vm => vm.Messages.Order = MessageOrder.Sender)
-                    .DisposeWith(disposables);
-#endif
 
                 this.OneWayBind(ViewModel,
                         x => x.Messages.IsSelecting,
@@ -151,7 +83,7 @@ namespace Observatory.UI.Views.Mail
                         {
                             BindingOperations.SetBinding(MessageList, 
                                 Selector.SelectedValueProperty, 
-                                _selectedMessageBinding);
+                                selectedMessageBinding);
                         }
                     })
                     .Subscribe()
@@ -173,7 +105,7 @@ namespace Observatory.UI.Views.Mail
             });
         }
 
-        public void SelectAllCheckBox_Clicked(object sender, RoutedEventArgs e)
+        public void SelectAllCheckBox_Click(object sender, RoutedEventArgs e)
         {
             if (SelectAllCheckBox.IsChecked ?? false)
             {
@@ -184,5 +116,25 @@ namespace Observatory.UI.Views.Mail
                 MessageList.DeselectAll();
             }
         }
+
+        public void FilterRadioButton_Click(object sender, RoutedEventArgs e)
+        {
+            var filter = (MessageFilter)(sender as FrameworkElement).Tag;
+            ViewModel.Messages.Filter = filter;
+        }
+
+        public void SortRadioButton_Click(object sender, RoutedEventArgs e)
+        {
+            var order = (MessageOrder)(sender as FrameworkElement).Tag;
+            ViewModel.Messages.Order = order;
+        }
+
+        public string FormatFilterText(MessageFilter filter) => "Show: " + filter switch
+        {
+            MessageFilter.None => "All",
+            MessageFilter.Unread => "Unread",
+            MessageFilter.Flagged => "Flagged",
+            _ => throw new NotSupportedException(),
+        };
     }
 }

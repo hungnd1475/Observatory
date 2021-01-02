@@ -30,7 +30,7 @@
                    Grid.Row="1"
                    CanDragItems="False"
                    CanReorderItems="False"
-                   ItemInvoked="{x:Bind SelectFolder, Mode=OneTime}"
+                   ItemInvoked="SelectFolder"
                    ItemsSource="{x:Bind ViewModel.Folders, FallbackValue={x:Null}}"
                    SelectedItem="{x:Bind DestinationFolder}">
       <muxc:TreeView.ItemTemplate>
