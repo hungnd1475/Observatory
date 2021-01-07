@@ -15,7 +15,7 @@ using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using static Microsoft.Graph.HeaderHelper;
-using MG = Microsoft.Graph;
+using MSGraph = Microsoft.Graph;
 using AM = AutoMapper;
 using System.Net.Http;
 using static Microsoft.Graph.SerializerExtentions;
@@ -24,8 +24,10 @@ namespace Observatory.Providers.Exchange.Services
 {
     public class ExchangeMailService : IMailService, IEnableLogger
     {
-        static class SpecialFolders
+        public static class SpecialFolders
         {
+            public const string INBOX = "inbox";
+            public const string DELETED_ITEMS = "deleteditems";
             public const string ROOT = "msgfolderroot";
             public const string ARCHIVE = "archive";
             public const string CONVERSATION_HISTORY = "conversationhistory";
@@ -45,7 +47,7 @@ namespace Observatory.Providers.Exchange.Services
 
         private readonly ProfileRegister _register;
         private readonly ExchangeProfileDataStore.Factory _storeFactory;
-        private readonly MG.GraphServiceClient _client;
+        private readonly MSGraph.GraphServiceClient _client;
         private readonly AM.IMapper _mapper;
         private readonly Subject<DeltaSet<MailFolder>> _folderChanges = new Subject<DeltaSet<MailFolder>>();
         private readonly Subject<DeltaSet<Message>> _messageChanges = new Subject<DeltaSet<Message>>();
@@ -56,7 +58,7 @@ namespace Observatory.Providers.Exchange.Services
 
         public ExchangeMailService(ProfileRegister register,
             ExchangeProfileDataStore.Factory storeFactory,
-            MG.GraphServiceClient client,
+            MSGraph.GraphServiceClient client,
             AM.IMapper mapper)
         {
             _register = register;
@@ -91,14 +93,14 @@ namespace Observatory.Providers.Exchange.Services
 
             if (syncState.DeltaLink == null)
             {
-                static async Task<MailFolder> RequestSpecialFolder(MG.IMailFolderRequestBuilder requestBuilder,
+                static async Task<MailFolder> RequestSpecialFolder(MSGraph.IMailFolderRequestBuilder requestBuilder,
                     FolderType type, bool isFavorite,
                     AM.IMapper mapper)
                 {
                     var folder = await requestBuilder.Request()
                         .GetAsync()
                         .ConfigureAwait(false);
-                    return mapper.Map<MG.MailFolder, MailFolder>(folder, opt => opt.AfterMap((src, dst) =>
+                    return mapper.Map<MSGraph.MailFolder, MailFolder>(folder, opt => opt.AfterMap((src, dst) =>
                     {
                         dst.IsFavorite = isFavorite;
                         dst.Type = type;
@@ -112,7 +114,7 @@ namespace Observatory.Providers.Exchange.Services
                     RequestSpecialFolder(_client.Me.MailFolders.Drafts, FolderType.Drafts, true, _mapper),
                     RequestSpecialFolder(_client.Me.MailFolders.DeletedItems, FolderType.DeletedItems, true, _mapper),
                     RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.ARCHIVE], FolderType.Archive, true, _mapper),
-                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.JUNK], FolderType.OtherSpecial, false, _mapper),
+                    RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.JUNK], FolderType.Junk, false, _mapper),
                     RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.OUTBOX], FolderType.OtherSpecial, false, _mapper),
                     RequestSpecialFolder(_client.Me.MailFolders[SpecialFolders.CONVERSATION_HISTORY], FolderType.OtherSpecial, false, _mapper));
                 var specialIds = new HashSet<string>(specialFolders.Select(f => f.Id));
@@ -130,7 +132,7 @@ namespace Observatory.Providers.Exchange.Services
                         .ConfigureAwait(false);
                     folders.AddRange(page
                         .Where(f => !specialIds.Contains(f.Id))
-                        .Select(f => _mapper.Map<MG.MailFolder, MailFolder>(f)));
+                        .Select(f => _mapper.Map<MSGraph.MailFolder, MailFolder>(f)));
 
                     if (page.NextPageRequest != null)
                     {
@@ -160,10 +162,10 @@ namespace Observatory.Providers.Exchange.Services
             }
             else
             {
-                MG.IMailFolderDeltaCollectionPage page = new MG.MailFolderDeltaCollectionPage();
+                MSGraph.IMailFolderDeltaCollectionPage page = new MSGraph.MailFolderDeltaCollectionPage();
                 page.InitializeNextPageRequest(_client, syncState.DeltaLink);
 
-                var deltaFolders = new Dictionary<string, MG.MailFolder>();
+                var deltaFolders = new Dictionary<string, MSGraph.MailFolder>();
                 var removedFolders = new List<MailFolder>();
 
                 while (page.NextPageRequest != null)
@@ -193,7 +195,7 @@ namespace Observatory.Providers.Exchange.Services
                         .ToDictionaryAsync(f => f.Id);
                     var newFolders = deltaFolders.Values
                         .Where(f => !updatedFolders.ContainsKey(f.Id))
-                        .Select(f => _mapper.Map<MG.MailFolder, MailFolder>(f))
+                        .Select(f => _mapper.Map<MSGraph.MailFolder, MailFolder>(f))
                         .ToList();
                     foreach (var f in updatedFolders)
                     {
@@ -228,10 +230,12 @@ namespace Observatory.Providers.Exchange.Services
         public async Task SynchronizeMessagesAsync(string folderId, CancellationToken cancellationToken = default)
         {
             using var store = _storeFactory.Invoke(_register.DataFilePath, true);
-            var syncState = await store.MessageSynchronizationStates.FindAsync(folderId);
+            var syncState = await store.MessageSynchronizationStates
+                .FindAsync(folderId)
+                .ConfigureAwait(false);
 
-            MG.IMessageDeltaRequest request = null;
-            MG.IMessageDeltaCollectionPage page = new MG.MessageDeltaCollectionPage();
+            MSGraph.IMessageDeltaRequest request = null;
+            MSGraph.IMessageDeltaCollectionPage page = new MSGraph.MessageDeltaCollectionPage();
 
             if (syncState.NextLink != null)
             {
@@ -270,10 +274,11 @@ namespace Observatory.Providers.Exchange.Services
                 {
                     var updatedMessages = await store.Messages
                         .Where(m => deltaMessages.Keys.Contains(m.Id))
-                        .ToDictionaryAsync(m => m.Id);
+                        .ToDictionaryAsync(m => m.Id)
+                        .ConfigureAwait(false);
                     var newMessages = deltaMessages
                         .Where(m => !updatedMessages.Keys.Contains(m.Key))
-                        .Select(m => _mapper.Map<MG.Message, Message>(m.Value))
+                        .Select(m => _mapper.Map<MSGraph.Message, Message>(m.Value))
                         .ToArray();
 
                     foreach (var m in updatedMessages)
@@ -288,7 +293,8 @@ namespace Observatory.Providers.Exchange.Services
                 {
                     var removedMessages = await store.Messages
                         .Where(m => m.FolderId == folderId && removedIds.Contains(m.Id))
-                        .ToListAsync();
+                        .ToListAsync()
+                        .ConfigureAwait(false);
                     store.RemoveRange(removedMessages);
                 }
 
@@ -325,11 +331,11 @@ namespace Observatory.Providers.Exchange.Services
         {
             return new RelayEntityUpdater<UpdatableMessage>(async sourceMessage =>
             {
-                var serializer = new MG.Serializer();
-                var targetMessage = _mapper.Map<UpdatableMessage, MG.Message>(sourceMessage);
+                var serializer = new MSGraph.Serializer();
+                var targetMessage = _mapper.Map<UpdatableMessage, MSGraph.Message>(sourceMessage);
                 await Task.WhenAll(messageIds.Paginate(20).Select(async page =>
                 {
-                    var batch = new MG.BatchRequestContent();
+                    var batchContent = new MSGraph.BatchRequestContent();
                     foreach (var id in page)
                     {
                         var request = _client.Me.Messages[id]
@@ -337,31 +343,95 @@ namespace Observatory.Providers.Exchange.Services
                             .GetHttpRequestMessage();
                         request.Method = new HttpMethod("PATCH");
                         request.Content = serializer.SerializeAsJsonContent(targetMessage);
-                        batch.AddBatchRequestStep(request);
+                        batchContent.AddBatchRequestStep(request);
                     }
                     await _client.Batch.Request()
-                        .PostAsync(batch)
+                        .PostAsync(batchContent)
                         .ConfigureAwait(false);
                 }));
 
                 using var store = _storeFactory.Invoke(_register.DataFilePath, true);
                 var originalMessages = await store.Messages
                     .Where(m => messageIds.Contains(m.Id))
-                    .ToArrayAsync();
+                    .ToArrayAsync()
+                    .ConfigureAwait(false);
                 foreach (var m in originalMessages)
                 {
                     _mapper.Map(sourceMessage, m);
                 }
-                await store.SaveChangesAsync()
+                await store.SaveChangesAsync(false)
                     .ConfigureAwait(false);
 
                 if (_messageChanges.HasObservers)
                 {
-                    var changes = new DeltaSet<Message>(originalMessages
-                        .Select(m => DeltaEntity.Updated(m)));
+                    var changes = store.GetChanges<Message>();
+                    if (changes.Count > 0)
+                    {
+                        _messageChanges.OnNext(store.GetChanges<Message>());
+                    }
+                }
+
+                store.ChangeTracker.AcceptAllChanges();
+            });
+        }
+
+        public async Task MoveMessage(IReadOnlyList<string> messageIds, string destinationFolderId)
+        {
+            var serializer = new MSGraph.Serializer();
+            var result = await Task.WhenAll(messageIds.Paginate(20).Select(async page =>
+            {
+                var batchContent = new MSGraph.BatchRequestContent();
+                var stepIds = new List<string>(20);
+                foreach (var id in page)
+                {
+                    var request = _client.Me.Messages[id]
+                        .Move(destinationFolderId)
+                        .Request()
+                        .GetHttpRequestMessage();
+                    request.Method = HttpMethod.Post;
+                    request.Content = serializer.SerializeAsJsonContent(
+                        new MSGraph.MessageMoveRequestBody()
+                        {
+                            DestinationId = destinationFolderId
+                        });
+                    stepIds.Add(batchContent.AddBatchRequestStep(request));
+                }
+                var batchResponse = await _client.Batch.Request()
+                    .PostAsync(batchContent)
+                    .ConfigureAwait(false);
+                return await Task.WhenAll(stepIds.Select(
+                    async id => await batchResponse
+                        .GetResponseByIdAsync<MSGraph.Message>(id)
+                        .ConfigureAwait(false)));
+            }));
+
+            using var store = _storeFactory.Invoke(_register.DataFilePath, true);
+            var removedMessages = await store.Messages
+                .Where(m => messageIds.Contains(m.Id))
+                .ToArrayAsync()
+                .ConfigureAwait(false);
+            var addedMessages = result.SelectMany(r => r).Select(r => _mapper.Map<MSGraph.Message, Message>(r));
+
+            store.RemoveRange(removedMessages);
+            store.AddRange(addedMessages);
+            await store.SaveChangesAsync(false)
+                .ConfigureAwait(false);
+
+            if (_messageChanges.HasObservers)
+            {
+                var changes = store.GetChanges<Message>();
+                if (changes.Count > 0)
+                {
                     _messageChanges.OnNext(changes);
                 }
-            });
+            }
+
+            store.ChangeTracker.AcceptAllChanges();
+        }
+
+        public Task MoveMessage(IReadOnlyList<string> messageIds, FolderType destinationFolderType)
+        {
+            return MoveMessage(messageIds, destinationFolderType.ToFolderId());
         }
     }
 }

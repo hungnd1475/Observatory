@@ -76,6 +76,15 @@ namespace Observatory.Core.Tests.Virtualization
         {
             Assert.Equal(expected, ranges.Contains(index));
         }
+
+        [Theory]
+        [MemberData(nameof(IndexRangeTestCases.Search), MemberType = typeof(IndexRangeTestCases))]
+        public void Search(IndexRange[] ranges, int index,
+            IndexRangeSearchApproximation approximation, IndexRangeSearchResult expectedResult)
+        {
+            var searchedIndex = ranges.Search(index, approximation);
+            Assert.Equal(searchedIndex, expectedResult);
+        }
     }
 
     public static class IndexRangeTestCases
@@ -88,6 +97,90 @@ namespace Observatory.Core.Tests.Virtualization
             new object[] { new IndexRange[] { new IndexRange(0, 0), new IndexRange(2, 3), new IndexRange(6, 9) }, 1, false },
             new object[] { new IndexRange[] { new IndexRange(0, 1) }, 1, true },
             new object[] { new IndexRange[] { new IndexRange(0, 1), new IndexRange(3, 5) }, 4, true },
+        };
+
+        public static IEnumerable<object[]> Search => new object[][]
+        {
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(0, 3) },
+                1, IndexRangeSearchApproximation.Exact, new IndexRangeSearchResult(true, 0),
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(0, 3), new IndexRange(5, 9) },
+                7, IndexRangeSearchApproximation.Exact, new IndexRangeSearchResult(true, 1)
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(0, 4), new IndexRange(6, 6), new IndexRange(9, 10) },
+                4, IndexRangeSearchApproximation.Exact, new IndexRangeSearchResult(true, 0)
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(0, 4), new IndexRange(6, 6), new IndexRange(9, 10) },
+                14, IndexRangeSearchApproximation.Exact, new IndexRangeSearchResult(false, -1)
+            },
+            new object[]
+            {
+                new IndexRange[0],
+                5, IndexRangeSearchApproximation.Exact, new IndexRangeSearchResult(false, -1)
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(0, 4) },
+                7, IndexRangeSearchApproximation.NearestLeft, new IndexRangeSearchResult(false, 0)
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(6, 9) },
+                4, IndexRangeSearchApproximation.NearestLeft, new IndexRangeSearchResult(false, -1)
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(0, 4), new IndexRange(6, 6), new IndexRange(9, 10) },
+                7, IndexRangeSearchApproximation.NearestLeft, new IndexRangeSearchResult(false, 1)
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(0, 4), new IndexRange(6, 6), new IndexRange(9, 10) },
+                6, IndexRangeSearchApproximation.NearestLeft, new IndexRangeSearchResult(true, 1)
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(0, 4), new IndexRange(6, 6), new IndexRange(9, 10) },
+                11, IndexRangeSearchApproximation.NearestLeft, new IndexRangeSearchResult(false, 2)
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(0, 4) },
+                7, IndexRangeSearchApproximation.NearestRight, new IndexRangeSearchResult(false, -1)
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(6, 9) },
+                4, IndexRangeSearchApproximation.NearestRight, new IndexRangeSearchResult(false, 0)
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(0, 4), new IndexRange(6, 6), new IndexRange(9, 10) },
+                7, IndexRangeSearchApproximation.NearestRight, new IndexRangeSearchResult(false, 2)
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(0, 4), new IndexRange(6, 6), new IndexRange(9, 10) },
+                6, IndexRangeSearchApproximation.NearestRight, new IndexRangeSearchResult(true, 1)
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(0, 4), new IndexRange(6, 6), new IndexRange(9, 10) },
+                11, IndexRangeSearchApproximation.NearestRight, new IndexRangeSearchResult(false, -1)
+            },
+            new object[]
+            {
+                new IndexRange[] { new IndexRange(2, 4), new IndexRange(6, 6), new IndexRange(9, 10) },
+                0, IndexRangeSearchApproximation.NearestRight, new IndexRangeSearchResult(false, 0)
+            },
         };
     }
 }

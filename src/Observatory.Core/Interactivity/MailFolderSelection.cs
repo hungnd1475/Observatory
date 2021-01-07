@@ -103,19 +103,19 @@ namespace Observatory.Core.Interactivity
     public struct MailFolderSelectionResult
     {
         public bool IsCancelled { get; }
-        public MailFolderSelectionItem DestinationFolder { get; }
+        public MailFolderSelectionItem SelectedFolder { get; }
 
         public MailFolderSelectionResult(bool isCancelled,
-            MailFolderSelectionItem destinationFolder)
+            MailFolderSelectionItem selectedFolder)
         {
             IsCancelled = isCancelled;
-            DestinationFolder = destinationFolder;
+            SelectedFolder = selectedFolder;
         }
 
         public override string ToString()
         {
             return IsCancelled ? $"{nameof(MailFolderSelectionResult)} {{ {nameof(IsCancelled)} = {IsCancelled} }}"
-                : $"{nameof(MailFolderSelectionResult)} {{ {nameof(DestinationFolder)} = '{DestinationFolder.Id}' }}";
+                : $"{nameof(MailFolderSelectionResult)} {{ {nameof(SelectedFolder)} = '{SelectedFolder.Id}' }}";
         }
     }
 }

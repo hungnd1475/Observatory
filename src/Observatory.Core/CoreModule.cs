@@ -9,7 +9,10 @@ using Observatory.Core.ViewModels.Mail;
 using Observatory.Core.ViewModels.Settings;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
+
+[assembly: InternalsVisibleTo("Observatory.Core.Tests")]
 
 namespace Observatory.Core
 {

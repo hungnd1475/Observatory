@@ -7,10 +7,10 @@ using System.Text;
 namespace Observatory.Core.Virtualization
 {
     /// <summary>
-    /// Represents a single change in the source that got its index figured out.
+    /// Represents a single change in the source.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public readonly struct VirtualizingCacheSourceChange<T>
+    public class VirtualizingCacheSourceChange<T>
         where T : class
     {
         /// <summary>

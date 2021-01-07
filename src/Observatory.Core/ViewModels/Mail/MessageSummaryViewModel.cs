@@ -1,6 +1,5 @@
 ﻿using Observatory.Core.Models;
 using Observatory.Core.Persistence;
-using Observatory.Core.Services;
 using Observatory.Core.Virtualization;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -12,7 +11,6 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Observatory.Core.ViewModels.Mail
 {
@@ -63,9 +61,6 @@ namespace Observatory.Core.ViewModels.Mail
         [Reactive]
         public int ThreadPosition { get; private set; }
 
-        [ObservableAsProperty]
-        public bool IsTogglingFlag { get; }
-
         public MessageDetailViewModel Detail => _detail.Value;
 
         public ReactiveCommand<Unit, Unit> Archive { get; }
@@ -88,22 +83,20 @@ namespace Observatory.Core.ViewModels.Mail
             Id = state.Id;
             Refresh(state);
 
+            Archive = ReactiveCommand.CreateFromObservable(() => list.Archive.Execute(new[] { Id }));
+
+            Delete = ReactiveCommand.CreateFromObservable(() => list.Delete.Execute(new[] { Id }));
+
             ToggleFlag = ReactiveCommand.CreateFromObservable(() =>
             {
                 var command = IsFlagged ? list.ClearFlag : list.SetFlag;
                 IsFlagged = !IsFlagged;
                 return command.Execute(new[] { Id });
             });
-            ToggleFlag.IsExecuting
-                .ToPropertyEx(this, x => x.IsTogglingFlag)
-                .DisposeWith(_disposables);
             ToggleFlag.ThrownExceptions
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(ex =>
-                {
-                    IsFlagged = !IsFlagged;
-                    this.Log().Error(ex);
-                })
+                .Do(_ => IsFlagged = !IsFlagged)
+                .Subscribe()
                 .DisposeWith(_disposables);
 
             ToggleRead = ReactiveCommand.CreateFromObservable(() =>
@@ -115,17 +108,13 @@ namespace Observatory.Core.ViewModels.Mail
             });
             ToggleRead.ThrownExceptions
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(ex =>
-                {
-                    IsRead = !IsRead;
-                    this.Log().Error(ex);
-                })
+                .Do(_ => IsRead = !IsRead)
+                .Subscribe()
                 .DisposeWith(_disposables);
 
-            Archive = ReactiveCommand.CreateFromTask(() =>
-            {
-                return Task.Delay(500);
-            });
+            Move = ReactiveCommand.CreateFromObservable(() => list.Move.Execute(new[] { Id }));
+
+            MoveToJunk = ReactiveCommand.CreateFromObservable(() => list.Move.Execute(new[] { Id }));
         }
 
         public void StartMarkingAsRead(int seconds = 0)

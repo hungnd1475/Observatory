@@ -34,6 +34,10 @@ namespace Observatory.Core.Models
         /// </summary>
         Archive,
         /// <summary>
+        /// Represents the junk folder.
+        /// </summary>
+        Junk,
+        /// <summary>
         /// Represents other special folders.
         /// </summary>
         OtherSpecial,

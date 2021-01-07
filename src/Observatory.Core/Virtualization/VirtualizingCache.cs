@@ -1,6 +1,7 @@
 ﻿using Observatory.Core.Persistence.Specifications;
 using Observatory.Core.Services;
 using Observatory.Core.Services.ChangeTracking;
+using Observatory.Core.Virtualization.Internals;
 using ReactiveUI;
 using Splat;
 using System;
@@ -100,8 +101,10 @@ namespace Observatory.Core.Virtualization
                 .Subscribe(newRanges =>
                 {
                     var discardedItems = Purge(CurrentBlocks, newRanges);
+
                     CurrentBlocks = UpdateBlocks(CurrentBlocks, newRanges, source);
                     _eventSubject.OnNext(new VirtualizingCacheRangesUpdatedEvent<TSource>(discardedItems));
+
                     foreach (var b in CurrentBlocks)
                         b.Subscribe(_eventSubject);
 
@@ -136,10 +139,10 @@ namespace Observatory.Core.Virtualization
                         }
                     }).ToArray();
 
-                    var (newBlocks, discardedItems) = RefreshBlocks(CurrentBlocks, totalCount, logicalChanges, source);
-                    CurrentBlocks = newBlocks;
+                    var (newBlocks, discardedItems) = ApplyChanges(CurrentBlocks, totalCount,
+                        logicalChanges.ToPhysicalChangeSet(), source);
 
-                    var serializedChanges = LogicalChange.Serialize(logicalChanges);
+                    var serializedChanges = logicalChanges.Serialize();
                     foreach (var c in serializedChanges)
                     {
                         switch (c.State)
@@ -160,7 +163,10 @@ namespace Observatory.Core.Virtualization
                         }
                     }
 
-                    _eventSubject.OnNext(new VirtualizingCacheSourceUpdatedEvent<TSource>(discardedItems, serializedChanges, totalCount));
+                    CurrentBlocks = newBlocks;
+                    _eventSubject.OnNext(new VirtualizingCacheSourceUpdatedEvent<TSource>(
+                        discardedItems, serializedChanges, totalCount));
+
                     foreach (var b in CurrentBlocks)
                         b.Subscribe(_eventSubject);
 
@@ -176,6 +182,7 @@ namespace Observatory.Core.Virtualization
                 {
                     foreach (var e in targetEvents)
                     {
+                        _selectionSubject.OnNext(e.ApplyToSelection(_selectionSubject.Value));
                         CollectionChanged?.Invoke(this, e);
                     }
                 })
@@ -203,16 +210,14 @@ namespace Observatory.Core.Virtualization
 
         public void SelectRange(IndexRange range)
         {
-            if (range.Length == 0) return;
+            if (range.Length <= 0) return;
             _selectionSubject.OnNext(_selectionSubject.Value.Merge(range));
-            this.Log().Debug($"Selected {range}.");
         }
 
         public void DeselectRange(IndexRange range)
         {
             if (range.Length == 0) return;
             _selectionSubject.OnNext(_selectionSubject.Value.Subtract(range));
-            this.Log().Debug($"Deselected {range}.");
         }
 
         public bool IsSelected(int index) => _selectionSubject.Value.Contains(index);
@@ -292,7 +297,7 @@ namespace Observatory.Core.Virtualization
                         {
                             events.Add(new NotifyCollectionChangedEventArgs(
                                 NotifyCollectionChangedAction.Move,
-                                _targetCache[key],
+                                target,
                                 c.CurrentIndex.Value,
                                 c.PreviousIndex.Value));
                         }
@@ -521,7 +526,7 @@ namespace Observatory.Core.Virtualization
 
                     if (leftDiff.HasValue)
                     {
-                        requests.Add(VirtualizingCacheBlockRequest<TSource>.FromSource(leftDiff.Value, source));
+                        requests.Add(VirtualizingCacheBlockRequest.FromSource(leftDiff.Value, source));
                     }
                     if (rightDiff.HasValue)
                     {
@@ -531,7 +536,7 @@ namespace Observatory.Core.Virtualization
 
                 if (rightDiff.HasValue)
                 {
-                    requests.Add(VirtualizingCacheBlockRequest<TSource>.FromSource(rightDiff.Value, source));
+                    requests.Add(VirtualizingCacheBlockRequest.FromSource(rightDiff.Value, source));
                 }
 
                 newBlocks[j] = new VirtualizingCacheBlock<TSource>(newRanges[j], newItems, requests);
@@ -542,30 +547,25 @@ namespace Observatory.Core.Virtualization
         }
 
         /// <summary>
-        /// Refreshes the current blocks when changes happened to the source.
+        /// Applies the changes to the array of cache blocks.
         /// </summary>
         /// <param name="oldBlocks">The current blocks to be refreshed.</param>
         /// <param name="totalCount">The new total count of items in the source.</param>
-        /// <param name="logicalChanges">The changes happened to the source.</param>
+        /// <param name="changes">The changes to apply.</param>
         /// <param name="source">The source where items are retrieved from.</param>
         /// <returns>A new array of <see cref="VirtualizingCacheBlock{T}"/> reflecting the changes.</returns>
-        private static (VirtualizingCacheBlock<TSource>[], IReadOnlyList<TSource>) RefreshBlocks(VirtualizingCacheBlock<TSource>[] oldBlocks,
-            int totalCount, LogicalChange[] logicalChanges,
+        private static (VirtualizingCacheBlock<TSource>[], IReadOnlyList<TSource>) ApplyChanges(
+            VirtualizingCacheBlock<TSource>[] oldBlocks,
+            int totalCount, PhysicalChangeSet<TSource> changes,
             IVirtualizingSource<TSource, TKey> source)
         {
-            var removals = logicalChanges.Where(c => c.State != DeltaState.Add)
-                .Select(c => new PhysicalChange(PhysicalChangeAction.Remove, c.PreviousEntity, c.PreviousIndex.Value))
-                .OrderBy(c => c.Index)
-                .ToArray();
-            var additions = logicalChanges.Where(c => c.State != DeltaState.Remove)
-                .Select(c => new PhysicalChange(PhysicalChangeAction.Add, c.CurrentEntity, c.CurrentIndex.Value))
-                .OrderBy(c => c.Index)
-                .ToArray();
+            var additions = changes.Additions;
+            var removals = changes.Removals;
 
             var newBlocks = new List<VirtualizingCacheBlock<TSource>>(oldBlocks.Length);
             var discardedItems = new List<TSource>();
-            var removalIndex = 0;
-            var additionIndex = 0;
+            var removalPointer = 0;
+            var additionPointer = 0;
             var shift = 0;
 
             foreach (var oldBlock in oldBlocks)
@@ -584,16 +584,16 @@ namespace Observatory.Core.Virtualization
                 while (true)
                 {
                     var shouldStop = true;
-                    if (removalIndex < removals.Length && removals[removalIndex].Index < oldBlock.Range.FirstIndex)
+                    if (removalPointer < removals.Length && removals[removalPointer].Index < oldBlock.Range.FirstIndex)
                     {
                         shift -= 1;
-                        removalIndex += 1;
+                        removalPointer += 1;
                         shouldStop = false;
                     }
-                    if (additionIndex < additions.Length && additions[additionIndex].Index < newRange.FirstIndex)
+                    if (additionPointer < additions.Length && additions[additionPointer].Index < newRange.FirstIndex)
                     {
                         shift += 1;
-                        additionIndex += 1;
+                        additionPointer += 1;
                         shouldStop = false;
                     }
                     if (shouldStop) break;
@@ -611,11 +611,11 @@ namespace Observatory.Core.Virtualization
                 var requestIndex = newRange.FirstIndex;
                 while (requestIndex < destinationIndex)
                 {
-                    if (additionIndex < additions.Length && additions[additionIndex].Index < destinationIndex)
+                    if (additionPointer < additions.Length && additions[additionPointer].Index < destinationIndex)
                     {
-                        var currentAddition = additions[additionIndex];
+                        var currentAddition = additions[additionPointer];
                         newItems[currentAddition.Index - newRange.FirstIndex] = currentAddition.Entity;
-                        additionIndex += 1;
+                        additionPointer += 1;
                         destinationIndex += 1;
                         shift += 1;
 
@@ -626,14 +626,14 @@ namespace Observatory.Core.Virtualization
                         else if (requestIndex < currentAddition.Index)
                         {
                             var range = new IndexRange(requestIndex, currentAddition.Index - 1);
-                            newRequests.Add(VirtualizingCacheBlockRequest<TSource>.FromSource(range, source));
+                            newRequests.Add(VirtualizingCacheBlockRequest.FromSource(range, source));
                             requestIndex = currentAddition.Index + 1;
                         }
                     }
                     else
                     {
                         var range = new IndexRange(requestIndex, destinationIndex - 1);
-                        newRequests.Add(VirtualizingCacheBlockRequest<TSource>.FromSource(range, source));
+                        newRequests.Add(VirtualizingCacheBlockRequest.FromSource(range, source));
                         requestIndex = destinationIndex;
                     }
                 }
@@ -648,30 +648,30 @@ namespace Observatory.Core.Virtualization
                 // iterates through all remaining changes within the current block to figure out which ranges to copy
                 while (true)
                 {
-                    PhysicalChange? currentChange = null;
-                    if (removalIndex < removals.Length && removals[removalIndex].Index <= oldBlock.Range.LastIndex &&
-                        additionIndex < additions.Length && additions[additionIndex].Index <= newRange.LastIndex)
+                    PhysicalChange<TSource>? currentChange = null;
+                    if (removalPointer < removals.Length && removals[removalPointer].Index <= oldBlock.Range.LastIndex &&
+                        additionPointer < additions.Length && additions[additionPointer].Index <= newRange.LastIndex)
                     {
-                        if (removals[removalIndex].Index <= additions[additionIndex].Index)
+                        if (removals[removalPointer].Index <= additions[additionPointer].Index)
                         {
-                            currentChange = removals[removalIndex];
-                            removalIndex += 1;
+                            currentChange = removals[removalPointer];
+                            removalPointer += 1;
                         }
                         else
                         {
-                            currentChange = additions[additionIndex];
-                            additionIndex += 1;
+                            currentChange = additions[additionPointer];
+                            additionPointer += 1;
                         }
                     }
-                    else if (removalIndex < removals.Length && removals[removalIndex].Index <= oldBlock.Range.LastIndex)
+                    else if (removalPointer < removals.Length && removals[removalPointer].Index <= oldBlock.Range.LastIndex)
                     {
-                        currentChange = removals[removalIndex];
-                        removalIndex += 1;
+                        currentChange = removals[removalPointer];
+                        removalPointer += 1;
                     }
-                    else if (additionIndex < additions.Length && additions[additionIndex].Index <= newRange.LastIndex)
+                    else if (additionPointer < additions.Length && additions[additionPointer].Index <= newRange.LastIndex)
                     {
-                        currentChange = additions[additionIndex];
-                        additionIndex += 1;
+                        currentChange = additions[additionPointer];
+                        additionPointer += 1;
                     }
 
                     if (currentChange.HasValue)
@@ -758,7 +758,7 @@ namespace Observatory.Core.Virtualization
                 if (destinationIndex <= newRange.LastIndex)
                 {
                     var range = new IndexRange(destinationIndex, newRange.LastIndex);
-                    newRequests.Add(VirtualizingCacheBlockRequest<TSource>.FromSource(range, source));
+                    newRequests.Add(VirtualizingCacheBlockRequest.FromSource(range, source));
                 }
 
                 // discards any remaining items from source if necessary
@@ -770,59 +770,82 @@ namespace Observatory.Core.Virtualization
                 }
 
                 // copy the items, transfering any overlapping pending requests
-                foreach (var (SourceRange, DestinationRange) in copyRanges)
+                foreach (var (sourceRange, destinationRange) in copyRanges)
                 {
-                    oldBlock.Slice(SourceRange).CopyTo(newRange.Slice(newItems, DestinationRange));
+                    oldBlock.Slice(sourceRange).CopyTo(newRange.Slice(newItems, destinationRange));
                     foreach (var oldRequest in oldBlock.Requests.Where(r => !r.IsReceived))
                     {
-                        var sourceEffectiveRange = oldRequest.FullRange.Intersect(SourceRange);
+                        var sourceEffectiveRange = oldRequest.FullRange.Intersect(sourceRange);
                         if (sourceEffectiveRange.HasValue)
                         {
                             var destinationEffectiveRange = new IndexRange(
-                                DestinationRange.FirstIndex + sourceEffectiveRange.Value.FirstIndex - SourceRange.FirstIndex,
-                                DestinationRange.FirstIndex + sourceEffectiveRange.Value.Length - 1);
-                            newRequests.Add(VirtualizingCacheBlockRequest<TSource>.FromSource(destinationEffectiveRange, source));
+                                destinationRange.FirstIndex + sourceEffectiveRange.Value.FirstIndex - sourceRange.FirstIndex,
+                                destinationRange.FirstIndex + sourceEffectiveRange.Value.Length - 1);
+                            newRequests.Add(VirtualizingCacheBlockRequest.FromSource(destinationEffectiveRange, source));
                         }
                     }
                 }
 
                 newBlocks.Add(new VirtualizingCacheBlock<TSource>(newRange, newItems, newRequests));
             }
+
             return (newBlocks.ToArray(), discardedItems.AsReadOnly());
         }
 
-        /// <summary>
-        /// Sorts then compacts a given array of ranges.
-        /// </summary>
-        /// <param name="ranges">The ranges.</param>
-        /// <returns>A new array of ranges that are sorted and compacted.</returns>
-        //private static IndexRange[] Normalize(IndexRange[] ranges)
-        //{
-        //    var sortedRanges = ranges.OrderBy(r => r.FirstIndex).ToList();
-        //    var normalizedRanges = new List<IndexRange>();
-        //    if (sortedRanges.Count > 0)
-        //    {
-        //        var anchor = sortedRanges[0];
-        //        var index = 1;
+        internal static IndexRange[] ApplyChanges(IndexRange[] oldSelection, PhysicalChangeSet<TSource> changes)
+        {
+            if (oldSelection.Length == 0) return oldSelection;
 
-        //        while (true)
-        //        {
-        //            if (index >= sortedRanges.Count)
-        //            {
-        //                normalizedRanges.Add(anchor);
-        //                break;
-        //            }
+            var newSelection = new List<IndexRange>(oldSelection.Length + changes.Additions.Length);
+            var removalPointer = 0;
+            var additionPointer = 0;
+            var removalShift = 0;
+            var additionShift = 0;
 
-        //            var current = sortedRanges[index++];
-        //            if (!anchor.TryUnion(current, ref anchor))
-        //            {
-        //                normalizedRanges.Add(anchor);
-        //                anchor = current;
-        //            }
-        //        }
-        //    }
-        //    return normalizedRanges.ToArray();
-        //}
+            foreach (var range in oldSelection)
+            {
+                var newRange = range.Shift(removalShift);
+                while (removalPointer < changes.Removals.Length && changes.Removals[removalPointer].Index <= range.LastIndex)
+                {
+                    if (changes.Removals[removalPointer].Index < range.FirstIndex)
+                    {
+                        removalShift -= 1;
+                        newRange = newRange.Shift(-1);
+                    }
+                    else
+                    {
+                        newRange = newRange.ShrinkLast(1);
+                    }
+                    ++removalPointer;
+                }
+
+                if (newRange.Length <= 0)
+                {
+                    continue;
+                }
+
+                newRange = newRange.Shift(additionShift);
+                while (additionPointer < changes.Additions.Length && changes.Additions[additionPointer].Index <= newRange.LastIndex)
+                {
+                    var additionIndex = changes.Additions[additionPointer].Index;
+                    if (additionIndex <= newRange.FirstIndex)
+                    {
+                        additionShift += 1;
+                        newRange = newRange.Shift(1);
+                    }
+                    else
+                    {
+                        newSelection.Add(new IndexRange(newRange.FirstIndex, additionIndex - 1));
+                        newRange = new IndexRange(additionIndex + 1, newRange.LastIndex + 1);
+                    }
+                    ++additionPointer;
+                }
+
+                newSelection.Add(newRange);
+            }
+
+            return newSelection.ToArray();
+        }
 
         /// <summary>
         /// Performs binary search on the current blocks to get the item at a given index.
@@ -857,130 +880,199 @@ namespace Observatory.Core.Virtualization
             return default;
         }
 
-        private readonly struct LogicalChange
-        {
-            public readonly DeltaState State;
-            public readonly TSource CurrentEntity;
-            public readonly TSource PreviousEntity;
-            public readonly int? CurrentIndex;
-            public readonly int? PreviousIndex;
+        //private readonly struct LogicalChange
+        //{
+        //    public readonly DeltaState State;
+        //    public readonly TSource CurrentEntity;
+        //    public readonly TSource PreviousEntity;
+        //    public readonly int? CurrentIndex;
+        //    public readonly int? PreviousIndex;
 
-            private LogicalChange(DeltaState state, TSource currentEntity, TSource previousEntity, int? currentIndex, int? previousIndex)
-            {
-                State = state;
-                CurrentEntity = currentEntity;
-                PreviousEntity = previousEntity;
-                CurrentIndex = currentIndex;
-                PreviousIndex = previousIndex;
-            }
+        //    private LogicalChange(DeltaState state, TSource currentEntity, TSource previousEntity, int? currentIndex, int? previousIndex)
+        //    {
+        //        State = state;
+        //        CurrentEntity = currentEntity;
+        //        PreviousEntity = previousEntity;
+        //        CurrentIndex = currentIndex;
+        //        PreviousIndex = previousIndex;
+        //    }
 
-            public static LogicalChange Addition(TSource currentEntity, int currentIndex)
-            {
-                return new LogicalChange(DeltaState.Add, currentEntity, null, currentIndex, null);
-            }
+        //    public static LogicalChange Addition(TSource currentEntity, int currentIndex)
+        //    {
+        //        return new LogicalChange(DeltaState.Add, currentEntity, null, currentIndex, null);
+        //    }
 
-            public static LogicalChange Removal(TSource previousEntity, int previousIndex)
-            {
-                return new LogicalChange(DeltaState.Remove, null, previousEntity, null, previousIndex);
-            }
+        //    public static LogicalChange Removal(TSource previousEntity, int previousIndex)
+        //    {
+        //        return new LogicalChange(DeltaState.Remove, null, previousEntity, null, previousIndex);
+        //    }
 
-            public static LogicalChange Update(TSource currentEntity, int currentIndex, TSource previousEntity, int previousIndex)
-            {
-                return new LogicalChange(DeltaState.Update, currentEntity, previousEntity, currentIndex, previousIndex);
-            }
+        //    public static LogicalChange Update(TSource currentEntity, int currentIndex, TSource previousEntity, int previousIndex)
+        //    {
+        //        return new LogicalChange(DeltaState.Update, currentEntity, previousEntity, currentIndex, previousIndex);
+        //    }
 
-            public static IReadOnlyList<VirtualizingCacheSourceChange<TSource>> Serialize(LogicalChange[] logicalChanges)
-            {
-                var serializedChanges = new List<VirtualizingCacheSourceChange<TSource>>();
-                var additions = logicalChanges.Where(c => c.State == DeltaState.Add)
-                    .OrderBy(c => c.CurrentIndex.Value)
-                    .ToArray();
-                var removalsAndUpdates = logicalChanges.Where(c => c.State != DeltaState.Add)
-                    .OrderBy(c => c.PreviousIndex.Value)
-                    .ToArray();
+        //    /// <summary>
+        //    /// Rearranges the logical changes in an order that can be applied one-by-one by the UI.
+        //    /// </summary>
+        //    /// <param name="logicalChanges">The logical changes.</param>
+        //    /// <returns></returns>
+        //    public static IReadOnlyList<VirtualizingCacheSourceChange<TSource>> Rearrange(LogicalChange[] logicalChanges)
+        //    {
+        //        var orderedChanges = new List<VirtualizingCacheSourceChange<TSource>>();
+        //        var additions = logicalChanges.Where(c => c.State == DeltaState.Add)
+        //            .OrderBy(c => c.CurrentIndex.Value)
+        //            .ToArray();
+        //        var removalsAndUpdates = logicalChanges.Where(c => c.State != DeltaState.Add)
+        //            .OrderBy(c => c.PreviousIndex.Value)
+        //            .ToArray();
 
-                var additionIndex = 0;
-                var removalAndUpdateIndex = 0;
-                var shift = 0;
+        //        var additionIndex = 0;
+        //        var removalAndUpdateIndex = 0;
+        //        var shift = 0;
 
-                while (true)
-                {
-                    LogicalChange? currentChange = null;
-                    if (additionIndex < additions.Length && removalAndUpdateIndex < removalsAndUpdates.Length)
-                    {
-                        if (additions[additionIndex].CurrentIndex.Value < removalsAndUpdates[removalAndUpdateIndex].PreviousIndex.Value + shift)
-                        {
-                            currentChange = additions[additionIndex];
-                            additionIndex += 1;
-                        }
-                        else
-                        {
-                            currentChange = removalsAndUpdates[removalAndUpdateIndex];
-                            removalAndUpdateIndex += 1;
-                        }
-                    }
-                    else if (additionIndex < additions.Length)
-                    {
-                        currentChange = additions[additionIndex];
-                        additionIndex += 1;
-                    }
-                    else if (removalAndUpdateIndex < removalsAndUpdates.Length)
-                    {
-                        currentChange = removalsAndUpdates[removalAndUpdateIndex];
-                        removalAndUpdateIndex += 1;
-                    }
+        //        while (true)
+        //        {
+        //            LogicalChange? currentChange = null;
+        //            if (additionIndex < additions.Length && removalAndUpdateIndex < removalsAndUpdates.Length)
+        //            {
+        //                if (additions[additionIndex].CurrentIndex.Value < removalsAndUpdates[removalAndUpdateIndex].PreviousIndex.Value + shift)
+        //                {
+        //                    currentChange = additions[additionIndex];
+        //                    additionIndex += 1;
+        //                }
+        //                else
+        //                {
+        //                    currentChange = removalsAndUpdates[removalAndUpdateIndex];
+        //                    removalAndUpdateIndex += 1;
+        //                }
+        //            }
+        //            else if (additionIndex < additions.Length)
+        //            {
+        //                currentChange = additions[additionIndex];
+        //                additionIndex += 1;
+        //            }
+        //            else if (removalAndUpdateIndex < removalsAndUpdates.Length)
+        //            {
+        //                currentChange = removalsAndUpdates[removalAndUpdateIndex];
+        //                removalAndUpdateIndex += 1;
+        //            }
 
-                    if (currentChange.HasValue)
-                    {
-                        switch (currentChange.Value.State)
-                        {
-                            case DeltaState.Add:
-                                serializedChanges.Add(VirtualizingCacheSourceChange<TSource>.Addition(
-                                    currentChange.Value.CurrentEntity,
-                                    currentChange.Value.CurrentIndex.Value));
-                                shift += 1;
-                                break;
-                            case DeltaState.Remove:
-                                serializedChanges.Add(VirtualizingCacheSourceChange<TSource>.Removal(
-                                    currentChange.Value.PreviousEntity,
-                                    currentChange.Value.PreviousIndex.Value + shift));
-                                shift -= 1;
-                                break;
-                            case DeltaState.Update:
-                                serializedChanges.Add(VirtualizingCacheSourceChange<TSource>.Update(
-                                    currentChange.Value.CurrentEntity,
-                                    currentChange.Value.CurrentIndex.Value,
-                                    currentChange.Value.PreviousEntity,
-                                    currentChange.Value.PreviousIndex.Value + shift));
-                                break;
-                        }
-                    }
-                    else
-                        break;
-                }
+        //            if (currentChange.HasValue)
+        //            {
+        //                switch (currentChange.Value.State)
+        //                {
+        //                    case DeltaState.Add:
+        //                        orderedChanges.Add(VirtualizingCacheSourceChange<TSource>.Addition(
+        //                            currentChange.Value.CurrentEntity,
+        //                            currentChange.Value.CurrentIndex.Value));
+        //                        shift += 1;
+        //                        break;
+        //                    case DeltaState.Remove:
+        //                        orderedChanges.Add(VirtualizingCacheSourceChange<TSource>.Removal(
+        //                            currentChange.Value.PreviousEntity,
+        //                            currentChange.Value.PreviousIndex.Value + shift));
+        //                        shift -= 1;
+        //                        break;
+        //                    case DeltaState.Update:
+        //                        orderedChanges.Add(VirtualizingCacheSourceChange<TSource>.Update(
+        //                            currentChange.Value.CurrentEntity,
+        //                            currentChange.Value.CurrentIndex.Value,
+        //                            currentChange.Value.PreviousEntity,
+        //                            currentChange.Value.PreviousIndex.Value + shift));
+        //                        break;
+        //                }
+        //            }
+        //            else
+        //                break;
+        //        }
 
-                return serializedChanges;
-            }
-        }
+        //        return orderedChanges.AsReadOnly();
+        //    }
+        //}
 
-        private readonly struct PhysicalChange
-        {
-            public readonly PhysicalChangeAction Action;
-            public readonly TSource Entity;
-            public readonly int Index;
+        /// <summary>
+        /// Represents a "physical" change to a collection. The only difference between this and <see cref="LogicalChange"/>
+        /// is that an update is treated as a removal (of the old item) followed by an addition (of the new item with updated information).
+        /// This treatment allows updated items to move to different positions and makes it easier to apply the changes to the array of
+        /// cache blocks.
+        /// </summary>
+        //private readonly struct PhysicalChange
+        //{
+        //    /// <summary>
+        //    /// Gets the action of the change.
+        //    /// </summary>
+        //    public readonly PhysicalChangeAction Action;
 
-            public PhysicalChange(PhysicalChangeAction action, TSource entity, int index)
-            {
-                Action = action;
-                Entity = entity;
-                Index = index;
-            }
-        }
+        //    /// <summary>
+        //    /// Gets the entity affected by the change.
+        //    /// </summary>
+        //    public readonly TSource Entity;
 
-        private enum PhysicalChangeAction
-        {
-            Add,
-            Remove,
-        }
+        //    /// <summary>
+        //    /// Gets the index of the change.
+        //    /// </summary>
+        //    public readonly int Index;
+
+        //    /// <summary>
+        //    /// Constructs an instance of <see cref="PhysicalChange"/>.
+        //    /// </summary>
+        //    /// <param name="action"></param>
+        //    /// <param name="entity"></param>
+        //    /// <param name="index"></param>
+        //    public PhysicalChange(PhysicalChangeAction action, TSource entity, int index)
+        //    {
+        //        Action = action;
+        //        Entity = entity;
+        //        Index = index;
+        //    }
+        //}
+
+        ///// <summary>
+        ///// Represents an action of a physical change.
+        ///// </summary>
+        //private enum PhysicalChangeAction
+        //{
+        //    /// <summary>
+        //    /// The physical change is an addition.
+        //    /// </summary>
+        //    Add,
+        //    /// <summary>
+        //    /// The physical change is a removal.
+        //    /// </summary>
+        //    Remove,
+        //}
+
+        ///// <summary>
+        ///// Represents a collection of <see cref="PhysicalChange"/>.
+        ///// </summary>
+        //private readonly struct PhysicalChangeSet
+        //{
+        //    /// <summary>
+        //    /// Gets the changes that are additions.
+        //    /// </summary>
+        //    public readonly PhysicalChange[] Additions;
+
+        //    /// <summary>
+        //    /// Gets the changes that are removals.
+        //    /// </summary>
+        //    public readonly PhysicalChange[] Removals;
+
+        //    /// <summary>
+        //    /// Constructs an instance of <see cref="PhysicalChangeSet"/> from an array of <see cref="LogicalChange"/>.
+        //    /// </summary>
+        //    /// <param name="logicalChanges">The array of <see cref="LogicalChange"/>.</param>
+        //    public PhysicalChangeSet(LogicalChange<TSource>[] logicalChanges)
+        //    {
+        //        Additions = logicalChanges.Where(c => c.State != DeltaState.Remove)
+        //            .Select(c => new PhysicalChange(PhysicalChangeAction.Add, c.CurrentEntity, c.CurrentIndex.Value))
+        //            .OrderBy(c => c.Index)
+        //            .ToArray();
+        //        Removals = logicalChanges.Where(c => c.State != DeltaState.Add)
+        //            .Select(c => new PhysicalChange(PhysicalChangeAction.Remove, c.PreviousEntity, c.PreviousIndex.Value))
+        //            .OrderBy(c => c.Index)
+        //            .ToArray();
+        //    }
+        //}
     }
 }

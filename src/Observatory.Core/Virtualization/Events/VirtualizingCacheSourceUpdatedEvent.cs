@@ -43,5 +43,10 @@ namespace Observatory.Core.Virtualization
         {
             return processor.Process(this);
         }
+
+        public void Process(IVirtualizingCacheEventProcessor<T> processor)
+        {
+            processor.Process(this);
+        }
     }
 }

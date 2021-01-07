@@ -532,7 +532,7 @@
                   DefaultLabelPosition="Right"
                   IsDynamicOverflowEnabled="False">
         <win:AppBarButton Icon="List"
-                          Label="{x:Bind FormatFilterText(ViewModel.Messages.Filter), FallbackValue=''}">
+                          Label="{x:Bind FormatFilterText(ViewModel.Messages.Filter), FallbackValue='Show'}">
           <win:AppBarButton.Flyout>
             <MenuFlyout Placement="BottomEdgeAlignedLeft">
               <muxc:RadioMenuFlyoutItem Click="FilterRadioButton_Click"

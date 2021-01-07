@@ -102,6 +102,11 @@ namespace Observatory.UI.Views.Mail
                     .Select(x => x ? Visibility.Visible : Visibility.Collapsed)
                     .BindTo(this, x => x.SelectionCountTextBlock.Visibility)
                     .DisposeWith(disposables);
+
+                this.WhenAnyValue(x => x.ViewModel.Messages.Cache)
+                    .Do(_ => SelectAllCheckBox.IsChecked = false)
+                    .Subscribe()
+                    .DisposeWith(disposables);
             });
         }
 

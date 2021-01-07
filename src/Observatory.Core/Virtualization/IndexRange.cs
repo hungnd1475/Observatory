@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
@@ -10,7 +11,7 @@ namespace Observatory.Core.Virtualization
     /// <summary>
     /// Represents a range of indices.
     /// </summary>
-    public struct IndexRange : IEquatable<IndexRange>, IEnumerable<int>
+    public readonly struct IndexRange : IEquatable<IndexRange>, IEnumerable<int>
     {
         /// <summary>
         /// Gets the first index of this range.
@@ -125,6 +126,64 @@ namespace Observatory.Core.Virtualization
         }
 
         /// <summary>
+        /// Shifts the range by a number of places (given by <paramref name="value"/>).
+        /// If <paramref name="value"/> is positive, the range is shifted to the right, otherwise to the left.
+        /// </summary>
+        /// <param name="value">The number of places to shift the range.</param>
+        /// <returns>An instance of <see cref="IndexRange"/> that is shifted accordingly.</returns>
+        public IndexRange Shift(int value)
+        {
+            return new IndexRange(FirstIndex + value, LastIndex + value);
+        }
+
+        /// <summary>
+        /// Shrinks the range by a number of places (given by <paramref name="value"/>) from the first index.
+        /// If <paramref name="value"/> is negative, this operation is equivalent to <see cref="ExpandFirst(int)"/> with a positive argument.
+        /// </summary>
+        /// <param name="value">The number of places to shrink from the first index.</param>
+        /// <returns>An instance of <see cref="IndexRange"/> that is shrinked accordingly.</returns>
+        public IndexRange ShrinkFirst(int value)
+        {
+            return new IndexRange(FirstIndex + value, LastIndex);
+        }
+
+        /// <summary>
+        /// Shrinks the range by a number of places (given by <paramref name="value"/> from the last index.
+        /// If <paramref name="value"/> is negative, this operation is equivalent to 
+        /// <see cref="ExpandLast(int)"/> with a positive argument.
+        /// </summary>
+        /// <param name="value">The number of places to shrink from the last index.</param>
+        /// <returns>An instance of <see cref="IndexRange"/> that is shrinked accordingly.</returns>
+        public IndexRange ShrinkLast(int value)
+        {
+            return new IndexRange(FirstIndex, LastIndex - value);
+        }
+
+        /// <summary>
+        /// Expands the range by a number of places (given by <paramref name="value"/>) from the first index.
+        /// If <paramref name="value"/> is negative, this operation is equivalent to
+        /// <see cref="ShrinkFirst(int)"/> with a positive argument.
+        /// </summary>
+        /// <param name="value">The number of places to expand from the first index.</param>
+        /// <returns>An instance of <see cref="IndexRange"/> that is expanded accordingly.</returns>
+        public IndexRange ExpandFirst(int value)
+        {
+            return new IndexRange(FirstIndex - value, LastIndex);
+        }
+
+        /// <summary>
+        /// Expands the range by a number of places (given by <paramref name="value"/>) from the last index.
+        /// If <paramref name="value"/> is negative, this operation is equivalent to 
+        /// <see cref="ShrinkLast(int)"/> with a positive argument.
+        /// </summary>
+        /// <param name="value">The number of places to expand from the last index.</param>
+        /// <returns>An instance of <see cref="IndexRange"/> that is expanded accordingly.</returns>
+        public IndexRange ExpandLast(int value)
+        {
+            return new IndexRange(FirstIndex, LastIndex + value);
+        }
+
+        /// <summary>
         /// Slices an array described by the range based on a given subrange.
         /// </summary>
         /// <typeparam name="T">The type of items in the array.</typeparam>
@@ -223,6 +282,34 @@ namespace Observatory.Core.Virtualization
         }
 
         /// <summary>
+        /// Shifts all ranges in the array by a number of places.
+        /// </summary>
+        /// <param name="ranges">The ranges to be shifted.</param>
+        /// <param name="value">The number of places to shift.</param>
+        /// <param name="startIndex">The index of the range where the shifting should start from.</param>
+        public static void Shift(this IndexRange[] ranges, int value, int startIndex = 0)
+        {
+            for (var i = startIndex; i < ranges.Length && i >= 0; ++i)
+            {
+                ranges[i] = ranges[i].Shift(value);
+            }
+        }
+
+        /// <summary>
+        /// Shifts all ranges in the list by a number of places.
+        /// </summary>
+        /// <param name="ranges">The ranges to be shifted.</param>
+        /// <param name="value">The number of places to shift.</param>
+        /// <param name="startIndex">The index of the range where the shifting should start from.</param>
+        public static void Shift(this IList<IndexRange> ranges, int value, int startIndex = 0)
+        {
+            for (var i = startIndex; i < ranges.Count && i >= 0; ++i)
+            {
+                ranges[i] = ranges[i].Shift(value);
+            }
+        }
+
+        /// <summary>
         /// Searches an array for the range containing a given index. This method will try to 
         /// find the nearest range in case the given index is not covered within the ranges and
         /// the value of <paramref name="approximation"/> is not <see cref="IndexRangeSearchApproximation.Exact"/>.
@@ -233,11 +320,11 @@ namespace Observatory.Core.Virtualization
         /// The index of the range if found, otherwise the index of the nearest left or right range depending
         /// on the value of <paramref name="approximation"/> or -1 if it is <see cref="IndexRangeSearchApproximation.Exact"/>.
         /// </returns>
-        public static int Search(this IndexRange[] ranges, int index,
+        public static IndexRangeSearchResult Search(this IReadOnlyList<IndexRange> ranges, int index,
             IndexRangeSearchApproximation approximation = IndexRangeSearchApproximation.Exact)
         {
             var startIndex = 0;
-            var endIndex = ranges.Length - 1;
+            var endIndex = ranges.Count - 1;
             var approximationResult = -1;
 
             while (startIndex <= endIndex)
@@ -247,7 +334,7 @@ namespace Observatory.Core.Virtualization
 
                 if (midRange.Contains(index))
                 {
-                    return midIndex;
+                    return new IndexRangeSearchResult(true, midIndex);
                 }
                 else if (midRange.FirstIndex < index)
                 {
@@ -267,15 +354,29 @@ namespace Observatory.Core.Virtualization
                 }
             }
 
-            return approximation == IndexRangeSearchApproximation.Exact ? -1 : approximationResult;
+            return approximation == IndexRangeSearchApproximation.Exact
+                ? new IndexRangeSearchResult(false, -1)
+                : new IndexRangeSearchResult(false, approximationResult);
         }
 
+        /// <summary>
+        /// Merges the array of ranges with another range.
+        /// </summary>
+        /// <param name="ranges">The array of ranges.</param>
+        /// <param name="otherRange">The other range to merge.</param>
+        /// <returns>A new array of ranges containing the merged range.</returns>
         public static IndexRange[] Merge(this IndexRange[] ranges, IndexRange otherRange)
         {
             var result = new List<IndexRange>(ranges) { otherRange };
             return result.ToArray().Normalize();
         }
 
+        /// <summary>
+        /// Subtracts another range from the array of ranges.
+        /// </summary>
+        /// <param name="ranges">The array of ranges.</param>
+        /// <param name="otherRange">The other range.</param>
+        /// <returns>A new array of ranges without the subtracted range.</returns>
         public static IndexRange[] Subtract(this IndexRange[] ranges, IndexRange otherRange)
         {
             if (ranges.Length == 0)
@@ -306,6 +407,167 @@ namespace Observatory.Core.Virtualization
             }
 
             return result.ToArray();
+        }
+
+        /// <summary>
+        /// Applies the change to an array of selected ranges.
+        /// </summary>
+        /// <param name="e">The change.</param>
+        /// <param name="oldSelection">The array of selection.</param>
+        /// <returns>A new array of selected ranges reflecting the change.</returns>
+        public static IndexRange[] ApplyToSelection(this NotifyCollectionChangedEventArgs e, IndexRange[] oldSelection)
+        {
+            if (oldSelection.Length == 0) return oldSelection;
+
+            var newSelection = new List<IndexRange>(oldSelection);
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    {
+                        var searchResult = newSelection.Search(e.NewStartingIndex, IndexRangeSearchApproximation.NearestRight);
+                        if (searchResult.IsFound)
+                        {
+                            var affectedRange = newSelection[searchResult.Index];
+                            if (e.NewStartingIndex > affectedRange.FirstIndex)
+                            {
+                                newSelection[searchResult.Index] = new IndexRange(affectedRange.FirstIndex, e.NewStartingIndex - 1);
+                                newSelection.Insert(searchResult.Index + 1, new IndexRange(e.NewStartingIndex + 1, affectedRange.LastIndex + 1));
+                                newSelection.Shift(1, searchResult.Index + 2);
+                            }
+                            else
+                            {
+                                newSelection.Shift(1, searchResult.Index);
+                            }
+                        }
+                        else
+                        {
+                            newSelection.Shift(1, searchResult.Index);
+                        }
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    {
+                        var searchResult = newSelection.Search(e.OldStartingIndex, IndexRangeSearchApproximation.NearestRight);
+                        if (searchResult.IsFound)
+                        {
+                            var affectedRange = newSelection[searchResult.Index];
+                            if (affectedRange.Length > 1)
+                            {
+                                newSelection[searchResult.Index] = affectedRange.ShrinkLast(1);
+                            }
+                            else
+                            {
+                                newSelection.RemoveAt(searchResult.Index);
+                            }
+                            newSelection.Shift(-1, searchResult.Index + 1);
+                        }
+                        else
+                        {
+                            newSelection.Shift(-1, searchResult.Index);
+                            if (searchResult.Index > 0)
+                            {
+                                var nearestLeftRange = newSelection[searchResult.Index - 1];
+                                if (nearestLeftRange.TryUnion(newSelection[searchResult.Index], ref nearestLeftRange))
+                                {
+                                    newSelection[searchResult.Index - 1] = nearestLeftRange;
+                                    newSelection.RemoveAt(searchResult.Index);
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Move:
+                    {
+                        var searchResult = newSelection.Search(e.OldStartingIndex, IndexRangeSearchApproximation.NearestRight);
+                        var previouslySelected = false;
+
+                        if (searchResult.IsFound)
+                        {
+                            var affectedRange = newSelection[searchResult.Index];
+                            if (affectedRange.Length > 1)
+                            {
+                                newSelection[searchResult.Index] = affectedRange.ShrinkLast(1);
+                            }
+                            else
+                            {
+                                newSelection.RemoveAt(searchResult.Index);
+                            }
+                            newSelection.Shift(-1, searchResult.Index + 1);
+                            previouslySelected = true;
+                        }
+                        else
+                        {
+                            newSelection.Shift(-1, searchResult.Index);
+                            if (searchResult.Index > 0)
+                            {
+                                var nearestLeftRange = newSelection[searchResult.Index - 1];
+                                if (nearestLeftRange.TryUnion(newSelection[searchResult.Index], ref nearestLeftRange))
+                                {
+                                    newSelection[searchResult.Index - 1] = nearestLeftRange;
+                                    newSelection.RemoveAt(searchResult.Index);
+                                }
+                            }
+                        }
+
+                        searchResult = newSelection.Search(e.NewStartingIndex, IndexRangeSearchApproximation.NearestRight);
+                        if (searchResult.IsFound)
+                        {
+                            var affectedRange = newSelection[searchResult.Index];
+                            if (previouslySelected)
+                            {
+                                newSelection[searchResult.Index] = affectedRange.ExpandLast(1);
+                                newSelection.Shift(1, searchResult.Index + 1);
+                            }
+                            else
+                            {
+                                if (e.NewStartingIndex > affectedRange.FirstIndex)
+                                {
+                                    newSelection[searchResult.Index] = new IndexRange(affectedRange.FirstIndex, e.NewStartingIndex - 1);
+                                    newSelection.Insert(searchResult.Index + 1, new IndexRange(e.NewStartingIndex + 1, affectedRange.LastIndex + 1));
+                                    newSelection.Shift(1, searchResult.Index + 2);
+                                }
+                                else
+                                {
+                                    newSelection.Shift(1, searchResult.Index);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (previouslySelected)
+                            {
+                                var newRange = new IndexRange(e.NewStartingIndex, e.NewStartingIndex);
+                                if (searchResult.Index == -1 || searchResult.Index > 0)
+                                {
+                                    var nearestLeftIndex = searchResult.Index == -1
+                                        ? newSelection.Count - 1
+                                        : searchResult.Index - 1;
+                                    if (newRange.TryUnion(newSelection[nearestLeftIndex], ref newRange))
+                                    {
+                                        newSelection[nearestLeftIndex] = newRange;
+                                        newSelection.Shift(1, nearestLeftIndex + 1);
+                                    }
+                                    else
+                                    {
+                                        newSelection.Insert(nearestLeftIndex + 1, newRange);
+                                        newSelection.Shift(1, nearestLeftIndex + 2);
+                                    }
+                                }
+                                else
+                                {
+                                    newSelection.Insert(searchResult.Index, newRange);
+                                    newSelection.Shift(1, searchResult.Index + 1);
+                                }
+                            }
+                            else
+                            {
+                                newSelection.Shift(1, searchResult.Index);
+                            }
+                        }
+                    }
+                    break;
+            }
+            return newSelection.ToArray();
         }
 
         /// <summary>
@@ -382,19 +644,50 @@ namespace Observatory.Core.Virtualization
         /// </summary>
         NearestLeft,
         /// <summary>
-        /// Return the nearest range to the left if no containing range is found.
-        /// If there is no nearest left range, return the nearest range to the right.
-        /// </summary>
-        NearestLeftFlexible,
-        /// <summary>
         /// Return the nearest range to the right if no containing range is found.
         /// If there is no nearest right range, return -1.
         /// </summary>
         NearestRight,
-        /// <summary>
-        /// Return the nearest range to the right if no containing range is found.
-        /// If there is no nearest right range, return the nearest range to the left.
-        /// </summary>
-        NearestRightFlexible,
+    }
+
+    public readonly struct IndexRangeSearchResult : IEquatable<IndexRangeSearchResult>
+    {
+        public readonly bool IsFound;
+        public readonly int Index;
+
+        public IndexRangeSearchResult(bool isFound, int index)
+        {
+            IsFound = isFound;
+            Index = index;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is IndexRangeSearchResult other)
+                return Equals(other);
+            else
+                return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(IsFound, Index);
+        }
+
+        public bool Equals(IndexRangeSearchResult other)
+        {
+            return IsFound == other.IsFound &&
+                Index == other.Index;
+        }
+
+        public static bool operator ==(IndexRangeSearchResult x, IndexRangeSearchResult y)
+        {
+            return x.Equals(y);
+        }
+
+        public static bool operator !=(IndexRangeSearchResult x, IndexRangeSearchResult y)
+        {
+            return !x.Equals(y);
+        }
     }
 }

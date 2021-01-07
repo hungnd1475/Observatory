@@ -41,7 +41,7 @@ namespace Observatory.Core.Virtualization
         /// <param name="fullRange">The full range of the retrieved items.</param>
         /// <param name="effectiveRange">The effective range that the owning <see cref="VirtualizingCacheBlock{T}"/> needs.</param>
         /// <param name="source">The source of items transfered from another request.</param>
-        private VirtualizingCacheBlockRequest(IndexRange fullRange,
+        public VirtualizingCacheBlockRequest(IndexRange fullRange,
             IndexRange effectiveRange,
             IObservable<T[]> source)
         {
@@ -60,7 +60,10 @@ namespace Observatory.Core.Virtualization
         {
             return new VirtualizingCacheBlockRequest<T>(FullRange, effectiveRange, WhenItemsLoaded);
         }
+    }
 
+    public static class VirtualizingCacheBlockRequest
+    {
         /// <summary>
         /// Constructs a new <see cref="VirtualizingCacheBlockRequest{T}"/> that gets items from a <see cref="IVirtualizingSource{TEntity, TKey}"/>.
         /// </summary>
@@ -68,9 +71,9 @@ namespace Observatory.Core.Virtualization
         /// <param name="range">The range of the request.</param>
         /// <param name="source">The source to retrieve items from.</param>
         /// <returns></returns>
-        public static VirtualizingCacheBlockRequest<T> FromSource<TKey>(IndexRange range, IVirtualizingSource<T, TKey> source)
+        public static VirtualizingCacheBlockRequest<TSource> FromSource<TSource, TKey>(IndexRange range, IVirtualizingSource<TSource, TKey> source)
         {
-            return new VirtualizingCacheBlockRequest<T>(range, range,
+            return new VirtualizingCacheBlockRequest<TSource>(range, range,
                 Observable.Start(() => source.GetItems(range.FirstIndex, range.Length).ToArray(), RxApp.TaskpoolScheduler));
         }
     }

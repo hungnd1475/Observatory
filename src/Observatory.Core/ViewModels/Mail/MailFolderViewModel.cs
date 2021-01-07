@@ -73,8 +73,8 @@ namespace Observatory.Core.ViewModels.Mail
             Name = node.Item.Name;
             Type = node.Item.Type;
             IsFavorite = node.Item.IsFavorite;
-            Messages = new MessageListViewModel(node.Item.Id, mailBox,
-                queryFactory, mailService, Activator);
+            Messages = new MessageListViewModel(node.Item.Id, node.Item.Type,
+                mailBox, queryFactory, mailService, Activator);
 
             Synchronize = ReactiveCommand.CreateFromObservable(() => Observable
                 .StartAsync((token) => mailService.SynchronizeMessagesAsync(node.Item.Id, token))

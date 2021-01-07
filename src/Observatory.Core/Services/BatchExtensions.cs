@@ -9,8 +9,8 @@ namespace Observatory.Core.Services
     {
         public static IEnumerable<IEnumerable<T>> Paginate<T>(this IEnumerable<T> source, int pageSize)
         {
-            var pageCount = source.Count() / pageSize;
-            return Enumerable.Range(0, pageCount).Select(pageNumber => source.Skip(pageNumber * pageSize).Take(pageSize));
+            var pageCount = source.Count() / pageSize + 1;
+            return Enumerable.Range(1, pageCount).Select(pageNumber => source.Skip((pageNumber - 1) * pageSize).Take(pageSize));
         }
     }
 }

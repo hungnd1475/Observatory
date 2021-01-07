@@ -20,8 +20,6 @@ namespace Observatory.Core.ViewModels.Mail
 {
     public class MessageListViewModel : ReactiveObject, IActivatableViewModel
     {
-        private readonly string _folderId;
-
         [Reactive]
         public MessageOrder Order { get; set; } = MessageOrder.ReceivedDateTime;
 
@@ -56,17 +54,32 @@ namespace Observatory.Core.ViewModels.Mail
         public ViewModelActivator Activator { get; }
 
         public MessageListViewModel(string folderId,
+            FolderType folderType,
             MailBoxViewModel mailBox,
             IProfileDataQueryFactory queryFactory,
             IMailService mailService,
             ViewModelActivator activator)
         {
-            _folderId = folderId;
-            Activator = activator;
-
             var canExecute = this.WhenAnyObservable(x => x.Cache.SelectionChanged)
                 .Select(x => x.IndexCount() > 0)
                 .Publish();
+
+            Activator = activator;
+
+            Archive = ReactiveCommand.Create<IReadOnlyList<string>>(async messageIds =>
+            {
+                PrepareMessageIds(ref messageIds);
+                await mailService.MoveMessage(messageIds, FolderType.Archive);
+            }, canExecute);
+
+            Delete = ReactiveCommand.Create<IReadOnlyList<string>>(async messageIds =>
+            {
+                PrepareMessageIds(ref messageIds);
+                if (folderType != FolderType.DeletedItems)
+                {
+                    await mailService.MoveMessage(messageIds, FolderType.DeletedItems);
+                }
+            }, canExecute);
 
             MarkAsRead = ReactiveCommand.Create<IReadOnlyList<string>>(async messageIds =>
             {
@@ -100,20 +113,71 @@ namespace Observatory.Core.ViewModels.Mail
                     .ExecuteAsync();
             }, canExecute);
 
-            Move = ReactiveCommand.CreateFromTask<IReadOnlyList<string>>(async (messageIds) =>
+            Move = ReactiveCommand.CreateFromTask<IReadOnlyList<string>>(async messageIds =>
             {
                 PrepareMessageIds(ref messageIds);
-                var result = await mailBox.PromptUserToSelectFolder(
+
+                var selectionResult = await mailBox.PromptUserToSelectFolder(
                     messageIds.Count == 1 ? "Move a message" : $"Move {messageIds.Count} messages",
                     "Select another folder to move to:",
                     includeRoot: false,
-                    CanMoveTo);
-                this.Log().Debug(result);
+                    destinationFolder => CanMoveTo(folderId, destinationFolder));
+
+                if (!selectionResult.IsCancelled)
+                {
+                    await mailService.MoveMessage(messageIds, selectionResult.SelectedFolder.Id);
+                }
+            }, canExecute);
+
+            MoveToJunk = ReactiveCommand.CreateFromTask<IReadOnlyList<string>>(async messageIds =>
+            {
+                PrepareMessageIds(ref messageIds);
+                await mailService.MoveMessage(messageIds, FolderType.Junk);
             }, canExecute);
 
             this.WhenActivated(disposables =>
             {
                 canExecute.Connect()
+                    .DisposeWith(disposables);
+
+                Archive.ThrownExceptions
+                    .Do(this.Log().Error)
+                    .Subscribe()
+                    .DisposeWith(disposables);
+
+                Delete.ThrownExceptions
+                    .Do(this.Log().Error)
+                    .Subscribe()
+                    .DisposeWith(disposables);
+
+                SetFlag.ThrownExceptions
+                    .Do(this.Log().Error)
+                    .Subscribe()
+                    .DisposeWith(disposables);
+
+                ClearFlag.ThrownExceptions
+                    .Do(this.Log().Error)
+                    .Subscribe()
+                    .DisposeWith(disposables);
+
+                MarkAsRead.ThrownExceptions
+                    .Do(this.Log().Error)
+                    .Subscribe()
+                    .DisposeWith(disposables);
+
+                MarkAsUnread.ThrownExceptions
+                    .Do(this.Log().Error)
+                    .Subscribe()
+                    .DisposeWith(disposables);
+
+                Move.ThrownExceptions
+                    .Do(this.Log().Error)
+                    .Subscribe()
+                    .DisposeWith(disposables);
+
+                MoveToJunk.ThrownExceptions
+                    .Do(this.Log().Error)
+                    .Subscribe()
                     .DisposeWith(disposables);
 
                 Observable.CombineLatest(
@@ -127,8 +191,8 @@ namespace Observatory.Core.ViewModels.Mail
                     Cache?.Dispose();
                     Cache = new VirtualizingCache<MessageSummary, MessageSummaryViewModel, string>(
                         new PersistentVirtualizingSource<MessageSummary, string>(queryFactory,
-                            GetItemSpecification(_folderId, x.Order, x.Filter),
-                            GetIndexSpecification(_folderId, x.Order, x.Filter)),
+                            GetItemSpecification(folderId, x.Order, x.Filter),
+                            GetIndexSpecification(folderId, x.Order, x.Filter)),
                         mailService.MessageChanges
                             .Select(changes => FilterChanges(changes.ForFolder(folderId), x.Filter)),
                         state => new MessageSummaryViewModel(state, this, queryFactory));
@@ -153,18 +217,18 @@ namespace Observatory.Core.ViewModels.Mail
             });
         }
 
-        private bool CanMoveTo(MailFolderSelectionItem destinationFolder)
-        {
-            return destinationFolder != null &&
-                destinationFolder.Id != _folderId;
-        }
-
         private void PrepareMessageIds(ref IReadOnlyList<string> messageIds)
         {
             if (messageIds == null || messageIds.Count == 0)
             {
                 messageIds = Cache.GetSelectedKeys();
             }
+        }
+
+        private static bool CanMoveTo(string sourceFolderId, MailFolderSelectionItem destinationFolder)
+        {
+            return destinationFolder != null &&
+                destinationFolder.Id != sourceFolderId;
         }
 
         public static DeltaEntity<MessageSummary>[] FilterChanges(

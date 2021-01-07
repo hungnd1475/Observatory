@@ -18,5 +18,7 @@ namespace Observatory.Core.Virtualization
         /// <param name="processor">The processor that knows how to process the event.</param>
         /// <returns></returns>
         R Process<R>(IVirtualizingCacheEventProcessor<T, R> processor);
+
+        void Process(IVirtualizingCacheEventProcessor<T> processor);
     }
 }

@@ -42,10 +42,28 @@ namespace Observatory.Core.Services
         Task SynchronizeMessagesAsync(string folderId, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Gets an <see cref="IEntityUpdater{TEntity}"/> to update a message given its id.
+        /// Gets an <see cref="IEntityUpdater{TEntity}"/> to update one or many messages.
         /// </summary>
         /// <param name="messageIds">The message id.</param>
         /// <returns>An instance of <see cref="IEntityUpdater{TEntity}"/>.</returns>
         IEntityUpdater<UpdatableMessage> UpdateMessage(IReadOnlyList<string> messageIds);
+
+        /// <summary>
+        /// Moves one or many messages to another folder.
+        /// </summary>
+        /// <param name="messageIds">The ids of messages to move.</param>
+        /// <param name="destinationFolderId">The id of the destination folder.</param>
+        /// <returns></returns>
+        Task MoveMessage(IReadOnlyList<string> messageIds, string destinationFolderId);
+
+        /// <summary>
+        /// Moves one or many messages to the folder of a given <see cref="FolderType"/>.
+        /// Only <see cref="FolderType.Inbox"/>, <see cref="FolderType.DeletedItems"/>,
+        /// <see cref="FolderType.Archive"/> are supported.
+        /// </summary>
+        /// <param name="messageIds">The ids of messages to move.</param>
+        /// <param name="destinationFolderType">The type of the destination folder.</param>
+        /// <returns></returns>
+        Task MoveMessage(IReadOnlyList<string> messageIds, FolderType destinationFolderType);
     }
 }

@@ -17,4 +17,13 @@ namespace Observatory.Core.Virtualization
         R Process(VirtualizingCacheRangesUpdatedEvent<T> e);
         R Process(VirtualizingCacheSourceUpdatedEvent<T> e);
     }
+
+    public interface IVirtualizingCacheEventProcessor<T>
+        where T : class
+    {
+        void Process(VirtualizingCacheInitializedEvent<T> e);
+        void Process(VirtualizingCacheItemsLoadedEvent<T> e);
+        void Process(VirtualizingCacheRangesUpdatedEvent<T> e);
+        void Process(VirtualizingCacheSourceUpdatedEvent<T> e);
+    }
 }

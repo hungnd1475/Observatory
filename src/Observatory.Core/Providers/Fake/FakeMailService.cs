@@ -19,6 +19,16 @@ namespace Observatory.Core.Providers.Fake
         public IObservable<DeltaSet<Message>> MessageChanges { get; } =
             Observable.Empty<DeltaSet<Message>>();
 
+        public Task MoveMessage(IReadOnlyList<string> messageIds, string destinationFolderId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task MoveMessage(IReadOnlyList<string> messageIds, FolderType destinationFolderType)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task SynchronizeFoldersAsync(CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
