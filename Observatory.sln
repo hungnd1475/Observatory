@@ -33,7 +33,12 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Observatory.UI.Shared", "sr
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7689574B-A522-4939-9649-1ABB8FF2C0B3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Observatory.Core.Tests", "tests\Observatory.Core.Tests\Observatory.Core.Tests.csproj", "{B7098393-A004-414F-B14A-AE69662B8EFB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Observatory.Core.Tests", "tests\Observatory.Core.Tests\Observatory.Core.Tests.csproj", "{B7098393-A004-414F-B14A-AE69662B8EFB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BC796895-93D5-4C77-B250-BA65DF458C5E}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

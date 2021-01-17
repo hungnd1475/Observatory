@@ -257,7 +257,7 @@ namespace Observatory.Providers.Exchange.Services
                     .Select(MESSAGES_SELECT_QUERY)
                     .Header(PREFER_HEADER, $"{MAX_PAGE_SIZE}={pageSize}")
                     .OrderBy("ReceivedDateTime desc")
-                    .Filter($"ReceivedDateTime ge {DateTimeOffset.UtcNow.AddMonths(-1):yyyy-MM-dd}");
+                    .Filter($"ReceivedDateTime ge {DateTimeOffset.UtcNow.AddYears(-1):yyyy-MM-dd}");
             }
 
             while (!cancellationToken.IsCancellationRequested && request != null)
