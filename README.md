@@ -1,20 +1,27 @@
 # Observatory
 
-Observatory is an experimental project attempting to create an email client using a C# cross-platform GUI framework called Uno Platform. This project aims to support basic features of an email client and run on the three major desktop platforms - Windows, MacOS and Linux. The reason behind Observatory is that while there are countless of email desktop clients out there, a majority of them are somewhat ugly and/or limited in some ways (such as only supporting a single platform). So as a software developer who loves to experiment with new things, I decided to make my own email client that also support calendar. This project does not aim to compete with other email clients such as Mozilla Thunderbird or Outlook, but it tries to support all the basic functionalities of an email client. This project is still very much a work in progress as it only supports Windows and the features are incomplete.
+Observatory is an experimental project attempting to create an email client using a C# cross-platform GUI framework called Uno Platform. This project aims to support basic features of an email client and run on the three major desktop platforms - Windows, MacOS and Linux. The reason behind Observatory is that while there are countless of email desktop clients out there, a majority of them are somewhat ugly and/or limited in some ways (such as only supporting a single platform). So as a software developer who loves to experiment with new things, I decided to make my own email client with a modern design that supports basic features of an email client. This project is still very much a work in progress.
 
-![](img/observatory-01.png)
+![](./img/observatory-01.PNG)
 
 ## Features
 
-### High level functionalities
+### Functionalities
 
 #### Mail
 
+- [x] Retrieving mail folders
+- [ ] Manipulating mail folders (renaming/adding/moving)
 - [x] Viewing messages
+- [x] Data virtualization in the message list to keep memory usage low.
+- [ ] Searching messages
+- [x] Marking messages as read/Flagging messages
+- [x] Archiving/deleting/moving messages
+- [x] Message batch operations
 - [ ] Composing messages
-- [ ] Encryption support such as PGP
+- [ ] Encryption support via PGP
 
-### Calendar
+#### Calendar
 
 - [ ] Viewing events
 - [ ] Creating/editing events
@@ -30,5 +37,7 @@ Observatory is an experimental project attempting to create an email client usin
 - [x] Microsoft Exchange/Office 365/Outlook
 - [ ] GMail
 - [ ] Yahoo! Mail
+
+## 
 - [ ] Generic POP3/IMAP
 
