@@ -41,7 +41,7 @@ Observatory is an experimental project attempting to create an email client usin
 
 ## Contributing
 
-I am not accepting any contribution right now, but any feedback is welcome (just open an issue for that).
+I am not accepting any contribution right now as I am not very familiar with managing an open source project. However, if you have any feedback, just open an issue for that and I will happily look at it.
 
 ## License
 
