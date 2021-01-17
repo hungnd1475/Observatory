@@ -1,9 +1,10 @@
 ﻿using Autofac;
 using Observatory.Core.Services;
+using Observatory.Providers.Exchange.Persistence;
 using Observatory.Providers.Exchange.Services;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("Observatory.Core.Tests")]
 
 namespace Observatory.Providers.Exchange
 {
@@ -14,6 +15,8 @@ namespace Observatory.Providers.Exchange
             builder.RegisterType<ExchangeAuthenticationService>()
                 .AsSelf()
                 .SingleInstance();
+            builder.RegisterType<ExchangeProfileDataStore>()
+                .InstancePerDependency();
             builder.RegisterType<ExchangeProfileProvider>()
                 .As<IProfileProvider>()
                 .Keyed<IProfileProvider>(ExchangeProfileProvider.PROVIDER_ID)

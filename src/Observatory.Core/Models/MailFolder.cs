@@ -11,5 +11,6 @@ namespace Observatory.Core.Models
         public FolderType Type { get; set; }
         public string ParentId { get; set; }
         public bool IsFavorite { get; set; }
+        public bool IsRoot { get; set; }
     }
 }

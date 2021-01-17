@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Observatory.Core.Virtualization;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Observatory.Core.Models
 {
-    public class MessageSummary
+    public class MessageSummary : IVirtualizableSource<string>
     {
         public string Id { get; set; }
         public string Subject { get; set; }

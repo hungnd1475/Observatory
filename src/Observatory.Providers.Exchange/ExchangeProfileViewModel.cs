@@ -19,7 +19,7 @@ namespace Observatory.Providers.Exchange
 {
     public class ExchangeProfileViewModel : ProfileViewModelBase
     {
-        private readonly ExchangeProfileDataStoreFactory _storeFactory;
+        private readonly ExchangeProfileDataStore.Factory _storeFactory;
         private readonly GraphServiceClient _client;
         private readonly ExchangeMailService _mailService;
 
@@ -33,10 +33,11 @@ namespace Observatory.Providers.Exchange
 
         public override ReactiveCommand<Unit, Unit> DeleteCommand => throw new NotImplementedException();
 
-        public ExchangeProfileViewModel(string emailAddress,
-            ExchangeProfileDataStoreFactory storeFactory,
-            ExchangeAuthenticationService authenticationService)
-            : base(emailAddress)
+        public ExchangeProfileViewModel(ProfileRegister register,
+            ExchangeProfileDataStore.Factory storeFactory,
+            ExchangeAuthenticationService authenticationService,
+            AutoMapper.IMapper mapper)
+            : base(register)
         {
             _storeFactory = storeFactory;
             _client = new GraphServiceClient(
@@ -55,26 +56,20 @@ namespace Observatory.Providers.Exchange
                         this.Log().Error(ex, $"Failed to silently authenticate {EmailAddress}.");
                     }
                 }));
-            _mailService = new ExchangeMailService(_storeFactory, _client);
-            MailBox = new MailBoxViewModel(_storeFactory, _mailService);
+            _mailService = new ExchangeMailService(register, _storeFactory, _client, mapper);
+
+            var queryFactory = new RelayProfileDataQueryFactory(register.DataFilePath, path => storeFactory.Invoke(path, false));
+            MailBox = new MailBoxViewModel(queryFactory, _mailService);
         }
 
         public async Task RestoreAsync()
         {
-            var restoringTasks = Task.WhenAll(
-                _mailService.InitializeAsync(),
-                MailBox.RestoreAsync());
+            await _mailService.InitializeAsync();
+            MailBox.Restore();
 
-            var store = _storeFactory.Connect();
+            using var store = _storeFactory.Invoke(_register.DataFilePath, false);
             var state = await store.Profiles.FirstAsync();
             DisplayName = state.DisplayName;
-
-            await restoringTasks;
-        }
-
-        public void Dispose()
-        {
-            MailBox.Dispose();
         }
     }
 }

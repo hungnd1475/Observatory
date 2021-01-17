@@ -1,0 +1,152 @@
+﻿using Observatory.Core.ViewModels.Mail;
+using ReactiveUI;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Uno.Extensions;
+using Uno.Logging;
+using Windows.Foundation;
+using Windows.Foundation.Collections;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Navigation;
+
+// The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
+
+namespace Observatory.UI.Views.Mail
+{
+    public sealed partial class MessageSummaryView : UserControl, IViewFor<MessageSummaryViewModel>
+    {
+        public const string STATE_NORMAL = "Normal";
+        public const string STATE_FLAGGED = "Flagged";
+        public const string STATE_POINTER_OVER = "PointerOver";
+        public const string STATE_SELECTED = "Selected";
+
+        public static DependencyProperty ViewModelProperty { get; } =
+            DependencyProperty.Register(nameof(ViewModel), typeof(MessageSummaryViewModel), typeof(MessageSummaryView), new PropertyMetadata(null));
+
+        public static DependencyProperty IsPointerOverProperty { get; } =
+            DependencyProperty.Register(nameof(IsPointerOver), typeof(bool), typeof(MessageSummaryView), new PropertyMetadata(false));
+
+        public static DependencyProperty IsSelectedProperty { get; } =
+            DependencyProperty.Register(nameof(IsSelected), typeof(bool), typeof(MessageSummaryView), new PropertyMetadata(false));
+
+        public static DependencyProperty StateNameProperty { get; } =
+            DependencyProperty.Register(nameof(StateName), typeof(string), typeof(MessageSummaryView), new PropertyMetadata(STATE_NORMAL));
+
+        public static DependencyProperty IsContextMenuOpenProperty { get; } =
+            DependencyProperty.Register(nameof(IsContextMenuOpen), typeof(bool), typeof(MessageSummaryView), new PropertyMetadata(false));
+
+        public static DependencyProperty IsMultiSelectionEnabledProperty { get; } =
+            DependencyProperty.Register(nameof(IsMultiSelectionEnabled), typeof(bool), typeof(MessageSummaryView), new PropertyMetadata(false));
+
+        public MessageSummaryViewModel ViewModel
+        {
+            get => (MessageSummaryViewModel)GetValue(ViewModelProperty);
+            set => SetValue(ViewModelProperty, value);
+        }
+
+        object IViewFor.ViewModel
+        {
+            get => ViewModel;
+            set => ViewModel = (MessageSummaryViewModel)value;
+        }
+
+        public bool IsPointerOver
+        {
+            get => (bool)GetValue(IsPointerOverProperty);
+            set => SetValue(IsPointerOverProperty, value);
+        }
+
+        public bool IsSelected
+        {
+            get => (bool)GetValue(IsSelectedProperty);
+            set => SetValue(IsSelectedProperty, value);
+        }
+
+        public string StateName
+        {
+            get => (string)GetValue(StateNameProperty);
+            set => SetValue(StateNameProperty, value);
+        }
+
+        public bool IsContextMenuOpen
+        {
+            get { return (bool)GetValue(IsContextMenuOpenProperty); }
+            set { SetValue(IsContextMenuOpenProperty, value); }
+        }
+
+        public bool IsMultiSelectionEnabled
+        {
+            get { return (bool)GetValue(IsMultiSelectionEnabledProperty); }
+            set { SetValue(IsMultiSelectionEnabledProperty, value); }
+        }
+
+        public MessageSummaryView()
+        {
+            this.InitializeComponent();
+            this.WhenActivated(disposables =>
+            {
+                Observable.CombineLatest(
+                    this.WhenAnyValue(x => x.ViewModel.IsFlagged),
+                    this.WhenAnyValue(x => x.IsPointerOver),
+                    this.WhenAnyValue(x => x.IsSelected),
+                    this.WhenAnyValue(x => x.IsContextMenuOpen),
+                    (isFlagged, isPointerOver, isSelected, isContextMenuOpen) =>
+                        (IsFlagged: isFlagged,
+                         IsPointerOver: isPointerOver,
+                         IsSelected: isSelected,
+                         IsContextMenuOpen: isContextMenuOpen))
+                .Select(state =>
+                {
+                    if (state.IsSelected)
+                    {
+                        return STATE_SELECTED;
+                    }
+                    else if (state.IsPointerOver || state.IsContextMenuOpen)
+                    {
+                        return STATE_POINTER_OVER;
+                    }
+                    else if (state.IsFlagged)
+                    {
+                        return STATE_FLAGGED;
+                    }
+                    else
+                    {
+                        return STATE_NORMAL;
+                    }
+                })
+                .BindTo(this, x => x.StateName)
+                .DisposeWith(disposables);
+
+                ContextFlyout.Opened += OpenContextMenu;
+                ContextFlyout.Closed += CloseContextMenu;
+
+                Disposable.Create(() =>
+                {
+                    ContextFlyout.Opened -= OpenContextMenu;
+                    ContextFlyout.Closed -= CloseContextMenu;
+                })
+                .DisposeWith(disposables);
+            });
+        }
+
+        private void OpenContextMenu(object sender, object e)
+        {
+            IsContextMenuOpen = true;
+        }
+
+        private void CloseContextMenu(object sender, object e)
+        {
+            IsContextMenuOpen = false;
+        }
+    }
+}

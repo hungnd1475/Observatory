@@ -1,7 +1,5 @@
-﻿using Autofac.Features.Indexed;
-using DynamicData;
-using Microsoft.EntityFrameworkCore.Internal;
-using Observatory.Core.Services;
+﻿using DynamicData;
+using Observatory.Core.Models.Settings;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
@@ -13,67 +11,9 @@ using System.Reactive.Linq;
 
 namespace Observatory.Core.ViewModels.Mail
 {
-    public class MailManagerViewModel : ReactiveObject, IRoutableViewModel, IDisposable
+    public class MailManagerViewModel : ReactiveObject, IFunctionalityViewModel
     {
-        private readonly ReadOnlyObservableCollection<ProfileViewModelBase> _profiles;
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
-
-        public MailManagerViewModel(ProfileRegistrationService profileRegistrationService,
-            IIndex<string, IProfileProvider> providers)
-        {
-            var sharedProfilesConnection = profileRegistrationService.Connect()
-                .ObserveOn(RxApp.TaskpoolScheduler)
-                .TransformAsync(p => providers[p.ProviderId].CreateViewModelAsync(p))
-                .Publish();
-            sharedProfilesConnection
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Bind(out _profiles)
-                .DisposeMany()
-                .Subscribe(_ => { }, ex => this.Log().Error(ex))
-                .DisposeWith(_disposables);
-            sharedProfilesConnection
-                .Where(_ => SelectedProfile == null)
-                .ToCollection()
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Do(profiles => SelectedProfile = profiles.FirstOrDefault())
-                .Subscribe()
-                .DisposeWith(_disposables);
-            sharedProfilesConnection
-                .Connect()
-                .DisposeWith(_disposables);
-
-            this.WhenAnyValue(x => x.SelectedProfile)
-                .Where(p => p != null)
-                .DistinctUntilChanged()
-                .SelectMany(p => p.WhenAnyValue(x => x.MailBox.Inbox))
-                .Do(f => SelectedFolder = f)
-                .Subscribe()
-                .DisposeWith(_disposables);
-
-            this.WhenAnyValue(x => x.SelectedProfile)
-                .DistinctUntilChanged()
-                .Buffer(2, 1)
-                .Select(x => (Previous: x[0], Current: x[1]))
-                .Do(x =>
-                {
-                    if (x.Previous != null) x.Previous.IsSelected = false;
-                    if (x.Current != null) x.Current.IsSelected = true;
-                })
-                .Subscribe()
-                .DisposeWith(_disposables);
-
-            this.WhenAnyValue(x => x.SelectedFolder)
-                .DistinctUntilChanged()
-                .Buffer(2, 1)
-                .Select(x => (Previous: x[0], Current: x[1]))
-                .Do(x =>
-                {
-                    if (x.Previous != null) x.Previous.IsSelected = false;
-                    if (x.Current != null) x.Current.IsSelected = true;
-                })
-                .Subscribe()
-                .DisposeWith(_disposables);
-        }
+        private ReadOnlyObservableCollection<ProfileViewModelBase> _profiles;
 
         public ReadOnlyObservableCollection<ProfileViewModelBase> Profiles => _profiles;
 
@@ -83,15 +23,73 @@ namespace Observatory.Core.ViewModels.Mail
         [Reactive]
         public MailFolderViewModel SelectedFolder { get; set; }
 
+        [Reactive]
+        public MessageSummaryViewModel SelectedMessage { get; set; }
+
         public string UrlPathSegment { get; } = "mail";
 
-        public IScreen HostScreen { get; set; }
+        IScreen IRoutableViewModel.HostScreen => HostScreen;
 
-        public MainViewModel Main => (MainViewModel)HostScreen;
+        public MainViewModel HostScreen { get; set; }
 
-        public void Dispose()
+        public ViewModelActivator Activator { get; } = new ViewModelActivator();
+
+        public MailManagerViewModel(MailSettings settings)
         {
-            _disposables.Dispose();
+            this.WhenActivated(disposables =>
+            {
+                HostScreen.Profiles
+                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .Bind(out _profiles)
+                    .DisposeMany()
+                    .Subscribe(_ => { }, ex => this.Log().Error(ex))
+                    .DisposeWith(disposables);
+
+                HostScreen.Profiles
+                    .Where(_ => SelectedProfile == null)
+                    .ToCollection()
+                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .Subscribe(profiles => SelectedProfile = profiles.FirstOrDefault())
+                    .DisposeWith(disposables);
+
+                this.RaisePropertyChanged(nameof(Profiles));
+
+                this.WhenAnyValue(x => x.SelectedProfile)
+                    .Where(p => p != null)
+                    .DistinctUntilChanged()
+                    .SelectMany(p => p.WhenAnyValue(x => x.MailBox.Inbox))
+                    .Subscribe(f => SelectedFolder = f)
+                    .DisposeWith(disposables);
+
+                this.WhenAnyValue(x => x.SelectedMessage)
+                    .DistinctUntilChanged()
+                    .Buffer(2, 1)
+                    .Select(x => (Previous: x[0], Current: x[1]))
+                    .Do(x =>
+                    {
+                        switch (settings.MarkingAsReadBehavior)
+                        {
+                            case MarkingAsReadBehavior.WhenViewed:
+                                x.Previous?.StopMarkingAsRead();
+                                x.Current?.StartMarkingAsRead(settings.MarkingAsReadWhenViewedSeconds);
+                                break;
+                            case MarkingAsReadBehavior.WhenSelectionChanged:
+                                x.Previous?.StartMarkingAsRead();
+                                break;
+                        }
+                    })
+                    .Subscribe()
+                    .DisposeWith(disposables);
+
+                Disposable.Create(() =>
+                {
+                    _profiles = null;
+                    SelectedProfile = null;
+                    SelectedFolder = null;
+                    SelectedMessage = null;
+                })
+                .DisposeWith(disposables);
+            });
         }
     }
 }

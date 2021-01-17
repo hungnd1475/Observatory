@@ -1,0 +1,56 @@
+﻿<Page x:Class="Observatory.UI.Views.Settings.SettingPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="using:Observatory.UI.Views.Settings"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:v="using:Observatory.UI.Views"
+      Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+      mc:Ignorable="d">
+  <SplitView CompactPaneLength="40"
+             DisplayMode="CompactInline"
+             IsPaneOpen="True"
+             OpenPaneLength="300"
+             PaneBackground="{ThemeResource SystemControlAccentDark1AcrylicWindowAccentDark1Brush}">
+    <SplitView.Pane>
+      <Grid RequestedTheme="Dark">
+        <Grid x:Name="ExpandedNavigationPane">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+          </Grid.RowDefinitions>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button HorizontalAlignment="Left"
+                    HorizontalContentAlignment="Center"
+                    Style="{StaticResource NavigationPaneButtonStyle}">
+              <SymbolIcon Symbol="GlobalNavigationButton"/>
+            </Button>
+            <TextBlock Grid.Column="1"
+                       Margin="8,0,0,0"
+                       VerticalAlignment="Center"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Text="Settings"/>
+          </Grid>
+          <ListView Grid.Row="1">
+            <ListView.ItemContainerStyle>
+              <Style BasedOn="{StaticResource NavigationPaneListViewItemStyle}" TargetType="ListViewItem">
+                <Setter Property="Height" Value="35"/>
+                <Setter Property="MinHeight" Value="0"/>
+              </Style>
+            </ListView.ItemContainerStyle>
+            <ListViewItem Content="Manage accounts"/>
+            <ListViewItem Content="Personalization"/>
+          </ListView>
+          <v:FunctionalityModeSelector Grid.Row="2"
+                                       IsExpanded="True"/>
+        </Grid>
+      </Grid>
+    </SplitView.Pane>
+  </SplitView>
+</Page>

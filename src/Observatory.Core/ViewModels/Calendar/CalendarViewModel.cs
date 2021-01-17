@@ -6,12 +6,14 @@ using System.Text;
 
 namespace Observatory.Core.ViewModels.Calendar
 {
-    public class CalendarViewModel : ReactiveObject, IRoutableViewModel
+    public class CalendarViewModel : ReactiveObject, IFunctionalityViewModel
     {
         public string UrlPathSegment { get; } = "calendar";
 
-        public IScreen HostScreen { get; set; }
+        IScreen IRoutableViewModel.HostScreen => HostScreen;
 
-        public MainViewModel Main => (MainViewModel)HostScreen;
+        public MainViewModel HostScreen { get; set; }
+
+        public ViewModelActivator Activator { get; } = new ViewModelActivator();
     }
 }

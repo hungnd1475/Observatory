@@ -39,10 +39,21 @@
     <!-- Note that for WebAssembly version 1.1.1 of the console logger required -->
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
-    <PackageReference Include="Uno.UI.WebAssembly" Version="3.0.12" />
-    <PackageReference Include="Uno.UI.RemoteControl" Version="3.0.12" Condition="'$(Configuration)'=='Debug'" />
-    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.3.0" />
-    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.3.0" />
+    <PackageReference Include="ReactiveUI.Fody" Version="13.0.1" />
+    <PackageReference Include="ReactiveUI.Uno" Version="13.0.1" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="1.0.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
+    <PackageReference Include="Splat.Autofac" Version="9.8.1" />
+    <PackageReference Include="Splat.Microsoft.Extensions.Logging" Version="9.6.1" />
+    <PackageReference Include="Splat.Serilog" Version="9.8.1" />
+    <PackageReference Include="Uno.Microsoft.Toolkit.Uwp.UI.Controls" Version="6.1.0-build.205.g2e0e348372" />
+    <PackageReference Include="Uno.UI" Version="3.3.0" />
+    <PackageReference Include="Uno.UI.MSAL" Version="3.3.0" />
+    <PackageReference Include="Uno.UI.WebAssembly" Version="3.3.0" />
+    <PackageReference Include="Uno.UI.RemoteControl" Version="3.3.0" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.3.4" />
+    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.3.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Observatory.Core\Observatory.Core.csproj" />
