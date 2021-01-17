@@ -37,7 +37,12 @@ Observatory is an experimental project attempting to create an email client usin
 - [x] Microsoft Exchange/Office 365/Outlook
 - [ ] GMail
 - [ ] Yahoo! Mail
-
-## 
 - [ ] Generic POP3/IMAP
 
+## Contributing
+
+I am not accepting any contribution right now, but any feedback is welcome (just open an issue for that).
+
+## License
+
+The project is currently unlicensed, but that may change in the future when I think it is mature and useful enough to be shared with the community.
