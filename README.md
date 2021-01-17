@@ -1,6 +1,6 @@
 # Observatory
 
-Observatory is an experimental project attempting to create an email client using a C# cross-platform GUI framework called Uno Platform. This project aims to support basic features of an email client and run on the three major desktop platforms - Windows, MacOS and Linux. The reason behind Observatory is that while there are countless of email desktop clients out there, a majority of them are somewhat ugly and/or limited in some ways (such as only supporting a single platform). So as a software developer who loves to experiment with new things, I decided to make my own email client with a modern design that supports basic features of an email client. This project is still very much a work in progress.
+Observatory is an experimental project attempting to create an email client using a C# cross-platform GUI framework called Uno Platform. This project aims to support basic features of an email client and run on the three major desktop platforms - Windows, MacOS and Linux. The reason behind Observatory is that while there are countless of email desktop clients out there, a majority of them are somewhat ugly and/or limited in some ways (such as only supporting a single platform). So as a software developer who loves to experiment with new things, I decided to make my own email client with a modern design that supports a basic set features. This project is still very much a work in progress.
 
 ![](./img/observatory-01.PNG)
 
