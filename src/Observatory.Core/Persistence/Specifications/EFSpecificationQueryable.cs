@@ -25,6 +25,12 @@ namespace Observatory.Core.Persistence.Specifications
             _source = source;
         }
 
+        public bool Any<TResult>(ISpecification<T, TResult> specification)
+        {
+            var query = specification.Apply(_source);
+            return query.Any();
+        }
+
         public int Count<TResult>(ISpecification<T, TResult> specification)
         {
             var query = specification.Apply(_source);

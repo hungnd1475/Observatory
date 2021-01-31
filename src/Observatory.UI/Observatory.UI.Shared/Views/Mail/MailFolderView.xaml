@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="using:Observatory.UI.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ex="using:Observatory.UI.Extensions"
              xmlns:local="using:Observatory.UI.Views.Mail"
              xmlns:mailvm="using:Observatory.Core.ViewModels.Mail"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -531,7 +532,7 @@
                   Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
                   DefaultLabelPosition="Right"
                   IsDynamicOverflowEnabled="False">
-        <win:AppBarButton Icon="List"
+        <win:AppBarButton Icon="{ex:FluentSystemIcon Symbol=Bullets}"
                           Label="{x:Bind FormatFilterText(ViewModel.Messages.Filter), FallbackValue='Show'}">
           <win:AppBarButton.Flyout>
             <MenuFlyout Placement="BottomEdgeAlignedLeft">
@@ -566,23 +567,23 @@
         </win:AppBarButton>
         <AppBarToggleButton x:Name="MultiSelectionToggleButton"
                             Width="45"
-                            Icon="Bullets"
+                            Icon="{ex:FluentSystemIcon Symbol=CheckList}"
                             IsChecked="{x:Bind ViewModel.Messages.IsSelecting, Mode=TwoWay}"
                             IsCompact="True"
                             LabelPosition="Collapsed"
                             ToolTipService.ToolTip="Enter selection mode"/>
         <CommandBar.SecondaryCommands>
-          <AppBarButton Icon="Edit"
+          <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Rename}"
                         Label="Rename"/>
-          <AppBarButton Icon="Delete"
+          <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Delete}"
                         Label="Delete"/>
           <AppBarButton Command="{x:Bind ViewModel.Move}"
-                        Icon="MoveToFolder"
+                        Icon="{ex:FluentSystemIcon Symbol=FolderArrowRight}"
                         Label="Move"/>
           <AppBarSeparator/>
-          <AppBarButton Icon="Favorite"
+          <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Star}"
                         Label="Add to Favorites"/>
-          <AppBarButton Icon="Mail"
+          <AppBarButton Icon="{ex:FluentSystemIcon Symbol=MailRead}"
                         Label="Mark all as read"/>
         </CommandBar.SecondaryCommands>
         <CommandBar.Content>
@@ -619,6 +620,10 @@
         </CommandBar.Content>
       </CommandBar>
     </Grid>
+    <muxc:ProgressBar HorizontalAlignment="Stretch"
+                      VerticalAlignment="Top"
+                      Background="Transparent"
+                      IsIndeterminate="{x:Bind ViewModel.IsBusy, FallbackValue='False'}"/>
     <Grid x:Name="MessageListGrid"
           Grid.Row="1">
       <controls:MessageListView x:Name="MessageList"

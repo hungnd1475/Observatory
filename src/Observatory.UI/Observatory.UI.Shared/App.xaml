@@ -8,6 +8,8 @@
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls"/>
+        <ResourceDictionary Source="ms-appx:///Styles/NoContentCommandBar.xaml"/>
+        <ResourceDictionary Source="ms-appx:///Styles/FixedAppBarButton.xaml"/>
         <ResourceDictionary>
           <CornerRadius x:Key="OverlayCornerRadius">0</CornerRadius>
           <CornerRadius x:Key="ControlCornerRadius">0</CornerRadius>
@@ -19,18 +21,8 @@
       <mctkconverters:FormatStringConverter x:Key="FormatStringConverter"/>
       <localconverters:DoubleToGridLengthConverter x:Key="DoubleToGridLengthConverter"/>
 
-      <!--  Icons  -->
-      <x:String x:Key="ArchiveGlyph">&#xE7B8;</x:String>
-      <x:String x:Key="DeleteGlyph">&#xE107;</x:String>
-      <x:String x:Key="FlagGlyph">&#xE129;</x:String>
-      <x:String x:Key="UnflagGlyph">&#xED2E;</x:String>
-      <x:String x:Key="LowImportanceGlyph">&#xE7EB;</x:String>
-      <x:String x:Key="HighImportanceGlyph">&#xE171;</x:String>
-      <x:String x:Key="MoveToJunkGlyph">&#xF140;</x:String>
-      <x:String x:Key="SaveAsGlyph">&#xE792;</x:String>
-      <x:String x:Key="UncheckedBoxGlyph">&#xE739;</x:String>
-      <x:String x:Key="CheckedBoxGlyph">&#xE73A;</x:String>
-      <x:String x:Key="CheckMark">&#xE73E;</x:String>
+      <x:String x:Key="FlagIconData">F1 M4.5 13H15.5C15.8993 13 16.1375 12.5549 15.916 12.2226L13.1009 8L15.916 3.77735C16.1375 3.44507 15.8993 3 15.5 3H4C3.72386 3 3.5 3.22386 3.5 3.5V17.5C3.5 17.7761 3.72386 18 4 18C4.27614 18 4.5 17.7761 4.5 17.5V13ZM4.5 12V4H14.5657L12.084 7.72265C11.972 7.8906 11.972 8.1094 12.084 8.27735L14.5657 12H4.5Z</x:String>
+      <x:String x:Key="UnflagIconData">M15.0656 15.7727C15.3152 16.0224 15.7094 16.0206 15.865 15.865C16.063 15.667 16.0223 15.3153 15.7727 15.0656L3.29944 2.59232C3.10326 2.39614 2.698 2.30201 2.50001 2.5C2.30202 2.69799 2.39615 3.10324 2.59234 3.29943L3.50001 4.20711V17.5C3.50001 17.7761 3.72387 18 4.00001 18C4.27615 18 4.50001 17.7761 4.50001 17.5V13H12.2929L15.0656 15.7727ZM4.49999 12H11.2929L4.49999 5.20711V12Z M6.00001 4L5.00001 3H15.5C15.8994 3 16.1376 3.44507 15.916 3.77735L13.1009 8L15.916 12.2226C16.1376 12.5549 15.8994 13 15.5 13H15L14 12H14.5658L12.084 8.27735C11.972 8.1094 11.972 7.8906 12.084 7.72265L14.5658 4H6.00001Z</x:String>
 
       <!--  Constants  -->
       <x:Double x:Key="NavigationViewCompactPaneLength">40</x:Double>
@@ -40,6 +32,14 @@
         <Setter Property="CornerRadius" Value="0"/>
       </Style>
 
+      <Style TargetType="ComboBox">
+        <Setter Property="CornerRadius" Value="0"/>
+      </Style>
+
+      <Style BasedOn="{StaticResource FixedAppBarButtonStyle}" TargetType="AppBarButton"/>
+
+      <Style BasedOn="{StaticResource FixedAppBarToggleButtonStyle}" TargetType="AppBarToggleButton"/>
+
       <Style x:Key="NavigationPaneButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
         <Setter Property="BorderBrush" Value="{ThemeResource SystemControlTransparentRevealBorderBrush}"/>
@@ -47,6 +47,7 @@
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
         <Setter Property="MinWidth" Value="{StaticResource NavigationViewCompactPaneLength}"/>
+        <Setter Property="Padding" Value="0"/>
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="Button">

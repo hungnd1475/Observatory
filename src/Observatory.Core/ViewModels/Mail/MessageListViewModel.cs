@@ -47,9 +47,14 @@ namespace Observatory.Core.ViewModels.Mail
 
         public ReactiveCommand<IReadOnlyList<string>, Unit> MarkAsUnread { get; }
 
-        public ReactiveCommand<IReadOnlyList<string>, Unit> Move { get; }
+        public ReactiveCommand<(IReadOnlyList<string>, string), Unit> Move { get; }
+
+        public ReactiveCommand<IReadOnlyList<string>, Unit> SelectAndMove { get; }
 
         public ReactiveCommand<IReadOnlyList<string>, Unit> MoveToJunk { get; }
+
+        [ObservableAsProperty]
+        public bool IsBusy { get; }
 
         public ViewModelActivator Activator { get; }
 
@@ -113,21 +118,23 @@ namespace Observatory.Core.ViewModels.Mail
                     .ExecuteAsync();
             }, canExecute);
 
-            Move = ReactiveCommand.CreateFromTask<IReadOnlyList<string>>(async messageIds =>
+            SelectAndMove = ReactiveCommand.CreateFromTask<IReadOnlyList<string>>(async messageIds =>
             {
                 PrepareMessageIds(ref messageIds);
-
                 var selectionResult = await mailBox.PromptUserToSelectFolder(
                     messageIds.Count == 1 ? "Move a message" : $"Move {messageIds.Count} messages",
                     "Select another folder to move to:",
                     includeRoot: false,
                     destinationFolder => CanMoveTo(folderId, destinationFolder));
-
                 if (!selectionResult.IsCancelled)
                 {
-                    await mailService.MoveMessage(messageIds, selectionResult.SelectedFolder.Id);
+                    await Move.Execute((messageIds, selectionResult.SelectedFolder.Id));
                 }
-            }, canExecute);
+            });
+
+            Move = ReactiveCommand.CreateFromTask<(IReadOnlyList<string> MessageIds, string DestinationFolderId)>(
+                x => mailService.MoveMessage(x.MessageIds, x.DestinationFolderId),
+                canExecute);
 
             MoveToJunk = ReactiveCommand.CreateFromTask<IReadOnlyList<string>>(async messageIds =>
             {
@@ -204,6 +211,21 @@ namespace Observatory.Core.ViewModels.Mail
                     .Do(x => SelectionCount = x)
                     .Subscribe()
                     .DisposeWith(disposables);
+
+                Observable.CombineLatest(new[]
+                    {
+                        Archive.IsExecuting,
+                        Delete.IsExecuting,
+                        SetFlag.IsExecuting,
+                        ClearFlag.IsExecuting,
+                        MarkAsRead.IsExecuting,
+                        MarkAsUnread.IsExecuting,
+                        Move.IsExecuting,
+                        MoveToJunk.IsExecuting
+                    },
+                    x => x.Any(x => x))
+                .ToPropertyEx(this, x => x.IsBusy)
+                .DisposeWith(disposables);
 
                 Disposable.Create(() =>
                 {

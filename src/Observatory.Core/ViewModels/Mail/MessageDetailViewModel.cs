@@ -5,6 +5,7 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
 
@@ -17,16 +18,13 @@ namespace Observatory.Core.ViewModels.Mail
         private IDisposable _loadSubscription = null;
 
         [Reactive]
-        public string Subject { get; private set; }
+        public string Subject { get; set; }
 
         [Reactive]
-        public string Sender { get; private set; }
+        public Recipient Sender { get; private set; }
 
         [Reactive]
         public DateTimeOffset ReceivedDateTime { get; private set; }
-
-        [Reactive]
-        public string FormattedReceivedDateTime { get; private set; }
 
         [Reactive]
         public bool IsRead { get; private set; }
@@ -38,10 +36,10 @@ namespace Observatory.Core.ViewModels.Mail
         public bool HasAttachments { get; private set; }
 
         [Reactive]
-        public IReadOnlyList<string> CcRecipients { get; private set; }
+        public ObservableCollection<Recipient> CcRecipients { get; private set; }
 
         [Reactive]
-        public IReadOnlyList<string> ToRecipients { get; private set; }
+        public ObservableCollection<Recipient> ToRecipients { get; private set; }
 
         [Reactive]
         public bool IsDraft { get; private set; }
@@ -50,7 +48,7 @@ namespace Observatory.Core.ViewModels.Mail
         public bool IsFlagged { get; private set; }
 
         [Reactive]
-        public string Body { get; private set; }
+        public string Body { get; set; }
 
         [Reactive]
         public ContentType BodyType { get; private set; }
@@ -74,11 +72,10 @@ namespace Observatory.Core.ViewModels.Mail
             HasAttachments = summary.HasAttachments;
             IsDraft = summary.IsDraft;
             IsFlagged = summary.IsFlagged;
-            Sender = FormatRecipient(summary.Sender, true);
-            CcRecipients = FormatRecipients(summary.CcRecipients);
-            ToRecipients = FormatRecipients(summary.ToRecipients);
+            Sender = summary.Sender;
+            CcRecipients = new ObservableCollection<Recipient>(summary.CcRecipients);
+            ToRecipients = new ObservableCollection<Recipient>(summary.ToRecipients);
             ReceivedDateTime = summary.ReceivedDateTime;
-            FormattedReceivedDateTime = FormatReceivedDateTime(summary.ReceivedDateTime);
             Body = "";
             BodyType = ContentType.Html;
             LoadBody();
@@ -101,44 +98,6 @@ namespace Observatory.Core.ViewModels.Mail
                 Body = x.Body;
                 BodyType = x.BodyType;
             });
-        }
-
-        private string FormatRecipient(Recipient recipient, bool isFull)
-        {
-            if (string.IsNullOrEmpty(recipient.DisplayName))
-            {
-                return recipient.EmailAddress;
-            }
-            else if (isFull)
-            {
-                return $"{recipient.DisplayName} <{recipient.EmailAddress}>";
-            }
-            else
-            {
-                return recipient.DisplayName;
-            }
-        }
-
-        private IReadOnlyList<string> FormatRecipients(IReadOnlyList<Recipient> recipients)
-        {
-            return recipients.Select((r, i) =>
-            {
-                return i == recipients.Count - 1
-                    ? FormatRecipient(r, false)
-                    : FormatRecipient(r, false) + ";";
-            })
-            .ToList().AsReadOnly();
-        }
-
-        private string FormatReceivedDateTime(DateTimeOffset receivedDateTime)
-        {
-            var now = DateTimeOffset.Now;
-            if (now.Date == receivedDateTime.Date)
-            {
-                return receivedDateTime.ToString("hh:mm tt");
-            }
-
-            return receivedDateTime.ToString("g");
         }
 
         public void Dispose()

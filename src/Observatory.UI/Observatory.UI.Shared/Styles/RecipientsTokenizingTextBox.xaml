@@ -1,0 +1,80 @@
+﻿<ResourceDictionary x:Class="Observatory.UI.Styles.RecipientsTokenizingTextBox"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:models="using:Observatory.Core.Models"
+                    xmlns:wct="using:Microsoft.Toolkit.Uwp.UI.Controls">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="ms-appx:///Microsoft.Toolkit.Uwp.UI.Controls/TokenizingTextBox/TokenizingTextBox.xaml"/>
+  </ResourceDictionary.MergedDictionaries>
+
+  <Style x:Key="RecipientsTokenizingTextBoxTextBoxStyle" BasedOn="{StaticResource TokenizingTextBoxTextBoxStyle}" TargetType="TextBox">
+    <Setter Property="Height" Value="28"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="Padding" Value="0,5"/>
+  </Style>
+
+  <Style x:Key="RecipientsTokenizingTextBoxItemTokenStyle" BasedOn="{StaticResource TokenizingTextBoxItemTokenStyle}" TargetType="wct:TokenizingTextBoxItem">
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <Style x:Key="RecipientsTokenizingTextBoxItemTextStyle" TargetType="wct:TokenizingTextBoxItem">
+    <Setter Property="Background" Value="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}"/>
+    <Setter Property="BorderBrush" Value="{ThemeResource SystemControlTransparentBrush}"/>
+    <Setter Property="IsTabStop" Value="False"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="MinWidth" Value="128"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="wct:TokenizingTextBoxItem">
+          <AutoSuggestBox Name="PART_AutoSuggestBox"
+                          DisplayMemberPath="{Binding Path=Owner.DisplayMemberPath, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                          ItemTemplate="{Binding Path=Owner.SuggestedItemTemplate, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                          ItemsSource="{Binding Path=Owner.SuggestedItemsSource, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                          PlaceholderText="{Binding Path=Owner.PlaceholderText, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                          Style="{StaticResource SystemAutoSuggestBoxStyle}"
+                          Text="{Binding Text, Mode=TwoWay}"
+                          TextBoxStyle="{StaticResource RecipientsTokenizingTextBoxTextBoxStyle}"
+                          TextMemberPath="{Binding Path=Owner.TextMemberPath, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                          UpdateTextOnSelect="False"/>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="UseSystemFocusVisuals" Value="False"/>
+  </Style>
+
+  <wct:TokenizingTextBoxStyleSelector x:Key="RecipientsTokenizingTextBoxStyleSelector"
+                                      TextStyle="{StaticResource RecipientsTokenizingTextBoxItemTextStyle}"
+                                      TokenStyle="{StaticResource RecipientsTokenizingTextBoxItemTokenStyle}"/>
+
+  <Style x:Key="RecipientsTokenizingTextBoxStyle" BasedOn="{StaticResource DefaultTokenizingTextBoxStyle}" TargetType="wct:TokenizingTextBox">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="ItemContainerStyleSelector" Value="{StaticResource RecipientsTokenizingTextBoxStyleSelector}"/>
+    <Setter Property="MinHeight" Value="30"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="wct:TokenizingTextBox">
+          <Grid Name="RootPanel">
+            <Border x:Name="BackgroundVisual"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"/>
+            <ItemsPresenter Margin="0,1"
+                            Padding="{TemplateBinding Padding}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Footer="{TemplateBinding Footer}"
+                            FooterTemplate="{TemplateBinding FooterTemplate}"
+                            FooterTransitions="{TemplateBinding FooterTransitions}"
+                            Header="{TemplateBinding Header}"
+                            HeaderTemplate="{TemplateBinding HeaderTemplate}"
+                            HeaderTransitions="{TemplateBinding HeaderTransitions}"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="TokenDelimiter" Value=";"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+</ResourceDictionary>

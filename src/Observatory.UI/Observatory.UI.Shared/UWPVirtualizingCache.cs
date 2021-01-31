@@ -1,11 +1,9 @@
-﻿using Observatory.Core.Services;
-using Observatory.Core.Virtualization;
+﻿using Observatory.Core.Virtualization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
 using Windows.UI.Xaml.Data;
 
 namespace Observatory.UI
@@ -22,10 +20,10 @@ namespace Observatory.UI
             _cache = cache;
         }
 
-        public object this[int index] 
-        { 
-            get => ((IList)_cache)[index]; 
-            set => throw new NotSupportedException(); 
+        public object this[int index]
+        {
+            get => ((IList)_cache)[index];
+            set => throw new NotSupportedException();
         }
 
         public bool IsFixedSize => _cache.IsFixedSize;
@@ -44,25 +42,25 @@ namespace Observatory.UI
             remove => _cache.CollectionChanged -= value;
         }
 
-        public int Add(object value) => _cache.Add(value);
+        public int Add(object value) => ((IList)_cache).Add(value);
 
         public void Clear() => _cache.Clear();
 
         public bool Contains(object value) => _cache.Contains(value);
 
-        public void CopyTo(Array array, int index) => _cache.CopyTo(array, index);
+        public void CopyTo(Array array, int index) => ((IList)_cache).CopyTo(array, index);
 
         public void Dispose() => _cache.Dispose();
 
-        public IEnumerator GetEnumerator() => _cache.GetEnumerator();
+        public IEnumerator GetEnumerator() => ((IList)_cache).GetEnumerator();
 
         public int IndexOf(object value) => _cache.IndexOf(value);
 
-        public void Insert(int index, object value) => _cache.Insert(index, value);
+        public void Insert(int index, object value) => ((IList)_cache).Insert(index, value);
 
-        public void Remove(object value) => _cache.Remove(value);
+        public void Remove(object value) => ((IList)_cache).Remove(value);
 
-        public void RemoveAt(int index) => _cache.RemoveAt(index);
+        public void RemoveAt(int index) => ((IList)_cache).RemoveAt(index);
 
         public void RangesChanged(ItemIndexRange visibleRange, IReadOnlyList<ItemIndexRange> trackedItems)
         {

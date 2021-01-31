@@ -1,4 +1,5 @@
 ﻿using Observatory.Core.ViewModels;
+using Observatory.UI.Extensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Globalization;
 using System.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 
 namespace Observatory.UI
 {
@@ -46,13 +48,13 @@ namespace Observatory.UI
             return x ? Visibility.Collapsed : Visibility.Visible;
         }
 
-        public static Symbol FunctionalityModeToIcon(FunctionalityMode mode)
+        public static FluentSystemIconSymbol FunctionalityModeToIcon(FunctionalityMode mode)
         {
             return mode switch
             {
-                FunctionalityMode.Mail => Symbol.Mail,
-                FunctionalityMode.Calendar => Symbol.Calendar,
-                FunctionalityMode.Setup => Symbol.Setting,
+                FunctionalityMode.Mail => FluentSystemIconSymbol.Mail,
+                FunctionalityMode.Calendar => FluentSystemIconSymbol.Calendar,
+                FunctionalityMode.Setup => FluentSystemIconSymbol.Setting,
                 _ => throw new NotSupportedException(),
             };
         }
@@ -83,6 +85,11 @@ namespace Observatory.UI
         public static double GridLengthToPixels(GridLength gridLength)
         {
             return gridLength.Value;
+        }
+
+        public static FontFamily StringToFontFamily(string familyName)
+        {
+            return new FontFamily(familyName);
         }
     }
 }

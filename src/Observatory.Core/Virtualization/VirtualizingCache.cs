@@ -29,14 +29,16 @@ namespace Observatory.Core.Virtualization
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly Subject<IndexRange[]> _rangeSubject = new Subject<IndexRange[]>();
-        private readonly Subject<IVirtualizingCacheEvent<TSource>> _eventSubject
-            = new Subject<IVirtualizingCacheEvent<TSource>>();
+        private readonly Subject<IVirtualizingCacheEvent<TSource>> _eventSubject =
+            new Subject<IVirtualizingCacheEvent<TSource>>();
         private readonly object _lock = new object();
+
         private readonly List<TKey> _keys = new List<TKey>();
-        private readonly BehaviorSubject<IndexRange[]> _selectionSubject
-            = new BehaviorSubject<IndexRange[]>(new IndexRange[0]);
         private readonly Dictionary<TKey, TTarget> _targetCache = new Dictionary<TKey, TTarget>();
         private readonly Func<TSource, TTarget> _targetFactory;
+
+        private readonly BehaviorSubject<IndexRange[]> _selectionSubject =
+            new BehaviorSubject<IndexRange[]>(new IndexRange[0]);
 
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
@@ -230,7 +232,7 @@ namespace Observatory.Core.Virtualization
 
         public IReadOnlyList<TKey> GetSelectedKeys() => _selectionSubject.Value.EnumerateIndex().Select(i => _keys[i]).ToArray();
 
-        #region ++ IVirtualizingCacheEventProcessor ++
+        #region ++ IVirtualizingCacheEventProcessor Implementation ++
 
         public IEnumerable<NotifyCollectionChangedEventArgs> Process(VirtualizingCacheInitializedEvent<TSource> e)
         {
@@ -380,8 +382,6 @@ namespace Observatory.Core.Virtualization
             _disposables.Dispose();
         }
 
-        public int Add(object value) => throw new NotImplementedException();
-
         public bool Contains(object value) => IndexOf(value as TTarget) != -1;
 
         public int IndexOf(object value)
@@ -394,15 +394,21 @@ namespace Observatory.Core.Virtualization
             };
         }
 
-        public void Insert(int index, object value) => throw new NotImplementedException();
+        #region ++ Unsupported Inherited Methods ++
 
-        public void Remove(object value) => throw new NotImplementedException();
+        int IList.Add(object value) => throw new NotImplementedException();
 
-        public void RemoveAt(int index) => throw new NotImplementedException();
+        void IList.Insert(int index, object value) => throw new NotImplementedException();
 
-        public void CopyTo(Array array, int index) => throw new NotImplementedException();
+        void IList.Remove(object value) => throw new NotImplementedException();
 
-        public IEnumerator GetEnumerator() => throw new NotImplementedException();
+        void IList.RemoveAt(int index) => throw new NotImplementedException();
+
+        void ICollection.CopyTo(Array array, int index) => throw new NotImplementedException();
+
+        IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+
+        #endregion
 
         /// <summary>
         /// Determines if there is any difference between the current ranges and the newly requested ranges.
@@ -879,200 +885,5 @@ namespace Observatory.Core.Virtualization
 
             return default;
         }
-
-        //private readonly struct LogicalChange
-        //{
-        //    public readonly DeltaState State;
-        //    public readonly TSource CurrentEntity;
-        //    public readonly TSource PreviousEntity;
-        //    public readonly int? CurrentIndex;
-        //    public readonly int? PreviousIndex;
-
-        //    private LogicalChange(DeltaState state, TSource currentEntity, TSource previousEntity, int? currentIndex, int? previousIndex)
-        //    {
-        //        State = state;
-        //        CurrentEntity = currentEntity;
-        //        PreviousEntity = previousEntity;
-        //        CurrentIndex = currentIndex;
-        //        PreviousIndex = previousIndex;
-        //    }
-
-        //    public static LogicalChange Addition(TSource currentEntity, int currentIndex)
-        //    {
-        //        return new LogicalChange(DeltaState.Add, currentEntity, null, currentIndex, null);
-        //    }
-
-        //    public static LogicalChange Removal(TSource previousEntity, int previousIndex)
-        //    {
-        //        return new LogicalChange(DeltaState.Remove, null, previousEntity, null, previousIndex);
-        //    }
-
-        //    public static LogicalChange Update(TSource currentEntity, int currentIndex, TSource previousEntity, int previousIndex)
-        //    {
-        //        return new LogicalChange(DeltaState.Update, currentEntity, previousEntity, currentIndex, previousIndex);
-        //    }
-
-        //    /// <summary>
-        //    /// Rearranges the logical changes in an order that can be applied one-by-one by the UI.
-        //    /// </summary>
-        //    /// <param name="logicalChanges">The logical changes.</param>
-        //    /// <returns></returns>
-        //    public static IReadOnlyList<VirtualizingCacheSourceChange<TSource>> Rearrange(LogicalChange[] logicalChanges)
-        //    {
-        //        var orderedChanges = new List<VirtualizingCacheSourceChange<TSource>>();
-        //        var additions = logicalChanges.Where(c => c.State == DeltaState.Add)
-        //            .OrderBy(c => c.CurrentIndex.Value)
-        //            .ToArray();
-        //        var removalsAndUpdates = logicalChanges.Where(c => c.State != DeltaState.Add)
-        //            .OrderBy(c => c.PreviousIndex.Value)
-        //            .ToArray();
-
-        //        var additionIndex = 0;
-        //        var removalAndUpdateIndex = 0;
-        //        var shift = 0;
-
-        //        while (true)
-        //        {
-        //            LogicalChange? currentChange = null;
-        //            if (additionIndex < additions.Length && removalAndUpdateIndex < removalsAndUpdates.Length)
-        //            {
-        //                if (additions[additionIndex].CurrentIndex.Value < removalsAndUpdates[removalAndUpdateIndex].PreviousIndex.Value + shift)
-        //                {
-        //                    currentChange = additions[additionIndex];
-        //                    additionIndex += 1;
-        //                }
-        //                else
-        //                {
-        //                    currentChange = removalsAndUpdates[removalAndUpdateIndex];
-        //                    removalAndUpdateIndex += 1;
-        //                }
-        //            }
-        //            else if (additionIndex < additions.Length)
-        //            {
-        //                currentChange = additions[additionIndex];
-        //                additionIndex += 1;
-        //            }
-        //            else if (removalAndUpdateIndex < removalsAndUpdates.Length)
-        //            {
-        //                currentChange = removalsAndUpdates[removalAndUpdateIndex];
-        //                removalAndUpdateIndex += 1;
-        //            }
-
-        //            if (currentChange.HasValue)
-        //            {
-        //                switch (currentChange.Value.State)
-        //                {
-        //                    case DeltaState.Add:
-        //                        orderedChanges.Add(VirtualizingCacheSourceChange<TSource>.Addition(
-        //                            currentChange.Value.CurrentEntity,
-        //                            currentChange.Value.CurrentIndex.Value));
-        //                        shift += 1;
-        //                        break;
-        //                    case DeltaState.Remove:
-        //                        orderedChanges.Add(VirtualizingCacheSourceChange<TSource>.Removal(
-        //                            currentChange.Value.PreviousEntity,
-        //                            currentChange.Value.PreviousIndex.Value + shift));
-        //                        shift -= 1;
-        //                        break;
-        //                    case DeltaState.Update:
-        //                        orderedChanges.Add(VirtualizingCacheSourceChange<TSource>.Update(
-        //                            currentChange.Value.CurrentEntity,
-        //                            currentChange.Value.CurrentIndex.Value,
-        //                            currentChange.Value.PreviousEntity,
-        //                            currentChange.Value.PreviousIndex.Value + shift));
-        //                        break;
-        //                }
-        //            }
-        //            else
-        //                break;
-        //        }
-
-        //        return orderedChanges.AsReadOnly();
-        //    }
-        //}
-
-        /// <summary>
-        /// Represents a "physical" change to a collection. The only difference between this and <see cref="LogicalChange"/>
-        /// is that an update is treated as a removal (of the old item) followed by an addition (of the new item with updated information).
-        /// This treatment allows updated items to move to different positions and makes it easier to apply the changes to the array of
-        /// cache blocks.
-        /// </summary>
-        //private readonly struct PhysicalChange
-        //{
-        //    /// <summary>
-        //    /// Gets the action of the change.
-        //    /// </summary>
-        //    public readonly PhysicalChangeAction Action;
-
-        //    /// <summary>
-        //    /// Gets the entity affected by the change.
-        //    /// </summary>
-        //    public readonly TSource Entity;
-
-        //    /// <summary>
-        //    /// Gets the index of the change.
-        //    /// </summary>
-        //    public readonly int Index;
-
-        //    /// <summary>
-        //    /// Constructs an instance of <see cref="PhysicalChange"/>.
-        //    /// </summary>
-        //    /// <param name="action"></param>
-        //    /// <param name="entity"></param>
-        //    /// <param name="index"></param>
-        //    public PhysicalChange(PhysicalChangeAction action, TSource entity, int index)
-        //    {
-        //        Action = action;
-        //        Entity = entity;
-        //        Index = index;
-        //    }
-        //}
-
-        ///// <summary>
-        ///// Represents an action of a physical change.
-        ///// </summary>
-        //private enum PhysicalChangeAction
-        //{
-        //    /// <summary>
-        //    /// The physical change is an addition.
-        //    /// </summary>
-        //    Add,
-        //    /// <summary>
-        //    /// The physical change is a removal.
-        //    /// </summary>
-        //    Remove,
-        //}
-
-        ///// <summary>
-        ///// Represents a collection of <see cref="PhysicalChange"/>.
-        ///// </summary>
-        //private readonly struct PhysicalChangeSet
-        //{
-        //    /// <summary>
-        //    /// Gets the changes that are additions.
-        //    /// </summary>
-        //    public readonly PhysicalChange[] Additions;
-
-        //    /// <summary>
-        //    /// Gets the changes that are removals.
-        //    /// </summary>
-        //    public readonly PhysicalChange[] Removals;
-
-        //    /// <summary>
-        //    /// Constructs an instance of <see cref="PhysicalChangeSet"/> from an array of <see cref="LogicalChange"/>.
-        //    /// </summary>
-        //    /// <param name="logicalChanges">The array of <see cref="LogicalChange"/>.</param>
-        //    public PhysicalChangeSet(LogicalChange<TSource>[] logicalChanges)
-        //    {
-        //        Additions = logicalChanges.Where(c => c.State != DeltaState.Remove)
-        //            .Select(c => new PhysicalChange(PhysicalChangeAction.Add, c.CurrentEntity, c.CurrentIndex.Value))
-        //            .OrderBy(c => c.Index)
-        //            .ToArray();
-        //        Removals = logicalChanges.Where(c => c.State != DeltaState.Add)
-        //            .Select(c => new PhysicalChange(PhysicalChangeAction.Remove, c.PreviousEntity, c.PreviousIndex.Value))
-        //            .OrderBy(c => c.Index)
-        //            .ToArray();
-        //    }
-        //}
     }
 }

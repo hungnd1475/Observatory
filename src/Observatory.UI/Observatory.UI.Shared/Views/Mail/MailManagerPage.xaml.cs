@@ -135,4 +135,19 @@ namespace Observatory.UI.Views.Mail
             ToggleFolderListPane();
         }
     }
+
+    public class MessageDetailTemplateSelector : DataTemplateSelector
+    {
+        public DataTemplate ReadingTemplate { get; set; }
+        public DataTemplate ComposingTemplate { get; set; }
+
+        protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
+        {
+            if (item is MessageDetailViewModel vm && vm != null)
+            {
+                return vm.IsDraft ? ComposingTemplate : ReadingTemplate;
+            }
+            return null;
+        }
+    }
 }

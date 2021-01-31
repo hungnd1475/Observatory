@@ -112,9 +112,9 @@ namespace Observatory.Core.ViewModels.Mail
                 .Subscribe()
                 .DisposeWith(_disposables);
 
-            Move = ReactiveCommand.CreateFromObservable(() => list.Move.Execute(new[] { Id }));
+            Move = ReactiveCommand.CreateFromObservable(() => list.SelectAndMove.Execute(new[] { Id }));
 
-            MoveToJunk = ReactiveCommand.CreateFromObservable(() => list.Move.Execute(new[] { Id }));
+            MoveToJunk = ReactiveCommand.CreateFromObservable(() => list.MoveToJunk.Execute(new[] { Id }));
         }
 
         public void StartMarkingAsRead(int seconds = 0)

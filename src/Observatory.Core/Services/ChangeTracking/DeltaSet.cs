@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 
 namespace Observatory.Core.Services.ChangeTracking
 {
-    public class DeltaSet<T> : ICollection<DeltaEntity<T>>
+    public class DeltaSet<T> : ICollection<DeltaEntity<T>>, IReadOnlyList<DeltaEntity<T>>
     {
         private readonly List<DeltaEntity<T>> _changes = new List<DeltaEntity<T>>();
 
@@ -39,5 +39,7 @@ namespace Observatory.Core.Services.ChangeTracking
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         bool ICollection<DeltaEntity<T>>.IsReadOnly => false;
+
+        public DeltaEntity<T> this[int index] => _changes[index];
     }
 }

@@ -1,0 +1,770 @@
+﻿<UserControl x:Class="Observatory.UI.Views.Mail.MessageComposer"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:composing="using:Observatory.UI.Views.Mail.Composing"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ex="using:Observatory.UI.Extensions"
+             xmlns:interactions="using:Microsoft.Xaml.Interactions.Core"
+             xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+             xmlns:local="using:Observatory.UI.Views.Mail"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="using:Observatory.Core.Models"
+             xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+             xmlns:primitives="using:Microsoft.UI.Xaml.Controls.Primitives"
+             xmlns:ui="using:Observatory.UI"
+             xmlns:wct="using:Microsoft.Toolkit.Uwp.UI.Controls"
+             xmlns:wctex="using:Microsoft.Toolkit.Uwp.UI.Extensions"
+             x:DefaultBindMode="OneWay"
+             mc:Ignorable="d">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="ms-appx:///Styles/RecipientsTokenizingTextBox.xaml"/>
+        <ResourceDictionary Source="ms-appx:///Styles/SubjectTextBox.xaml"/>
+        <ResourceDictionary Source="ms-appx:///Styles/EditorToolBar.xaml"/>
+      </ResourceDictionary.MergedDictionaries>
+
+      <DataTemplate x:Key="RecipientsTokenizingTextBoxTokenItemDataTemplate"
+                    x:DataType="models:Recipient">
+        <TextBlock Margin="0,0,6,0"
+                   Text="{x:Bind DisplayName, Mode=OneTime}"/>
+      </DataTemplate>
+
+      <Style x:Key="EditorToolBarFlyoutPresenterStyle" TargetType="FlyoutPresenter">
+        <Setter Property="CornerRadius" Value="0"/>
+        <Setter Property="MaxHeight" Value="1000"/>
+        <Setter Property="MinWidth" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+      </Style>
+
+      <Style x:Key="FixedDefaultComboBoxStyle" TargetType="ComboBox">
+        <Setter Property="Background" Value="{ThemeResource ComboBoxBackground}"/>
+        <Setter Property="BorderBrush" Value="{ThemeResource ComboBoxBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="{ThemeResource ComboBoxBorderThemeThickness}"/>
+        <Setter Property="CornerRadius" Value="{ThemeResource ControlCornerRadius}"/>
+        <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}"/>
+        <Setter Property="FontSize" Value="{ThemeResource ControlContentThemeFontSize}"/>
+        <Setter Property="Foreground" Value="{ThemeResource ComboBoxForeground}"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="ItemsPanel">
+          <Setter.Value>
+            <ItemsPanelTemplate>
+              <CarouselPanel/>
+            </ItemsPanelTemplate>
+          </Setter.Value>
+        </Setter>
+        <Setter Property="MaxDropDownHeight" Value="504"/>
+        <Setter Property="Padding" Value="{ThemeResource ComboBoxPadding}"/>
+        <Setter Property="ScrollViewer.BringIntoViewOnFocusChange" Value="True"/>
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="ScrollViewer.HorizontalScrollMode" Value="Disabled"/>
+        <Setter Property="ScrollViewer.IsDeferredScrollingEnabled" Value="False"/>
+        <Setter Property="ScrollViewer.IsVerticalRailEnabled" Value="True"/>
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="ScrollViewer.VerticalScrollMode" Value="Auto"/>
+        <Setter Property="TabNavigation" Value="Once"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="ComboBox">
+              <Grid x:Name="LayoutRoot">
+                <Grid.Resources>
+                  <Storyboard x:Key="OverlayOpeningAnimation">
+                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
+                      <DiscreteDoubleKeyFrame KeyTime="0:0:0"
+                                              Value="0.0"/>
+                      <SplineDoubleKeyFrame KeySpline="0.1,0.9 0.2,1.0"
+                                            KeyTime="0:0:0.383"
+                                            Value="1.0"/>
+                    </DoubleAnimationUsingKeyFrames>
+                  </Storyboard>
+                  <Storyboard x:Key="OverlayClosingAnimation">
+                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
+                      <DiscreteDoubleKeyFrame KeyTime="0:0:0"
+                                              Value="1.0"/>
+                      <SplineDoubleKeyFrame KeySpline="0.1,0.9 0.2,1.0"
+                                            KeyTime="0:0:0.216"
+                                            Value="0.0"/>
+                    </DoubleAnimationUsingKeyFrames>
+                  </Storyboard>
+                </Grid.Resources>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="*"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="32"/>
+                </Grid.ColumnDefinitions>
+                <Popup x:Name="Popup">
+                  <Border x:Name="PopupBorder"
+                          Margin="0,-1,0,-1"
+                          Padding="{ThemeResource ComboBoxDropdownBorderPadding}"
+                          HorizontalAlignment="Stretch"
+                          Background="{ThemeResource ComboBoxDropDownBackground}"
+                          BackgroundSizing="OuterBorderEdge"
+                          BorderBrush="{ThemeResource ComboBoxDropDownBorderBrush}"
+                          BorderThickness="{ThemeResource ComboBoxDropdownBorderThickness}"
+                          CornerRadius="{ThemeResource OverlayCornerRadius}">
+                    <ScrollViewer x:Name="ScrollViewer"
+                                  MinWidth="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.DropDownContentMinWidth}"
+                                  AutomationProperties.AccessibilityView="Raw"
+                                  BringIntoViewOnFocusChange="{TemplateBinding ScrollViewer.BringIntoViewOnFocusChange}"
+                                  Foreground="{ThemeResource ComboBoxDropDownForeground}"
+                                  HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                                  HorizontalScrollMode="{TemplateBinding ScrollViewer.HorizontalScrollMode}"
+                                  IsDeferredScrollingEnabled="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}"
+                                  IsHorizontalRailEnabled="{TemplateBinding ScrollViewer.IsHorizontalRailEnabled}"
+                                  IsVerticalRailEnabled="{TemplateBinding ScrollViewer.IsVerticalRailEnabled}"
+                                  VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"
+                                  VerticalScrollMode="{TemplateBinding ScrollViewer.VerticalScrollMode}"
+                                  VerticalSnapPointsAlignment="Near"
+                                  VerticalSnapPointsType="OptionalSingle"
+                                  ZoomMode="Disabled">
+                      <ItemsPresenter Margin="{ThemeResource ComboBoxDropdownContentMargin}"/>
+                    </ScrollViewer>
+                  </Border>
+                </Popup>
+                <ContentPresenter x:Name="HeaderContentPresenter"
+                                  Grid.Row="0"
+                                  Grid.Column="0"
+                                  Grid.ColumnSpan="2"
+                                  Margin="{ThemeResource ComboBoxTopHeaderMargin}"
+                                  VerticalAlignment="Top"
+                                  x:DeferLoadStrategy="Lazy"
+                                  Content="{TemplateBinding Header}"
+                                  ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                  FlowDirection="{TemplateBinding FlowDirection}"
+                                  FontWeight="{ThemeResource ComboBoxHeaderThemeFontWeight}"
+                                  Foreground="{ThemeResource ComboBoxHeaderForeground}"
+                                  TextWrapping="Wrap"
+                                  Visibility="Collapsed"/>
+                <Border x:Name="Background"
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        MinWidth="{ThemeResource ComboBoxThemeMinWidth}"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        Control.IsTemplateFocusTarget="True"
+                        CornerRadius="{TemplateBinding CornerRadius}"/>
+                <Border x:Name="HighlightBackground"
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Background="{ThemeResource ComboBoxBackgroundUnfocused}"
+                        BorderBrush="{ThemeResource ComboBoxBackgroundBorderBrushUnfocused}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Opacity="0"/>
+                <ContentPresenter x:Name="ContentPresenter"
+                                  Grid.Row="1"
+                                  Grid.Column="0"
+                                  Margin="{TemplateBinding Padding}"
+                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+                  <TextBlock x:Name="PlaceholderTextBlock"
+                             Foreground="{Binding PlaceholderForeground, RelativeSource={RelativeSource TemplatedParent}, TargetNullValue={ThemeResource ComboBoxPlaceHolderForeground}}"
+                             Text="{TemplateBinding PlaceholderText}"/>
+                </ContentPresenter>
+                <TextBox x:Name="EditableText"
+                         Grid.Row="1"
+                         Grid.Column="0"
+                         Grid.ColumnSpan="2"
+                         Margin="0,0,0,0"
+                         Padding="{ThemeResource ComboBoxEditableTextPadding}"
+                         HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                         VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                         x:Load="False"
+                         AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}"
+                         BorderBrush="Transparent"
+                         CornerRadius="{TemplateBinding CornerRadius}"
+                         Foreground="{Binding PlaceholderForeground, RelativeSource={RelativeSource TemplatedParent}, TargetNullValue={ThemeResource ComboBoxPlaceHolderForeground}}"
+                         Header="{TemplateBinding Header}"
+                         PlaceholderText="{TemplateBinding PlaceholderText}"
+                         Style="{TemplateBinding TextBoxStyle}"
+                         Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         Visibility="Collapsed"/>
+                <Border x:Name="DropDownOverlay"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Width="30"
+                        Margin="0,1,1,1"
+                        HorizontalAlignment="Right"
+                        x:Load="False"
+                        Background="Transparent"
+                        Visibility="Collapsed"/>
+                <FontIcon x:Name="DropDownGlyph"
+                          Grid.Row="1"
+                          Grid.Column="1"
+                          MinHeight="{ThemeResource ComboBoxMinHeight}"
+                          Margin="0,0,10,0"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Center"
+                          AutomationProperties.AccessibilityView="Raw"
+                          FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                          FontSize="12"
+                          Foreground="{ThemeResource ComboBoxDropDownGlyphForeground}"
+                          Glyph="&#xE0E5;"
+                          IsHitTestVisible="False"/>
+                <ContentPresenter x:Name="DescriptionPresenter"
+                                  Grid.Row="2"
+                                  Grid.Column="0"
+                                  Grid.ColumnSpan="2"
+                                  x:Load="False"
+                                  Content="{TemplateBinding Description}"
+                                  Foreground="{ThemeResource SystemControlDescriptionTextForegroundBrush}"/>
+                <VisualStateManager.VisualStateGroups>
+                  <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal"/>
+                    <VisualState x:Name="PointerOver">
+                      <Storyboard>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Background"
+                                                       Storyboard.TargetProperty="Background">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxBackgroundPointerOver}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Background"
+                                                       Storyboard.TargetProperty="BorderBrush">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxBorderBrushPointerOver}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxForegroundPointerOver}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PlaceholderTextBlock"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{Binding PlaceholderForeground, RelativeSource={RelativeSource TemplatedParent}, TargetNullValue={ThemeResource ComboBoxPlaceHolderForegroundPointerOver}}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                      </Storyboard>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                      <Storyboard>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Background"
+                                                       Storyboard.TargetProperty="Background">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxBackgroundPressed}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Background"
+                                                       Storyboard.TargetProperty="BorderBrush">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxBorderBrushPressed}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxForegroundPressed}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PlaceholderTextBlock"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{Binding PlaceholderForeground, RelativeSource={RelativeSource TemplatedParent}, TargetNullValue={ThemeResource ComboBoxPlaceHolderForegroundPressed}}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                      </Storyboard>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                      <Storyboard>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Background"
+                                                       Storyboard.TargetProperty="Background">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxBackgroundDisabled}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Background"
+                                                       Storyboard.TargetProperty="BorderBrush">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxBorderBrushDisabled}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="HeaderContentPresenter"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxHeaderForegroundDisabled}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxForegroundDisabled}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PlaceholderTextBlock"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{Binding PlaceholderForeground, RelativeSource={RelativeSource TemplatedParent}, TargetNullValue={ThemeResource ComboBoxPlaceHolderForegroundDisabled}}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="DropDownGlyph"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxDropDownGlyphForegroundDisabled}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                      </Storyboard>
+                    </VisualState>
+                  </VisualStateGroup>
+                  <VisualStateGroup x:Name="FocusStates">
+                    <VisualState x:Name="Focused">
+                      <Storyboard>
+                        <DoubleAnimation Storyboard.TargetName="HighlightBackground"
+                                         Storyboard.TargetProperty="Opacity"
+                                         To="1"
+                                         Duration="0"/>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="HighlightBackground"
+                                                       Storyboard.TargetProperty="Background">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxBackgroundFocused}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="HighlightBackground"
+                                                       Storyboard.TargetProperty="BorderBrush">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxBackgroundBorderBrushFocused}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxForegroundFocused}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PlaceholderTextBlock"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{Binding PlaceholderForeground, RelativeSource={RelativeSource TemplatedParent}, TargetNullValue={ThemeResource ComboBoxPlaceHolderForegroundFocused}}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="DropDownGlyph"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxDropDownGlyphForegroundFocused}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                      </Storyboard>
+                    </VisualState>
+                    <VisualState x:Name="FocusedPressed">
+                      <Storyboard>
+                        <DoubleAnimation Storyboard.TargetName="HighlightBackground"
+                                         Storyboard.TargetProperty="Opacity"
+                                         To="1"
+                                         Duration="0"/>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxForegroundFocusedPressed}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PlaceholderTextBlock"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{Binding PlaceholderForeground, RelativeSource={RelativeSource TemplatedParent}, TargetNullValue={ThemeResource ComboBoxPlaceHolderForegroundFocusedPressed}}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="DropDownGlyph"
+                                                       Storyboard.TargetProperty="Foreground">
+                          <DiscreteObjectKeyFrame KeyTime="0"
+                                                  Value="{ThemeResource ComboBoxDropDownGlyphForegroundFocusedPressed}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                      </Storyboard>
+                    </VisualState>
+                    <VisualState x:Name="Unfocused"/>
+                    <VisualState x:Name="PointerFocused"/>
+                    <VisualState x:Name="FocusedDropDown">
+                      <Storyboard>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PopupBorder"
+                                                       Storyboard.TargetProperty="Visibility"
+                                                       Duration="0">
+                          <DiscreteObjectKeyFrame KeyTime="0">
+                            <DiscreteObjectKeyFrame.Value>
+                              <Visibility>Visible</Visibility>
+                            </DiscreteObjectKeyFrame.Value>
+                          </DiscreteObjectKeyFrame>
+                        </ObjectAnimationUsingKeyFrames>
+                      </Storyboard>
+                    </VisualState>
+                  </VisualStateGroup>
+                  <VisualStateGroup x:Name="DropDownStates">
+                    <VisualState x:Name="Opened">
+                      <Storyboard>
+                        <SplitOpenThemeAnimation ClosedTargetName="ContentPresenter"
+                                                 OffsetFromCenter="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.DropDownOffset}"
+                                                 OpenedLength="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.DropDownOpenedHeight}"
+                                                 OpenedTargetName="PopupBorder"/>
+                      </Storyboard>
+                    </VisualState>
+                    <VisualState x:Name="Closed">
+                      <Storyboard>
+                        <SplitCloseThemeAnimation ClosedTargetName="ContentPresenter"
+                                                  OffsetFromCenter="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.DropDownOffset}"
+                                                  OpenedLength="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.DropDownOpenedHeight}"
+                                                  OpenedTargetName="PopupBorder"/>
+                      </Storyboard>
+                    </VisualState>
+                  </VisualStateGroup>
+                  <VisualStateGroup x:Name="EditableModeStates">
+                    <VisualState x:Name="TextBoxFocused">
+                      <VisualState.Setters>
+                        <Setter Target="DropDownGlyph.Foreground" Value="{ThemeResource ComboBoxEditableDropDownGlyphForeground}"/>
+                        <Setter Target="DropDownOverlay.Margin" Value="0,2,2,2"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="TextBoxFocusedOverlayPointerOver">
+                      <VisualState.Setters>
+                        <Setter Target="DropDownGlyph.Foreground" Value="{ThemeResource ComboBoxEditableDropDownGlyphForeground}"/>
+                        <Setter Target="DropDownOverlay.Background" Value="{ThemeResource ComboBoxFocusedDropDownBackgroundPointerOver}"/>
+                        <Setter Target="DropDownOverlay.Margin" Value="0,2,2,2"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="TextBoxFocusedOverlayPressed">
+                      <VisualState.Setters>
+                        <Setter Target="DropDownGlyph.Foreground" Value="{ThemeResource ComboBoxEditableDropDownGlyphForeground}"/>
+                        <Setter Target="DropDownOverlay.Background" Value="{ThemeResource ComboBoxFocusedDropDownBackgroundPointerPressed}"/>
+                        <Setter Target="DropDownOverlay.Margin" Value="0,2,2,2"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="TextBoxOverlayPointerOver">
+                      <VisualState.Setters>
+                        <Setter Target="DropDownOverlay.Background" Value="{ThemeResource ComboBoxDropDownBackgroundPointerOver}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="TextBoxOverlayPressed">
+                      <VisualState.Setters>
+                        <Setter Target="DropDownOverlay.Background" Value="{ThemeResource ComboBoxDropDownBackgroundPointerPressed}"/>
+                      </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="TextBoxUnfocused"/>
+                  </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+              </Grid>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+        <Setter Property="TextBoxStyle" Value="{StaticResource ComboBoxTextBoxStyle}"/>
+        <Setter Property="UseSystemFocusVisuals" Value="{ThemeResource IsApplicationFocusVisualKindReveal}"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+        <Setter Property="primitives:ComboBoxHelper.KeepInteriorCornersSquare" Value="true"/>
+      </Style>
+
+      <Style TargetType="ComboBoxItem">
+        <Setter Property="Height" Value="35"/>
+        <Setter Property="Padding" Value="11,0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+      </Style>
+
+      <ThemeShadow x:Name="EditorToolBarShadow"/>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <Grid Shadow="{StaticResource EditorToolBarShadow}"
+          Translation="0,0,4">
+      <Pivot Background="{ThemeResource CommandBarBackground}"
+             GettingFocus="EditorToolBar_GettingFocus"
+             IsTabStop="False">
+        <Pivot.Resources>
+          <!--<Style BasedOn="{StaticResource FluentIconAppBarButtonStyle}" TargetType="AppBarButton"/>
+          <Style BasedOn="{StaticResource FluentIconAppBarToggleButtonStyle}" TargetType="AppBarToggleButton"/>-->
+          <Style BasedOn="{StaticResource EditorCommandBarPivotHeaderItemStyle}" TargetType="PivotHeaderItem"/>
+          <Style BasedOn="{StaticResource NoContentCommandBarStyle}" TargetType="CommandBar">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="IsDynamicOverflowEnabled" Value="False"/>
+            <Setter Property="Margin" Value="0,-6,0,0"/>
+          </Style>
+        </Pivot.Resources>
+        <PivotItem Header="Format">
+          <CommandBar Height="{StaticResource NavigationViewCompactPaneLength}"
+                      DefaultLabelPosition="Right"
+                      IsEnabled="{x:Bind IsFormattingEnabled}">
+            <AppBarElementContainer Margin="0,0,8,0"
+                                    VerticalAlignment="Center">
+              <ComboBox x:Name="FontComboBox"
+                        Width="200"
+                        GettingFocus="FontComboBox_GettingFocus"
+                        IsEditable="True"
+                        ItemsSource="{x:Bind local:MessageComposer.FontFamilies, Mode=OneTime}"
+                        PreviewKeyDown="FontComboBox_PreviewKeyDown"
+                        SelectedValue="{x:Bind FormattedFontFamily}"
+                        SelectionChanged="FontComboBox_SelectionChanged"
+                        SelectionChangedTrigger="Committed"
+                        Style="{StaticResource FixedDefaultComboBoxStyle}"
+                        ToolTipService.ToolTip="Font"/>
+            </AppBarElementContainer>
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=FontDecreased}"
+                          LabelPosition="Collapsed"
+                          ToolTipService.ToolTip="Decrease Font Size"/>
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=FontIncreased}"
+                          LabelPosition="Collapsed"
+                          ToolTipService.ToolTip="Increase Font Size"/>
+            <AppBarSeparator IsCompact="True"/>
+            <AppBarToggleButton Click="{x:Bind Editor.ToggleBold, Mode=OneTime}"
+                                Icon="{ex:FluentSystemIcon Symbol=Bold}"
+                                IsChecked="{x:Bind DisplayTextFormat.IsBold}"
+                                LabelPosition="Collapsed"
+                                ToolTipService.ToolTip="Bold"/>
+            <AppBarToggleButton Click="{x:Bind Editor.ToggleItalic, Mode=OneTime}"
+                                Icon="{ex:FluentSystemIcon Symbol=Italic}"
+                                IsChecked="{x:Bind DisplayTextFormat.IsItalic}"
+                                LabelPosition="Collapsed"
+                                ToolTipService.ToolTip="Italic"/>
+            <AppBarToggleButton Click="{x:Bind Editor.ToggleUnderlined, Mode=OneTime}"
+                                Icon="{ex:FluentSystemIcon Symbol=Underline}"
+                                IsChecked="{x:Bind DisplayTextFormat.IsUnderlined}"
+                                LabelPosition="Collapsed"
+                                ToolTipService.ToolTip="Underline"/>
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Highlight}"
+                          LabelPosition="Collapsed"
+                          ToolTipService.ToolTip="Highlight"/>
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=TextColor}"
+                          LabelPosition="Collapsed"
+                          ToolTipService.ToolTip="Font Color"/>
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=ChevronDown}"
+                          LabelPosition="Collapsed"
+                          ToolTipService.ToolTip="Font Formatting">
+              <AppBarButton.Flyout>
+                <Flyout FlyoutPresenterStyle="{StaticResource EditorToolBarFlyoutPresenterStyle}"
+                        Placement="BottomEdgeAlignedLeft">
+                  <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                      <AppBarToggleButton Click="{x:Bind Editor.ToggleStrikethrough, Mode=OneTime}"
+                                          Icon="{ex:FluentSystemIcon Symbol=Strikethrough}"
+                                          IsChecked="{x:Bind DisplayTextFormat.IsStrikethrough}"
+                                          LabelPosition="Collapsed"
+                                          ToolTipService.ToolTip="Strikethrough"/>
+                      <AppBarToggleButton Click="{x:Bind Editor.ToggleSubscript, Mode=OneTime}"
+                                          Icon="{ex:FluentSystemIcon Symbol=Subscript}"
+                                          IsChecked="{x:Bind DisplayTextFormat.IsSubscript}"
+                                          LabelPosition="Collapsed"
+                                          ToolTipService.ToolTip="Subscript"/>
+                      <AppBarToggleButton Click="{x:Bind Editor.ToggleSuperscript, Mode=OneTime}"
+                                          Icon="{ex:FluentSystemIcon Symbol=Superscript}"
+                                          IsChecked="{x:Bind DisplayTextFormat.IsSuperscript}"
+                                          LabelPosition="Collapsed"
+                                          ToolTipService.ToolTip="Superscript"/>
+                    </StackPanel>
+                  </StackPanel>
+                </Flyout>
+              </AppBarButton.Flyout>
+            </AppBarButton>
+            <AppBarSeparator IsCompact="True"/>
+            <AppBarToggleButton Icon="{ex:FluentSystemIcon Symbol=Bullets}"
+                                LabelPosition="Collapsed"
+                                ToolTipService.ToolTip="Bullets"/>
+            <AppBarToggleButton Icon="{ex:FluentSystemIcon Symbol=Numbering}"
+                                LabelPosition="Collapsed"
+                                ToolTipService.ToolTip="Numbering"/>
+            <AppBarButton LabelPosition="Collapsed"
+                          ToolTipService.ToolTip="Alignment">
+              <AppBarButton.Icon>
+                <ex:FluentSystemIcon Symbol="{x:Bind ConvertAlignmentToSymbol(DisplayTextFormat.Alignment)}"/>
+              </AppBarButton.Icon>
+              <AppBarButton.Flyout>
+                <Flyout FlyoutPresenterStyle="{StaticResource EditorToolBarFlyoutPresenterStyle}"
+                        Placement="BottomEdgeAlignedLeft">
+                  <StackPanel Orientation="Horizontal">
+                    <AppBarToggleButton Click="{x:Bind Editor.AlignLeft, Mode=OneTime}"
+                                        Icon="{ex:FluentSystemIcon Symbol=AlignLeft}"
+                                        IsChecked="{x:Bind ui:Converters.Equality(DisplayTextFormat.Alignment, composing:HTMLEditorTextAlignment.Left)}"
+                                        LabelPosition="Collapsed"
+                                        ToolTipService.ToolTip="Align Left"/>
+                    <AppBarToggleButton Click="{x:Bind Editor.AlignCenter, Mode=OneTime}"
+                                        Icon="{ex:FluentSystemIcon Symbol=AlignCenter}"
+                                        IsChecked="{x:Bind ui:Converters.Equality(DisplayTextFormat.Alignment, composing:HTMLEditorTextAlignment.Center)}"
+                                        LabelPosition="Collapsed"
+                                        ToolTipService.ToolTip="Align Center"/>
+                    <AppBarToggleButton Click="{x:Bind Editor.AlignRight, Mode=OneTime}"
+                                        Icon="{ex:FluentSystemIcon Symbol=AlignRight}"
+                                        IsChecked="{x:Bind ui:Converters.Equality(DisplayTextFormat.Alignment, composing:HTMLEditorTextAlignment.Right)}"
+                                        LabelPosition="Collapsed"
+                                        ToolTipService.ToolTip="Align Right"/>
+                    <AppBarToggleButton Click="{x:Bind Editor.AlignJustified, Mode=OneTime}"
+                                        Icon="{ex:FluentSystemIcon Symbol=AlignJustify}"
+                                        IsChecked="{x:Bind ui:Converters.Equality(DisplayTextFormat.Alignment, composing:HTMLEditorTextAlignment.Justified)}"
+                                        LabelPosition="Collapsed"
+                                        ToolTipService.ToolTip="Justify"/>
+                  </StackPanel>
+                </Flyout>
+              </AppBarButton.Flyout>
+            </AppBarButton>
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=ChevronDown}"
+                          LabelPosition="Collapsed"
+                          ToolTipService.ToolTip="Paragraph Formatting">
+              <AppBarButton.Flyout>
+                <Flyout FlyoutPresenterStyle="{StaticResource EditorToolBarFlyoutPresenterStyle}"
+                        Placement="BottomEdgeAlignedLeft">
+                  <StackPanel Orientation="Horizontal">
+                    <AppBarButton Icon="{ex:FluentSystemIcon Symbol=IndentDecreased}"
+                                  LabelPosition="Collapsed"
+                                  ToolTipService.ToolTip="Decrease Indent"/>
+                    <AppBarButton Icon="{ex:FluentSystemIcon Symbol=IndentIncreased}"
+                                  LabelPosition="Collapsed"
+                                  ToolTipService.ToolTip="Increase Indent"/>
+                  </StackPanel>
+                </Flyout>
+              </AppBarButton.Flyout>
+            </AppBarButton>
+          </CommandBar>
+        </PivotItem>
+        <PivotItem Header="Insert">
+          <CommandBar Height="{StaticResource NavigationViewCompactPaneLength}"
+                      DefaultLabelPosition="Right">
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Attachment}"
+                          Label="Files"/>
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Table}"
+                          IsEnabled="{x:Bind IsFormattingEnabled}"
+                          Label="Table"/>
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Picture}"
+                          IsEnabled="{x:Bind IsFormattingEnabled}"
+                          Label="Pictures"/>
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Link}"
+                          IsEnabled="{x:Bind IsFormattingEnabled}"
+                          Label="Links"/>
+            <AppBarButton Click="{x:Bind ShowEmojiKeyboard, Mode=OneTime}"
+                          Icon="{ex:FluentSystemIcon Symbol=Emoji}"
+                          Label="Emoji"/>
+          </CommandBar>
+        </PivotItem>
+        <PivotItem Header="Options">
+          <CommandBar Height="{StaticResource NavigationViewCompactPaneLength}"
+                      DefaultLabelPosition="Right">
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Importance}"
+                          LabelPosition="Collapsed"/>
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=ArrowDown}"
+                          LabelPosition="Collapsed"/>
+          </CommandBar>
+        </PivotItem>
+      </Pivot>
+    </Grid>
+    <Grid x:Name="MailHeaderGrid"
+          Grid.Row="1"
+          Padding="16,8,16,0">
+      <Grid ColumnSpacing="8">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <!--  From  -->
+        <TextBlock VerticalAlignment="Center"
+                   Foreground="{ThemeResource TextBoxPlaceholderTextThemeBrush}"
+                   Text="From:"
+                   TextAlignment="Right"/>
+        <Grid Grid.Column="1"
+              Height="30">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <TextBlock VerticalAlignment="Center"
+                     Text="{x:Bind ViewModel.Sender.DisplayName}"/>
+          <Button Grid.Column="1"
+                  MinHeight="0"
+                  VerticalAlignment="Stretch"
+                  Background="Transparent"
+                  Click="{x:Bind ShowCcTextBox}"
+                  Content="Cc"
+                  CornerRadius="0"
+                  Foreground="{ThemeResource ButtonForegroundThemeBrush}"
+                  Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(IsCcVisible)}"/>
+          <Button Grid.Column="2"
+                  MinHeight="0"
+                  VerticalAlignment="Stretch"
+                  Background="Transparent"
+                  Click="{x:Bind ShowBccTextBox}"
+                  Content="Bcc"
+                  CornerRadius="0"
+                  Foreground="{ThemeResource ButtonForegroundThemeBrush}"
+                  Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(IsBccVisible)}"/>
+        </Grid>
+        <Rectangle Grid.Row="1"
+                   Grid.ColumnSpan="2"
+                   Height="1"
+                   HorizontalAlignment="Stretch"
+                   Fill="{ThemeResource SystemBaseLowColor}"/>
+        <!--  To  -->
+        <TextBlock Grid.Row="2"
+                   VerticalAlignment="Center"
+                   Foreground="{ThemeResource TextBoxPlaceholderTextThemeBrush}"
+                   Text="To:"/>
+        <wct:TokenizingTextBox Grid.Row="2"
+                               Grid.Column="1"
+                               GotFocus="MailHeaderEditor_GotFocus"
+                               ItemsSource="{x:Bind ViewModel.ToRecipients}"
+                               Style="{StaticResource RecipientsTokenizingTextBoxStyle}"
+                               TokenItemAdding="RecipientTokenItemAdding"
+                               TokenItemTemplate="{StaticResource RecipientsTokenizingTextBoxTokenItemDataTemplate}"/>
+        <Rectangle Grid.Row="3"
+                   Grid.ColumnSpan="2"
+                   Height="1"
+                   HorizontalAlignment="Stretch"
+                   Fill="{ThemeResource SystemBaseLowColor}"/>
+        <!--  Cc  -->
+        <TextBlock Grid.Row="4"
+                   VerticalAlignment="Center"
+                   Foreground="{ThemeResource TextBoxPlaceholderTextThemeBrush}"
+                   Text="Cc:"
+                   Visibility="{x:Bind IsCcVisible}"/>
+        <wct:TokenizingTextBox x:Name="CcTextBox"
+                               Grid.Row="4"
+                               Grid.Column="1"
+                               GotFocus="MailHeaderEditor_GotFocus"
+                               ItemsSource="{x:Bind ViewModel.CcRecipients}"
+                               Style="{StaticResource RecipientsTokenizingTextBoxStyle}"
+                               TokenItemAdding="RecipientTokenItemAdding"
+                               TokenItemTemplate="{StaticResource RecipientsTokenizingTextBoxTokenItemDataTemplate}"
+                               Visibility="{x:Bind IsCcVisible}"/>
+        <Rectangle Grid.Row="5"
+                   Grid.ColumnSpan="2"
+                   Height="1"
+                   HorizontalAlignment="Stretch"
+                   Fill="{ThemeResource SystemBaseLowColor}"
+                   Visibility="{x:Bind IsCcVisible}"/>
+        <!--  Bcc  -->
+        <TextBlock Grid.Row="6"
+                   VerticalAlignment="Center"
+                   Foreground="{ThemeResource TextBoxPlaceholderTextThemeBrush}"
+                   Text="Bcc:"
+                   Visibility="{x:Bind IsBccVisible}"/>
+        <wct:TokenizingTextBox x:Name="BccTextBox"
+                               Grid.Row="6"
+                               Grid.Column="1"
+                               GotFocus="MailHeaderEditor_GotFocus"
+                               Style="{StaticResource RecipientsTokenizingTextBoxStyle}"
+                               TokenItemAdding="RecipientTokenItemAdding"
+                               TokenItemTemplate="{StaticResource RecipientsTokenizingTextBoxTokenItemDataTemplate}"
+                               Visibility="{x:Bind IsBccVisible}"/>
+        <Rectangle Grid.Row="7"
+                   Grid.ColumnSpan="2"
+                   Height="1"
+                   HorizontalAlignment="Stretch"
+                   Fill="{ThemeResource SystemBaseLowColor}"
+                   Visibility="{x:Bind IsBccVisible}"/>
+        <!--  Subject  -->
+        <TextBox Grid.Row="8"
+                 Grid.ColumnSpan="2"
+                 GotFocus="MailHeaderEditor_GotFocus"
+                 PlaceholderText="Subject"
+                 Style="{StaticResource SubjectTextBoxStyle}"
+                 Text="{x:Bind ViewModel.Subject, Mode=TwoWay}"/>
+        <Rectangle Grid.Row="9"
+                   Grid.ColumnSpan="2"
+                   Height="1"
+                   HorizontalAlignment="Stretch"
+                   Fill="{ThemeResource SystemBaseLowColor}"/>
+      </Grid>
+    </Grid>
+    <composing:HTMLEditor x:Name="Editor"
+                          Grid.Row="2"
+                          Grid.RowSpan="2"
+                          Margin="8,0"
+                          GotFocus="MailBodyEditor_GotFocus"/>
+  </Grid>
+</UserControl>

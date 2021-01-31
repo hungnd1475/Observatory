@@ -6,18 +6,15 @@ using Observatory.Core.Persistence;
 using Observatory.Core.Persistence.Specifications;
 using Observatory.Core.Services;
 using Observatory.Core.Services.ChangeTracking;
-using Observatory.Core.Virtualization;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Splat;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 namespace Observatory.Core.ViewModels.Mail
 {
@@ -33,11 +30,14 @@ namespace Observatory.Core.ViewModels.Mail
         [Reactive]
         public string Name { get; private set; }
 
-        [Reactive]
-        public int UnreadCount { get; private set; }
+        //[Reactive]
+        //public int UnreadCount { get; private set; }
+
+        //[Reactive]
+        //public int TotalCount { get; private set; }
 
         [Reactive]
-        public int TotalCount { get; private set; }
+        public int MessageCount { get; private set; }
 
         public FolderType Type { get; }
 
@@ -52,14 +52,14 @@ namespace Observatory.Core.ViewModels.Mail
 
         public ReactiveCommand<Unit, Unit> CancelSynchronization { get; }
 
-        [ObservableAsProperty]
-        public bool IsSynchronizing { get; }
-
         public ReactiveCommand<Unit, Unit> Rename { get; }
 
         public ReactiveCommand<Unit, Unit> Move { get; }
 
         public ReactiveCommand<Unit, Unit> Delete { get; }
+
+        [ObservableAsProperty]
+        public bool IsBusy { get; }
 
         public ViewModelActivator Activator { get; } = new ViewModelActivator();
 
@@ -79,9 +79,6 @@ namespace Observatory.Core.ViewModels.Mail
             Synchronize = ReactiveCommand.CreateFromObservable(() => Observable
                 .StartAsync((token) => mailService.SynchronizeMessagesAsync(node.Item.Id, token))
                 .TakeUntil(CancelSynchronization));
-            Synchronize.IsExecuting
-                .ToPropertyEx(this, x => x.IsSynchronizing)
-                .DisposeWith(_disposables);
             Synchronize.ThrownExceptions
                 .Subscribe(ex => this.Log().Error(ex))
                 .DisposeWith(_disposables);
@@ -108,23 +105,22 @@ namespace Observatory.Core.ViewModels.Mail
 
             mailService.MessageChanges
                 .Where(changes => changes.AffectsFolder(node.Item.Id))
-                .SelectMany(_ => CountMessages(queryFactory, node.Item.Id))
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(x =>
-                {
-                    UnreadCount = x.UnreadCount;
-                    TotalCount = x.TotalCount;
-                })
+                .SelectMany(_ => CountMessages(queryFactory))
+                .Subscribe()
                 .DisposeWith(_disposables);
 
-            CountMessages(queryFactory, node.Item.Id)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(x =>
-                {
-                    UnreadCount = x.UnreadCount;
-                    TotalCount = x.TotalCount;
-                })
+            CountMessages(queryFactory)
+                .Subscribe()
                 .DisposeWith(_disposables);
+
+            Observable.CombineLatest(new[]
+                {
+                    Synchronize.IsExecuting,
+                    this.WhenAnyValue(x => x.Messages.IsBusy),
+                },
+                x => x.Any(x => x))
+            .ToPropertyEx(this, x => x.IsBusy)
+            .DisposeWith(_disposables);
         }
 
         private bool CanMoveTo(MailFolderSelectionItem destinationFolder)
@@ -139,17 +135,39 @@ namespace Observatory.Core.ViewModels.Mail
             _disposables.Dispose();
         }
 
-        private static IObservable<(int UnreadCount, int TotalCount)> CountMessages(
-            IProfileDataQueryFactory queryFactory, string folderId)
+        public IObservable<Unit> CountMessages(IProfileDataQueryFactory queryFactory)
         {
             return Observable.Start(() =>
             {
                 using var query = queryFactory.Connect();
-                var unreadCount = query.MessageSummaries.Count(m => m.FolderId == folderId && !m.IsRead);
-                var totalCount = query.MessageSummaries.Count(m => m.FolderId == folderId);
-                return (UnreadCount: unreadCount, TotalCount: totalCount);
-            },
-            RxApp.TaskpoolScheduler);
+                switch (Type)
+                {
+                    case FolderType.Archive:
+                    case FolderType.DeletedItems:
+                    case FolderType.SentItems:
+                        return 0;
+                    case FolderType.Drafts:
+                        return query.MessageSummaries.Count(m => m.FolderId == Id);
+                    default:
+                        return query.MessageSummaries.Count(m => m.FolderId == Id && !m.IsRead);
+                }
+            }, RxApp.TaskpoolScheduler)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Do(count => MessageCount = count)
+            .Select(_ => Unit.Default);
         }
+
+        //private static IObservable<(int UnreadCount, int TotalCount)> CountMessages(
+        //    IProfileDataQueryFactory queryFactory, string folderId)
+        //{
+        //    return Observable.Start(() =>
+        //    {
+        //        using var query = queryFactory.Connect();
+        //        var unreadCount = query.MessageSummaries.Count(m => m.FolderId == folderId && !m.IsRead);
+        //        var totalCount = query.MessageSummaries.Count(m => m.FolderId == folderId);
+        //        return (UnreadCount: unreadCount, TotalCount: totalCount);
+        //    },
+        //    RxApp.TaskpoolScheduler);
+        //}
     }
 }

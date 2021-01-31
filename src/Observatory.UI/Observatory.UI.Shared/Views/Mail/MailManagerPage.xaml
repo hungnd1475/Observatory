@@ -2,6 +2,7 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:ex="using:Observatory.UI.Extensions"
       xmlns:local="using:Observatory.UI.Views.Mail"
       xmlns:mailvm="using:Observatory.Core.ViewModels.Mail"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -63,9 +64,9 @@
                          Margin="0,0,20,0"
                          VerticalAlignment="Center"
                          FontWeight="Normal"
-                         Text="{x:Bind UnreadCount, Mode=OneWay}"
+                         Text="{x:Bind MessageCount, Mode=OneWay}"
                          TextAlignment="Right"
-                         Visibility="{x:Bind ui:Converters.IntegerVisibility(UnreadCount), Mode=OneWay}"/>
+                         Visibility="{x:Bind ui:Converters.IntegerVisibility(MessageCount), Mode=OneWay}"/>
             </Grid>
           </DataTemplate>
         </Setter.Value>
@@ -80,12 +81,18 @@
       <Setter Property="RequestedTheme" Value="Dark"/>
     </Style>
 
-    <DataTemplate x:Key="ModeSelectorItemTemplate"
-                  x:DataType="vm:FunctionalityMode">
-      <SymbolIcon HorizontalAlignment="Center"
-                  VerticalAlignment="Center"
-                  Symbol="{x:Bind ui:Converters.FunctionalityModeToIcon((vm:FunctionalityMode))}"/>
-    </DataTemplate>
+    <local:MessageDetailTemplateSelector x:Key="MessageDetailTemplateSelector">
+      <local:MessageDetailTemplateSelector.ReadingTemplate>
+        <DataTemplate x:DataType="mailvm:MessageDetailViewModel">
+          <local:MessageDetailView ViewModel="{x:Bind}"/>
+        </DataTemplate>
+      </local:MessageDetailTemplateSelector.ReadingTemplate>
+      <local:MessageDetailTemplateSelector.ComposingTemplate>
+        <DataTemplate x:DataType="mailvm:MessageDetailViewModel">
+          <local:MessageComposer ViewModel="{x:Bind}"/>
+        </DataTemplate>
+      </local:MessageDetailTemplateSelector.ComposingTemplate>
+    </local:MessageDetailTemplateSelector>
 
     <win:ThemeShadow x:Name="ContentGridShadow"/>
     <win:ThemeShadow x:Name="TopBarGridShadow"/>
@@ -126,15 +133,15 @@
           <Button HorizontalAlignment="Left"
                   HorizontalContentAlignment="Center"
                   Click="{x:Bind ToggleNavigationPane, Mode=OneTime}"
-                  Style="{StaticResource NavigationPaneButtonStyle}">
-            <SymbolIcon Symbol="GlobalNavigationButton"/>
-          </Button>
+                  Content="{ex:FluentSystemIcon Symbol=Navigation,
+                                                Size=24}"
+                  Style="{StaticResource NavigationPaneButtonStyle}"/>
           <CommandBar Grid.Column="1"
                       HorizontalAlignment="Left"
                       Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
                       DefaultLabelPosition="Right">
             <AppBarButton x:Name="ExpandedNewMailButton"
-                          Icon="Add"
+                          Icon="{ex:FluentSystemIcon Symbol=Add}"
                           Label="New mail"/>
           </CommandBar>
         </Grid>
@@ -147,11 +154,11 @@
                       IsDynamicOverflowEnabled="False"
                       Visibility="Visible">
             <AppBarButton x:Name="CompactNewMailButton"
-                          Icon="Add"
+                          Icon="{ex:FluentSystemIcon Symbol=Add}"
                           Label="New mail"
                           Visibility="Collapsed"/>
             <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Synchronize}"
-                          Icon="Sync"
+                          Icon="{ex:FluentSystemIcon Symbol=Sync}"
                           Label="Sync"/>
             <CommandBar.Content>
               <TextBox Margin="0,0,2,0"
@@ -170,26 +177,34 @@
                       IsDynamicOverflowEnabled="False"
                       Visibility="Collapsed">
             <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.Archive}"
-                          Icon="{wctex:FontIcon Glyph={StaticResource ArchiveGlyph}}"
+                          Icon="{ex:FluentSystemIcon Symbol=Archive}"
                           Label="Archive"/>
             <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.Delete}"
-                          Icon="Delete"
+                          Icon="{ex:FluentSystemIcon Symbol=Delete}"
                           Label="Delete"/>
-            <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.Move}"
-                          Icon="MoveToFolder"
+            <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.SelectAndMove}"
+                          Icon="{ex:FluentSystemIcon Symbol=FolderArrowRight}"
                           Label="Move"/>
             <CommandBar.SecondaryCommands>
               <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.SetFlag}"
-                            Icon="Flag"
-                            Label="Set flag"/>
+                            Label="Set flag">
+                <AppBarButton.Icon>
+                  <IconSourceElement Margin="-1">
+                    <PathIconSource Data="{StaticResource FlagIconData}"/>
+                  </IconSourceElement>
+                </AppBarButton.Icon>
+              </AppBarButton>
               <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.ClearFlag}"
-                            Icon="Flag"
-                            Label="Clear flag"/>
+                            Label="Clear flag">
+                <IconSourceElement Margin="-1">
+                  <PathIconSource Data="{StaticResource UnflagIconData}"/>
+                </IconSourceElement>
+              </AppBarButton>
               <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.MarkAsRead}"
-                            Icon="Read"
+                            Icon="{ex:FluentSystemIcon Symbol=MailRead}"
                             Label="Mark as read"/>
               <AppBarButton Command="{x:Bind ViewModel.SelectedFolder.Messages.MarkAsUnread}"
-                            Icon="Mail"
+                            Icon="{ex:FluentSystemIcon Symbol=Mail}"
                             Label="Mark as unread"/>
             </CommandBar.SecondaryCommands>
           </CommandBar>
@@ -200,46 +215,56 @@
                       Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
                       CommandBarOverflowPresenterStyle="{StaticResource LightCommandBarOverflowPresenterStyle}"
                       DefaultLabelPosition="Right">
-            <AppBarButton Icon="MailReply"
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Reply}"
                           Label="Reply"/>
-            <AppBarButton Icon="MailReplyAll"
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=ReplyAll}"
                           Label="Reply all"/>
-            <AppBarButton Icon="MailForward"
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=ArrowForward}"
                           Label="Forward"/>
             <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.Archive}"
-                          Icon="{wctex:FontIcon Glyph={StaticResource ArchiveGlyph}}"
+                          Icon="{ex:FluentSystemIcon Symbol=Archive}"
                           Label="Archive"/>
             <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.Delete}"
-                          Icon="Delete"
+                          Icon="{ex:FluentSystemIcon Symbol=Delete}"
                           Label="Delete"/>
             <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.ToggleFlag}"
-                          Icon="Flag"
                           Label="Set flag"
-                          Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.SelectedMessage.IsFlagged)}"/>
+                          Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.SelectedMessage.IsFlagged)}">
+              <AppBarButton.Icon>
+                <IconSourceElement Margin="-1">
+                  <PathIconSource Data="{StaticResource FlagIconData}"/>
+                </IconSourceElement>
+              </AppBarButton.Icon>
+            </AppBarButton>
             <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.ToggleFlag}"
-                          Icon="Flag"
                           Label="Clear flag"
-                          Visibility="{x:Bind ViewModel.SelectedMessage.IsFlagged}"/>
+                          Visibility="{x:Bind ViewModel.SelectedMessage.IsFlagged}">
+              <AppBarButton.Icon>
+                <IconSourceElement Margin="-1">
+                  <PathIconSource Data="{StaticResource UnflagIconData}"/>
+                </IconSourceElement>
+              </AppBarButton.Icon>
+            </AppBarButton>
             <CommandBar.SecondaryCommands>
               <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.ToggleRead}"
-                            Icon="Read"
+                            Icon="{ex:FluentSystemIcon Symbol=MailRead}"
                             Label="Mark as read"
                             Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.SelectedMessage.IsRead)}"/>
               <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.ToggleRead}"
-                            Icon="Mail"
+                            Icon="{ex:FluentSystemIcon Symbol=Mail}"
                             Label="Mark as unread"
                             Visibility="{x:Bind ViewModel.SelectedMessage.IsRead}"/>
               <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.Move}"
-                            Icon="MoveToFolder"
+                            Icon="{ex:FluentSystemIcon Symbol=FolderArrowRight}"
                             Label="Move"/>
               <AppBarButton Command="{x:Bind ViewModel.SelectedMessage.MoveToJunk}"
-                            Icon="{wctex:FontIcon Glyph={StaticResource MoveToJunkGlyph}}"
+                            Icon="{ex:FluentSystemIcon Symbol=FolderProhibited}"
                             Label="Move to junk"/>
-              <AppBarButton Icon="Find"
+              <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Search}"
                             Label="Find"/>
-              <AppBarButton Icon="{wctex:FontIcon Glyph={StaticResource SaveAsGlyph}}"
+              <AppBarButton Icon="{ex:FluentSystemIcon Symbol=SaveAs}"
                             Label="Save as"/>
-              <AppBarButton Icon="Print"
+              <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Print}"
                             Label="Print"/>
               <AppBarButton Icon="Zoom"
                             Label="Zoom"/>
@@ -273,7 +298,8 @@
                 <ColumnDefinition Width="40"/>
                 <ColumnDefinition Width="*"/>
               </Grid.ColumnDefinitions>
-              <SymbolIcon Symbol="Contact"/>
+              <ex:FluentSystemIcon FontSize="24"
+                                   Symbol="Person"/>
               <Grid Grid.Column="1">
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="*"/>
@@ -286,10 +312,10 @@
                 <Button Grid.Column="1"
                         HorizontalContentAlignment="Center"
                         Command="{x:Bind ViewModel.HostScreen.AddProfile, Mode=OneTime}"
+                        Content="{ex:FluentSystemIcon Symbol=Add,
+                                                      Size=24}"
                         Style="{StaticResource NavigationPaneButtonStyle}"
-                        ToolTipService.ToolTip="Add new account">
-                  <SymbolIcon Symbol="Add"/>
-                </Button>
+                        ToolTipService.ToolTip="Add new account"/>
               </Grid>
             </Grid>
             <ListView Grid.Row="1"
@@ -305,10 +331,11 @@
                     ToolTipService.ToolTip="View all folders">
               <Grid>
                 <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="39"/>
+                  <ColumnDefinition Width="38"/>
                   <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <FontIcon Glyph="&#xF12B;"/>
+                <ex:FluentSystemIcon FontSize="24"
+                                     Symbol="Folder"/>
                 <TextBlock Grid.Column="1"
                            HorizontalAlignment="Stretch"
                            VerticalAlignment="Center"
@@ -336,9 +363,10 @@
                 <TextBlock Grid.Column="1"
                            VerticalAlignment="Center"
                            Text="More"/>
-                <FontIcon Grid.Column="2"
-                          Margin="8,6"
-                          Glyph="&#xE00F;"/>
+                <ex:FluentSystemIcon Grid.Column="2"
+                                     Margin="8,6"
+                                     FontSize="24"
+                                     Symbol="ChevronRight"/>
               </Grid>
             </Button>
             <v:FunctionalityModeSelector Grid.Row="6"
@@ -354,20 +382,21 @@
             </Grid.RowDefinitions>
             <Button HorizontalAlignment="Left"
                     HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
                     Click="{x:Bind ToggleProfileListPane, Mode=OneTime}"
+                    Content="{ex:FluentSystemIcon Symbol=Person,
+                                                  Size=24}"
                     Style="{StaticResource NavigationPaneButtonStyle}"
-                    ToolTipService.ToolTip="View all accounts">
-              <SymbolIcon Symbol="Contact"/>
-            </Button>
+                    ToolTipService.ToolTip="View all accounts"/>
             <Button Grid.Row="1"
-                    Padding="0"
                     HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
                     HorizontalContentAlignment="Center"
                     Click="{x:Bind ToggleFolderListPane, Mode=OneTime}"
+                    Content="{ex:FluentSystemIcon Symbol=Folder,
+                                                  Size=24}"
                     Style="{StaticResource NavigationPaneButtonStyle}"
-                    ToolTipService.ToolTip="View all folders">
-              <FontIcon Glyph="&#xF12B;"/>
-            </Button>
+                    ToolTipService.ToolTip="View all folders"/>
             <v:FunctionalityModeSelector Grid.Row="3"
                                          IsExpanded="False"/>
           </Grid>
@@ -400,10 +429,10 @@
                       VerticalContentAlignment="Center"
                       Click="{x:Bind ToggleProfileListPane, Mode=OneTime}"
                       Command="{x:Bind ViewModel.HostScreen.AddProfile, Mode=OneTime}"
+                      Content="{ex:FluentSystemIcon Symbol=Add,
+                                                    Size=24}"
                       Style="{StaticResource NavigationPaneButtonStyle}"
-                      ToolTipService.ToolTip="Add new account">
-                <SymbolIcon Symbol="Add"/>
-              </Button>
+                      ToolTipService.ToolTip="Add new account"/>
             </Grid>
             <ListView Grid.Row="1"
                       IsItemClickEnabled="True"
@@ -439,10 +468,10 @@
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center"
                         Click="{x:Bind ToggleFolderListPane}"
+                        Content="{ex:FluentSystemIcon Symbol=Add,
+                                                      Size=24}"
                         Style="{StaticResource NavigationPaneButtonStyle}"
-                        ToolTipService.ToolTip="Add new folder">
-                  <SymbolIcon Symbol="Add"/>
-                </Button>
+                        ToolTipService.ToolTip="Add new folder"/>
               </Grid>
               <muxc:TreeView x:Name="FolderTreeView"
                              Grid.Row="1"
@@ -462,9 +491,9 @@
                         <TextBlock Text="{x:Bind Name}"/>
                         <TextBlock Grid.Column="1"
                                    Margin="0,0,15,0"
-                                   Text="{x:Bind UnreadCount}"
+                                   Text="{x:Bind MessageCount}"
                                    TextAlignment="Right"
-                                   Visibility="{x:Bind ui:Converters.IntegerVisibility(UnreadCount)}"/>
+                                   Visibility="{x:Bind ui:Converters.IntegerVisibility(MessageCount)}"/>
                       </Grid>
                     </muxc:TreeViewItem>
                   </DataTemplate>
@@ -482,9 +511,14 @@
             </Grid.ColumnDefinitions>
             <local:MailFolderView SelectedMessage="{x:Bind ViewModel.SelectedMessage, Mode=TwoWay}"
                                   ViewModel="{x:Bind ViewModel.SelectedFolder}"/>
-            <local:MessageDetailView Grid.Column="1"
-                                     ViewModel="{x:Bind ViewModel.SelectedMessage.Detail}"
-                                     Visibility="{x:Bind ui:Converters.ObjectNullToVisibility(ViewModel.SelectedMessage), FallbackValue='Collapsed'}"/>
+            <ContentControl Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"
+                            Content="{x:Bind ViewModel.SelectedMessage.Detail}"
+                            ContentTemplateSelector="{StaticResource MessageDetailTemplateSelector}"
+                            Visibility="{x:Bind ui:Converters.ObjectNullToVisibility(ViewModel.SelectedMessage), FallbackValue='Collapsed'}"/>
             <Rectangle Grid.Column="1"
                        Width="1"
                        HorizontalAlignment="Left"

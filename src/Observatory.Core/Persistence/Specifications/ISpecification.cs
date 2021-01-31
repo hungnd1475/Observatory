@@ -13,9 +13,9 @@ namespace Observatory.Core.Persistence.Specifications
     public interface ISpecification<TSource, TTarget>
     {
         /// <summary>
-        /// Applies the specification on a source queryable.
+        /// Applies the specification on a queryable source.
         /// </summary>
-        /// <param name="source">The source queryable to apply the specification on.</param>
+        /// <param name="source">The queryable source to apply the specification on.</param>
         /// <returns>A <see cref="IQueryable{T}"/> that satisfies the specification.</returns>
         IQueryable<TTarget> Apply(IQueryable<TSource> source);
     }

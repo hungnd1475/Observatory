@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="using:Observatory.UI.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ex="using:Observatory.UI.Extensions"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:models="using:Observatory.Core.Models"
              xmlns:triggers="using:Microsoft.Toolkit.Uwp.UI.Triggers"
@@ -37,14 +38,12 @@
 
       <Style x:Key="MessageSummaryViewArchiveButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="Button">
-              <FontIcon x:Name="Icon"
-                        FontSize="16"
-                        Glyph="{StaticResource ArchiveGlyph}">
+              <ex:FluentSystemIcon x:Name="Icon"
+                                   Symbol="Archive">
                 <VisualStateManager.VisualStateGroups>
                   <VisualStateGroup x:Name="CommonStates">
                     <VisualState x:Name="Normal"/>
@@ -65,7 +64,7 @@
                     </VisualState>
                   </VisualStateGroup>
                 </VisualStateManager.VisualStateGroups>
-              </FontIcon>
+              </ex:FluentSystemIcon>
             </ControlTemplate>
           </Setter.Value>
         </Setter>
@@ -73,14 +72,12 @@
 
       <Style x:Key="MessageSummaryViewDeleteButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="Button">
-              <FontIcon x:Name="Icon"
-                        FontSize="16"
-                        Glyph="{StaticResource DeleteGlyph}">
+              <ex:FluentSystemIcon x:Name="Icon"
+                                   Symbol="Delete">
                 <VisualStateManager.VisualStateGroups>
                   <VisualStateGroup x:Name="CommonStates">
                     <VisualState x:Name="Normal"/>
@@ -101,7 +98,7 @@
                     </VisualState>
                   </VisualStateGroup>
                 </VisualStateManager.VisualStateGroups>
-              </FontIcon>
+              </ex:FluentSystemIcon>
             </ControlTemplate>
           </Setter.Value>
         </Setter>
@@ -115,17 +112,15 @@
           <Setter.Value>
             <ControlTemplate TargetType="ToggleButton">
               <Grid Background="{TemplateBinding Background}">
-                <FontIcon x:Name="FlagIcon"
-                          FontSize="16"
-                          Glyph="{StaticResource FlagGlyph}"/>
-                <FontIcon x:Name="UnflagIcon"
-                          FontSize="16"
-                          Glyph="{StaticResource UnflagGlyph}"
-                          Visibility="Collapsed">
-                  <FontIcon.RenderTransform>
-                    <TranslateTransform X="2"/>
-                  </FontIcon.RenderTransform>
-                </FontIcon>
+                <IconSourceElement x:Name="FlagIcon"
+                                   Margin="-2">
+                  <PathIconSource Data="{StaticResource FlagIconData}"/>
+                </IconSourceElement>
+                <IconSourceElement x:Name="UnflagIcon"
+                                   Margin="-2"
+                                   Visibility="Collapsed">
+                  <PathIconSource Data="{StaticResource UnflagIconData}"/>
+                </IconSourceElement>
                 <VisualStateManager.VisualStateGroups>
                   <VisualStateGroup x:Name="CommonStates">
                     <VisualState x:Name="Normal"/>
@@ -146,29 +141,37 @@
                     </VisualState>
                     <VisualState x:Name="Checked">
                       <VisualState.Setters>
+                        <Setter Target="FlagIcon.Visibility" Value="Collapsed"/>
                         <Setter Target="UnflagIcon.Visibility" Value="Visible"/>
-                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
+                        <!--<Setter Target="FlagIcon.Symbol" Value="FlagOff"/>-->
+                        <!--<Setter Target="FlagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>-->
                         <Setter Target="UnflagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
                       </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="CheckedPointerOver">
                       <VisualState.Setters>
+                        <Setter Target="FlagIcon.Visibility" Value="Collapsed"/>
                         <Setter Target="UnflagIcon.Visibility" Value="Visible"/>
-                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
+                        <!--<Setter Target="FlagIcon.Symbol" Value="FlagOff"/>-->
+                        <!--<Setter Target="FlagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>-->
                         <Setter Target="UnflagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
                       </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="CheckedPressed">
                       <VisualState.Setters>
+                        <Setter Target="FlagIcon.Visibility" Value="Collapsed"/>
                         <Setter Target="UnflagIcon.Visibility" Value="Visible"/>
-                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
+                        <!--<Setter Target="FlagIcon.Symbol" Value="FlagOff"/>-->
+                        <!--<Setter Target="FlagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>-->
                         <Setter Target="UnflagIcon.Foreground" Value="{ThemeResource UnflagIconColor}"/>
                       </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="CheckedDisabled">
                       <VisualState.Setters>
+                        <Setter Target="FlagIcon.Visibility" Value="Collapsed"/>
                         <Setter Target="UnflagIcon.Visibility" Value="Visible"/>
-                        <Setter Target="FlagIcon.Foreground" Value="{ThemeResource SystemControlDisabledBaseMediumLowBrush}"/>
+                        <!--<Setter Target="FlagIcon.Symbol" Value="FlagOff"/>-->
+                        <!--<Setter Target="FlagIcon.Foreground" Value="{ThemeResource SystemControlDisabledBaseMediumLowBrush}"/>-->
                         <Setter Target="UnflagIcon.Foreground" Value="{ThemeResource SystemControlDisabledBaseMediumLowBrush}"/>
                       </VisualState.Setters>
                     </VisualState>
@@ -184,33 +187,43 @@
   <UserControl.ContextFlyout>
     <MenuFlyout>
       <MenuFlyoutItem Command="{x:Bind ViewModel.Archive}"
-                      Icon="{wctex:FontIcon Glyph={StaticResource ArchiveGlyph}}"
+                      Icon="{ex:FluentSystemIcon Symbol=Archive}"
                       Text="Archive"/>
       <MenuFlyoutItem Command="{x:Bind ViewModel.Delete}"
-                      Icon="{wctex:FontIcon Glyph={StaticResource DeleteGlyph}}"
+                      Icon="{ex:FluentSystemIcon Symbol=Delete}"
                       Text="Delete"/>
       <MenuFlyoutItem Command="{x:Bind ViewModel.Move}"
-                      Icon="{wctex:SymbolIcon Symbol=MoveToFolder}"
+                      Icon="{ex:FluentSystemIcon Symbol=FolderArrowRight}"
                       Text="Move"/>
       <MenuFlyoutItem Command="{x:Bind ViewModel.ToggleFlag}"
-                      Icon="{wctex:FontIcon Glyph={StaticResource FlagGlyph}}"
                       Text="Set flag"
-                      Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.IsFlagged)}"/>
+                      Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.IsFlagged)}">
+        <MenuFlyoutItem.Icon>
+          <IconSourceElement Margin="-1">
+            <PathIconSource Data="{StaticResource FlagIconData}"/>
+          </IconSourceElement>
+        </MenuFlyoutItem.Icon>
+      </MenuFlyoutItem>
       <MenuFlyoutItem Command="{x:Bind ViewModel.ToggleFlag}"
-                      Icon="{wctex:FontIcon Glyph={StaticResource FlagGlyph}}"
                       Text="Clear flag"
-                      Visibility="{x:Bind ViewModel.IsFlagged}"/>
+                      Visibility="{x:Bind ViewModel.IsFlagged}">
+        <MenuFlyoutItem.Icon>
+          <IconSourceElement Margin="-1">
+            <PathIconSource Data="{StaticResource UnflagIconData}"/>
+          </IconSourceElement>
+        </MenuFlyoutItem.Icon>
+      </MenuFlyoutItem>
       <MenuFlyoutItem Command="{x:Bind ViewModel.ToggleRead}"
-                      Icon="{wctex:SymbolIcon Symbol=Read}"
+                      Icon="{ex:FluentSystemIcon Symbol=MailRead}"
                       Text="Mark as read"
                       Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.IsRead)}"/>
       <MenuFlyoutItem Command="{x:Bind ViewModel.ToggleRead}"
-                      Icon="{wctex:SymbolIcon Symbol=Mail}"
+                      Icon="{ex:FluentSystemIcon Symbol=Mail}"
                       Text="Mark as unread"
                       Visibility="{x:Bind ViewModel.IsRead}"/>
       <MenuFlyoutSeparator/>
       <MenuFlyoutItem Command="{x:Bind ViewModel.MoveToJunk}"
-                      Icon="{wctex:FontIcon Glyph={StaticResource MoveToJunkGlyph}}"
+                      Icon="{ex:FluentSystemIcon Symbol=FolderArrowRight}"
                       Text="Move to Junk"/>
     </MenuFlyout>
   </UserControl.ContextFlyout>
@@ -254,13 +267,13 @@
         <Border.RenderTransform>
           <CompositeTransform x:Name="MultiSelectionBoxTransform"/>
         </Border.RenderTransform>
-        <FontIcon x:Name="MultiSelectionBoxCheckMark"
-                  Grid.Column="1"
-                  HorizontalAlignment="Center"
-                  VerticalAlignment="Center"
-                  FontSize="14"
-                  Glyph="{StaticResource CheckMark}"
-                  Visibility="Collapsed"/>
+        <ex:FluentSystemIcon x:Name="MultiSelectionBoxCheckMark"
+                             Grid.Column="1"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             FontSize="14"
+                             Symbol="CheckMark"
+                             Visibility="Collapsed"/>
       </Border>
       <Grid x:Name="ContentGrid"
             Grid.Column="2"
@@ -284,25 +297,25 @@
                     HorizontalAlignment="Right"
                     d:Visibility="Collapsed"
                     Orientation="Horizontal"
-                    Spacing="3"
                     Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(IsPointerOver)}">
-          <FontIcon FontSize="16"
-                    Glyph="&#xE16C;"
-                    Visibility="{x:Bind ViewModel.HasAttachments}"/>
-          <FontIcon x:Name="ImportanceIcon"
-                    FontSize="16"
-                    Visibility="Collapsed"/>
-          <FontIcon x:Name="FlagIcon"
-                    FontSize="16"
-                    Foreground="{ThemeResource UnflagIconColor}"
-                    Glyph="&#xE129;"
-                    Visibility="{x:Bind ViewModel.IsFlagged}"/>
+          <ex:FluentSystemIcon Symbol="Attachment"
+                               Visibility="{x:Bind ViewModel.HasAttachments}"/>
+          <ex:FluentSystemIcon x:Name="ImportanceIcon"
+                               Margin="0,0,-5,0"
+                               Visibility="Collapsed"/>
+          <IconSourceElement x:Name="FlagIcon"
+                             Margin="5,-2,-2,-2"
+                             VerticalAlignment="Center"
+                             Foreground="{ThemeResource UnflagIconColor}"
+                             Visibility="{x:Bind ViewModel.IsFlagged}">
+            <PathIconSource Data="{StaticResource FlagIconData}"/>
+          </IconSourceElement>
         </StackPanel>
         <StackPanel Grid.Column="1"
                     HorizontalAlignment="Right"
                     d:Visibility="Visible"
                     Orientation="Horizontal"
-                    Spacing="3"
+                    Spacing="5"
                     Visibility="{x:Bind IsPointerOver}">
           <Button Command="{x:Bind ViewModel.Archive}"
                   Style="{StaticResource MessageSummaryViewArchiveButtonStyle}"
@@ -411,7 +424,7 @@
             </triggers:IsEqualStateTrigger>
           </VisualState.StateTriggers>
           <VisualState.Setters>
-            <Setter Target="ImportanceIcon.Glyph" Value="{StaticResource LowImportanceGlyph}"/>
+            <Setter Target="ImportanceIcon.Symbol" Value="ArrowDown"/>
             <Setter Target="ImportanceIcon.Visibility" Value="Visible"/>
           </VisualState.Setters>
         </VisualState>
@@ -425,7 +438,7 @@
             </triggers:IsEqualStateTrigger>
           </VisualState.StateTriggers>
           <VisualState.Setters>
-            <Setter Target="ImportanceIcon.Glyph" Value="{StaticResource HighImportanceGlyph}"/>
+            <Setter Target="ImportanceIcon.Symbol" Value="Importance"/>
             <Setter Target="ImportanceIcon.Foreground" Value="{ThemeResource HighImportanceIconColor}"/>
             <Setter Target="ImportanceIcon.Visibility" Value="Visible"/>
           </VisualState.Setters>

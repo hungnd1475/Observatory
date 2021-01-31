@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="using:Observatory.UI.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ex="using:Observatory.UI.Extensions"
              xmlns:local="using:Observatory.UI.Views"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="using:Observatory.UI"
@@ -89,24 +90,24 @@
       </Grid.RowDefinitions>
       <controls:OneWayToggleButton Command="{x:Bind MainViewModel.SelectMode, Mode=OneWay}"
                                    CommandParameter="{x:Bind vm:FunctionalityMode.Mail}"
+                                   Content="{ex:FluentSystemIcon Symbol=Mail,
+                                                                 Size=24}"
                                    IsChecked="{x:Bind ui:Converters.Equality(MainViewModel.CurrentMode, vm:FunctionalityMode.Mail), Mode=OneWay}"
-                                   Style="{StaticResource ModeSelectorToggleButtonStyle}">
-        <SymbolIcon Symbol="Mail"/>
-      </controls:OneWayToggleButton>
+                                   Style="{StaticResource ModeSelectorToggleButtonStyle}"/>
       <controls:OneWayToggleButton Grid.Row="1"
                                    Command="{x:Bind MainViewModel.SelectMode, Mode=OneWay}"
                                    CommandParameter="{x:Bind vm:FunctionalityMode.Calendar}"
+                                   Content="{ex:FluentSystemIcon Symbol=Calendar,
+                                                                 Size=24}"
                                    IsChecked="{x:Bind ui:Converters.Equality(MainViewModel.CurrentMode, vm:FunctionalityMode.Calendar), Mode=OneWay}"
-                                   Style="{StaticResource ModeSelectorToggleButtonStyle}">
-        <SymbolIcon Symbol="Calendar"/>
-      </controls:OneWayToggleButton>
+                                   Style="{StaticResource ModeSelectorToggleButtonStyle}"/>
       <controls:OneWayToggleButton Grid.Row="2"
                                    Command="{x:Bind MainViewModel.SelectMode, Mode=OneWay}"
                                    CommandParameter="{x:Bind vm:FunctionalityMode.Setup}"
+                                   Content="{ex:FluentSystemIcon Symbol=Setting,
+                                                                 Size=24}"
                                    IsChecked="{x:Bind ui:Converters.Equality(MainViewModel.CurrentMode, vm:FunctionalityMode.Setup), Mode=OneWay}"
-                                   Style="{StaticResource ModeSelectorToggleButtonStyle}">
-        <SymbolIcon Symbol="Setting"/>
-      </controls:OneWayToggleButton>
+                                   Style="{StaticResource ModeSelectorToggleButtonStyle}"/>
     </Grid>
     <Grid x:Name="ExpandedGrid"
           Visibility="Collapsed">
@@ -117,24 +118,24 @@
       </Grid.ColumnDefinitions>
       <controls:OneWayToggleButton Command="{x:Bind MainViewModel.SelectMode, Mode=OneWay}"
                                    CommandParameter="{x:Bind vm:FunctionalityMode.Mail}"
+                                   Content="{ex:FluentSystemIcon Symbol=Mail,
+                                                                 Size=24}"
                                    IsChecked="{x:Bind ui:Converters.Equality(MainViewModel.CurrentMode, vm:FunctionalityMode.Mail), Mode=OneWay}"
-                                   Style="{StaticResource ModeSelectorToggleButtonStyle}">
-        <SymbolIcon Symbol="Mail"/>
-      </controls:OneWayToggleButton>
+                                   Style="{StaticResource ModeSelectorToggleButtonStyle}"/>
       <controls:OneWayToggleButton Grid.Column="1"
                                    Command="{x:Bind MainViewModel.SelectMode, Mode=OneWay}"
                                    CommandParameter="{x:Bind vm:FunctionalityMode.Calendar}"
+                                   Content="{ex:FluentSystemIcon Symbol=Calendar,
+                                                                 Size=24}"
                                    IsChecked="{x:Bind ui:Converters.Equality(MainViewModel.CurrentMode, vm:FunctionalityMode.Calendar), Mode=OneWay}"
-                                   Style="{StaticResource ModeSelectorToggleButtonStyle}">
-        <SymbolIcon Symbol="Calendar"/>
-      </controls:OneWayToggleButton>
+                                   Style="{StaticResource ModeSelectorToggleButtonStyle}"/>
       <controls:OneWayToggleButton Grid.Column="2"
                                    Command="{x:Bind MainViewModel.SelectMode, Mode=OneWay}"
                                    CommandParameter="{x:Bind vm:FunctionalityMode.Setup}"
+                                   Content="{ex:FluentSystemIcon Symbol=Setting,
+                                                                 Size=24}"
                                    IsChecked="{x:Bind ui:Converters.Equality(MainViewModel.CurrentMode, vm:FunctionalityMode.Setup), Mode=OneWay}"
-                                   Style="{StaticResource ModeSelectorToggleButtonStyle}">
-        <SymbolIcon Symbol="Setting"/>
-      </controls:OneWayToggleButton>
+                                   Style="{StaticResource ModeSelectorToggleButtonStyle}"/>
     </Grid>
     <VisualStateManager.VisualStateGroups>
       <VisualStateGroup>

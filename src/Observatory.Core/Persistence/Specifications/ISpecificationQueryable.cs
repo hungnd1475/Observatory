@@ -33,6 +33,14 @@ namespace Observatory.Core.Persistence.Specifications
         TResult FirstOrDefault<TResult>(ISpecification<T, TResult> specification);
 
         /// <summary>
+        /// Determines whether there is any element satisfying a given <see cref="ISpecification{TSource, TTarget}"/>.
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="specification">The specification.</param>
+        /// <returns></returns>
+        bool Any<TResult>(ISpecification<T, TResult> specification);
+
+        /// <summary>
         /// Returns the number of elements satisfying a given <see cref="ISpecification{TSource, TTarget}"/>.
         /// </summary>
         /// <param name="specification"></param>

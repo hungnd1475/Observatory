@@ -19,6 +19,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
+using Uno.Extensions;
+using Uno.Logging;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
@@ -55,6 +57,13 @@ namespace Observatory.UI
 
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            this.UnhandledException += OnUnhandledException;
+        }
+
+        private void OnUnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
+        {
+            this.Log().Debug("Unhandled exception", e.Exception);
+            e.Handled = true;
         }
 
         /// <summary>
