@@ -459,8 +459,6 @@
              GettingFocus="EditorToolBar_GettingFocus"
              IsTabStop="False">
         <Pivot.Resources>
-          <!--<Style BasedOn="{StaticResource FluentIconAppBarButtonStyle}" TargetType="AppBarButton"/>
-          <Style BasedOn="{StaticResource FluentIconAppBarToggleButtonStyle}" TargetType="AppBarToggleButton"/>-->
           <Style BasedOn="{StaticResource EditorCommandBarPivotHeaderItemStyle}" TargetType="PivotHeaderItem"/>
           <Style BasedOn="{StaticResource NoContentCommandBarStyle}" TargetType="CommandBar">
             <Setter Property="Background" Value="Transparent"/>
@@ -486,10 +484,14 @@
                         Style="{StaticResource FixedDefaultComboBoxStyle}"
                         ToolTipService.ToolTip="Font"/>
             </AppBarElementContainer>
-            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=FontDecreased}"
+            <AppBarButton Click="{x:Bind Editor.DecreaseFontSize, Mode=OneTime}"
+                          Icon="{ex:FluentSystemIcon Symbol=FontDecreased}"
+                          IsEnabled="{x:Bind Editor.CanDecreaseFontSize}"
                           LabelPosition="Collapsed"
                           ToolTipService.ToolTip="Decrease Font Size"/>
-            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=FontIncreased}"
+            <AppBarButton Click="{x:Bind Editor.IncreaseFontSize, Mode=OneTime}"
+                          Icon="{ex:FluentSystemIcon Symbol=FontIncreased}"
+                          IsEnabled="{x:Bind Editor.CanIncreaseFontSize}"
                           LabelPosition="Collapsed"
                           ToolTipService.ToolTip="Increase Font Size"/>
             <AppBarSeparator IsCompact="True"/>

@@ -12,20 +12,18 @@ function debounce(interval, callback) {
 }
 
 function getCurrentFormat() {
-    const selection = document.getSelection();
+    //const selection = document.getSelection();
 
     // get the font size in pt
-    let fontSizeStr = window.getComputedStyle(selection.anchorNode.parentElement, null).fontSize;
-    let fontSize = parseInt(fontSizeStr.substring(0, fontSizeStr.length - 2)) * 72 / 96;
+    //let fontSizeStr = window.getComputedStyle(selection.anchorNode.parentElement, null).fontSize;
+    //let fontSize = parseInt(fontSizeStr.substring(0, fontSizeStr.length - 2)) * 72 / 96;
 
+    // get font names as array of string
     let fontNamesStr = document.queryCommandValue('fontname');
     let fontNames = [];
     if (fontNamesStr !== null) {
         fontNames = fontNamesStr.split(",").map(x => x.replace(/['"]+/g, ''));
     }
-
-    console.log(window.getComputedStyle(selection.anchorNode.parentElement, null).fontFamily);
-    console.log(fontNames);
 
     // get alignment
     let alignment = ALIGN_LEFT;
@@ -37,9 +35,7 @@ function getCurrentFormat() {
         alignment = ALIGN_JUSTIFIED;
     }
 
-    console.log('bold state = ' + document.queryCommandState('bold'));
-    console.log('bold indeterm = ' + document.queryCommandIndeterm('bold'));
-    console.log('bold value = ' + document.queryCommandValue('bold'));
+    console.log(document.queryCommandValue('fontsize'));
 
     return JSON.stringify({
         isBold: document.queryCommandValue('bold'),
@@ -49,7 +45,7 @@ function getCurrentFormat() {
         isSuperscript: document.queryCommandValue('superscript'),
         isSubscript: document.queryCommandValue('subscript'),
         fontNames: fontNames,
-        fontSize: Math.ceil(fontSize),
+        fontSize: parseInt(document.queryCommandValue('fontsize')),
         foreground: document.queryCommandValue('forecolor'),
         background: document.queryCommandValue('backcolor'),
         alignment: alignment,

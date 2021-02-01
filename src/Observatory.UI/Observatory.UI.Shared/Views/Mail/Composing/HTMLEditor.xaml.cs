@@ -26,6 +26,12 @@ namespace Observatory.UI.Views.Mail.Composing
             DependencyProperty.Register(nameof(TextFormat), typeof(HTMLEditorTextFormat),
                 typeof(HTMLEditor), new PropertyMetadata(HTMLEditorTextFormat.Default));
 
+        public static DependencyProperty CanIncreaseFontSizeProperty { get; } =
+            DependencyProperty.Register(nameof(CanIncreaseFontSize), typeof(bool), typeof(HTMLEditor), new PropertyMetadata(true));
+
+        public static DependencyProperty CanDecreaseFontSizeProperty { get; } =
+            DependencyProperty.Register(nameof(CanDecreaseFontSize), typeof(bool), typeof(HTMLEditor), new PropertyMetadata(true));
+
         /// <summary>
         /// Gets the format of the current text selection.
         /// </summary>
@@ -33,6 +39,24 @@ namespace Observatory.UI.Views.Mail.Composing
         {
             get { return (HTMLEditorTextFormat)GetValue(TextFormatProperty); }
             private set { SetValue(TextFormatProperty, value); }
+        }
+
+        /// <summary>
+        /// Gets the value indicating whether font size can be increased.
+        /// </summary>
+        public bool CanIncreaseFontSize
+        {
+            get { return (bool)GetValue(CanIncreaseFontSizeProperty); }
+            private set { SetValue(CanIncreaseFontSizeProperty, value); }
+        }
+
+        /// <summary>
+        /// Gets the value indicating whether the font size can be decrease.
+        /// </summary>
+        public bool CanDecreaseFontSize
+        {
+            get { return (bool)GetValue(CanDecreaseFontSizeProperty); }
+            private set { SetValue(CanDecreaseFontSizeProperty, value); }
         }
 
         public HTMLEditor()
@@ -115,6 +139,32 @@ namespace Observatory.UI.Views.Mail.Composing
         /// Justifies the current paragraph.
         /// </summary>
         public void AlignJustified() => Align(HTMLEditorTextAlignment.Justified);
+
+        /// <summary>
+        /// Increases the font size of the current text selection.
+        /// </summary>
+        public async void IncreaseFontSize()
+        {
+            if (CanIncreaseFontSize)
+            {
+                await SetCurrentFormat(ScriptConstants.FORMAT_FONT_SIZE, $"{TextFormat.FontSize + 1}");
+                CanIncreaseFontSize = TextFormat.FontSize < HTMLEditorTextFormat.MAX_FONT_SIZE;
+                CanDecreaseFontSize = TextFormat.FontSize > HTMLEditorTextFormat.MIN_FONT_SIZE;
+            }
+        }
+
+        /// <summary>
+        /// Decreases the font size of the current text selection.
+        /// </summary>
+        public async void DecreaseFontSize()
+        {
+            if (CanDecreaseFontSize)
+            {
+                await SetCurrentFormat(ScriptConstants.FORMAT_FONT_SIZE, $"{TextFormat.FontSize - 1}");
+                CanIncreaseFontSize = TextFormat.FontSize < HTMLEditorTextFormat.MAX_FONT_SIZE;
+                CanDecreaseFontSize = TextFormat.FontSize > HTMLEditorTextFormat.MIN_FONT_SIZE;
+            }
+        }
 
         /// <summary>
         /// Sets the font of the current selection.

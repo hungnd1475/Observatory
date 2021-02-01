@@ -15,6 +15,10 @@ namespace Observatory.UI.Views.Mail.Composing
             IgnoreNullValues = true,
         };
 
+        public const int MAX_FONT_SIZE = 7;
+
+        public const int MIN_FONT_SIZE = 1;
+
         /// <summary>
         /// Gets the default value of <see cref="HTMLEditorTextFormat"/>.
         /// </summary>

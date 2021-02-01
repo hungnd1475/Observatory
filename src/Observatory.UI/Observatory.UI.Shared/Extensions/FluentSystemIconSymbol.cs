@@ -61,5 +61,6 @@ namespace Observatory.UI.Extensions
         Navigation,
         CheckList,
         CheckMark,
+        Filter,
     }
 }

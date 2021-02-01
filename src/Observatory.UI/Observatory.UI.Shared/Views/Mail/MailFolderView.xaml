@@ -532,7 +532,7 @@
                   Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
                   DefaultLabelPosition="Right"
                   IsDynamicOverflowEnabled="False">
-        <win:AppBarButton Icon="{ex:FluentSystemIcon Symbol=Bullets}"
+        <win:AppBarButton Icon="{ex:FluentSystemIcon Symbol=Filter}"
                           Label="{x:Bind FormatFilterText(ViewModel.Messages.Filter), FallbackValue='Show'}">
           <win:AppBarButton.Flyout>
             <MenuFlyout Placement="BottomEdgeAlignedLeft">

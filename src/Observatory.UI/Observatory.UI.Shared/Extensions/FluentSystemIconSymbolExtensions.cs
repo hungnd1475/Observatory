@@ -65,6 +65,7 @@ namespace Observatory.UI.Extensions
                 FluentSystemIconSymbol.Navigation => "\uF560",
                 FluentSystemIconSymbol.CheckList => "\uF786",
                 FluentSystemIconSymbol.CheckMark => "\uF294",
+                FluentSystemIconSymbol.Filter => "\uF406",
                 _ => throw new NotSupportedException(),
             };
         }
