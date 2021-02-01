@@ -177,6 +177,16 @@ namespace Observatory.UI.Views.Mail.Composing
         public async void DecreaseIndent() => await SetCurrentFormat(ScriptConstants.FORMAT_OUTDENT);
 
         /// <summary>
+        /// Toggles bulleted list for the current paragraph.
+        /// </summary>
+        public async void ToggleBullets() => await SetCurrentFormat(ScriptConstants.FORMAT_BULLETS);
+
+        /// <summary>
+        /// Toggles numbered list for the current paragraph.
+        /// </summary>
+        public async void ToggleNumbering() => await SetCurrentFormat(ScriptConstants.FORMAT_NUMBERING);
+
+        /// <summary>
         /// Sets the font of the current selection.
         /// </summary>
         /// <param name="fontName"></param>
@@ -251,6 +261,8 @@ namespace Observatory.UI.Views.Mail.Composing
             public const string FORMAT_ALIGN_JUSTIFIED = "justifyFull";
             public const string FORMAT_INDENT = "indent";
             public const string FORMAT_OUTDENT = "outdent";
+            public const string FORMAT_BULLETS = "insertUnorderedList";
+            public const string FORMAT_NUMBERING = "insertOrderedList";
         }
     }
 }

@@ -545,10 +545,14 @@
               </AppBarButton.Flyout>
             </AppBarButton>
             <AppBarSeparator IsCompact="True"/>
-            <AppBarToggleButton Icon="{ex:FluentSystemIcon Symbol=Bullets}"
+            <AppBarToggleButton Click="{x:Bind Editor.ToggleBullets, Mode=OneTime}"
+                                Icon="{ex:FluentSystemIcon Symbol=Bullets}"
+                                IsChecked="{x:Bind ui:Converters.Equality(DisplayTextFormat.ListType, composing:HTMLEditorTextListType.Bullets)}"
                                 LabelPosition="Collapsed"
                                 ToolTipService.ToolTip="Bullets"/>
-            <AppBarToggleButton Icon="{ex:FluentSystemIcon Symbol=Numbering}"
+            <AppBarToggleButton Click="{x:Bind Editor.ToggleNumbering, Mode=OneTime}"
+                                Icon="{ex:FluentSystemIcon Symbol=Numbering}"
+                                IsChecked="{x:Bind ui:Converters.Equality(DisplayTextFormat.ListType, composing:HTMLEditorTextListType.Numbering)}"
                                 LabelPosition="Collapsed"
                                 ToolTipService.ToolTip="Numbering"/>
             <AppBarButton LabelPosition="Collapsed"

@@ -3,6 +3,10 @@ const ALIGN_CENTER = 1;
 const ALIGN_RIGHT = 2;
 const ALIGN_JUSTIFIED = 3;
 
+const LIST_TYPE_NONE = 0;
+const LIST_TYPE_BULLETS = 1;
+const LIST_TYPE_NUMBERING = 2;
+
 function debounce(interval, callback) {
     let debounceTimeoutId;
     return function (...args) {
@@ -35,7 +39,12 @@ function getCurrentFormat() {
         alignment = ALIGN_JUSTIFIED;
     }
 
-    console.log(document.queryCommandValue('fontsize'));
+    let listType = LIST_TYPE_NONE;
+    if (document.queryCommandValue('insertUnorderedList')) {
+        listType = LIST_TYPE_BULLETS;
+    } else if (document.queryCommandValue('insertOrderedList')) {
+        listType = LIST_TYPE_NUMBERING;
+    }
 
     return JSON.stringify({
         isBold: document.queryCommandValue('bold'),
@@ -49,6 +58,7 @@ function getCurrentFormat() {
         foreground: document.queryCommandValue('forecolor'),
         background: document.queryCommandValue('backcolor'),
         alignment: alignment,
+        listType: listType,
     });
 }
 

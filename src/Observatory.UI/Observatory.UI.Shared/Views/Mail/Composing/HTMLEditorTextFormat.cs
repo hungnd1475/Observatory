@@ -35,6 +35,7 @@ namespace Observatory.UI.Views.Mail.Composing
             Background = Colors.Transparent,
             Foreground = Colors.Black,
             Alignment = HTMLEditorTextAlignment.Left,
+            ListType = HTMLEditorTextListType.None,
         };
 
         /// <summary>
@@ -86,6 +87,11 @@ namespace Observatory.UI.Views.Mail.Composing
         /// Gets the alignment of the text.
         /// </summary>
         public HTMLEditorTextAlignment Alignment { get; set; }
+
+        /// <summary>
+        /// Gets the list type of the text.
+        /// </summary>
+        public HTMLEditorTextListType ListType { get; set; }
 
         /// <summary>
         /// Constructs an instance of <see cref="HTMLEditorTextFormat"/> by deserializing the given text. 
