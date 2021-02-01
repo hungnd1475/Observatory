@@ -64,10 +64,10 @@ namespace Observatory.UI.Extensions
                 FluentSystemIconSymbol.ZoomOut => "\uF8C6",
                 FluentSystemIconSymbol.Navigation => "\uF560",
                 FluentSystemIconSymbol.CheckList => "\uF786",
-                FluentSystemIconSymbol.CheckMark => "\uF293",
-                //FluentSystemIconSymbol.CheckMark => "\uF294",
+                FluentSystemIconSymbol.CheckMark => "\uF294",
                 FluentSystemIconSymbol.Filter => "\uF406",
                 FluentSystemIconSymbol.MultiSelect => "\uF55B",
+                FluentSystemIconSymbol.Send => "\uF699",
                 _ => throw new NotSupportedException(),
             };
         }

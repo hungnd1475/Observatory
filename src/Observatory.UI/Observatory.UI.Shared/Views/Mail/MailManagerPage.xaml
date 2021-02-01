@@ -214,7 +214,8 @@
           <CommandBar x:Name="MessageDetailCommandBar"
                       Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
                       CommandBarOverflowPresenterStyle="{StaticResource LightCommandBarOverflowPresenterStyle}"
-                      DefaultLabelPosition="Right">
+                      DefaultLabelPosition="Right"
+                      Visibility="{x:Bind ui:Converters.BoolNegationToVisibility(ViewModel.SelectedMessage.IsDraft), FallbackValue='Visible'}">
             <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Reply}"
                           Label="Reply"/>
             <AppBarButton Icon="{ex:FluentSystemIcon Symbol=ReplyAll}"
@@ -269,6 +270,16 @@
               <AppBarButton Icon="Zoom"
                             Label="Zoom"/>
             </CommandBar.SecondaryCommands>
+          </CommandBar>
+          <CommandBar x:Name="MessageComposerCommand"
+                      Background="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"
+                      CommandBarOverflowPresenterStyle="{StaticResource LightCommandBarOverflowPresenterStyle}"
+                      DefaultLabelPosition="Right"
+                      Visibility="{x:Bind ViewModel.SelectedMessage.IsDraft, FallbackValue='Collapsed'}">
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Delete}"
+                          Label="Discard"/>
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Send}"
+                          Label="Send"/>
           </CommandBar>
         </Grid>
       </Grid>
