@@ -33,13 +33,9 @@
         <Setter Property="CornerRadius" Value="0"/>
       </Style>
 
-      <Style TargetType="ComboBox">
-        <Setter Property="CornerRadius" Value="0"/>
-      </Style>
+      <Style BasedOn="{StaticResource FixedDefaultAppBarButtonStyle}" TargetType="AppBarButton"/>
 
-      <Style BasedOn="{StaticResource FixedAppBarButtonStyle}" TargetType="AppBarButton"/>
-
-      <Style BasedOn="{StaticResource FixedAppBarToggleButtonStyle}" TargetType="AppBarToggleButton"/>
+      <Style BasedOn="{StaticResource FixedDefaultAppBarToggleButtonStyle}" TargetType="AppBarToggleButton"/>
 
       <Style x:Key="NavigationPaneButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{ThemeResource SystemControlTransparentRevealBackgroundBrush}"/>
