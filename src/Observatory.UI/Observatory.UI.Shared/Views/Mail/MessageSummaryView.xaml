@@ -267,13 +267,18 @@
         <Border.RenderTransform>
           <CompositeTransform x:Name="MultiSelectionBoxTransform"/>
         </Border.RenderTransform>
-        <ex:FluentSystemIcon x:Name="MultiSelectionBoxCheckMark"
-                             Grid.Column="1"
-                             HorizontalAlignment="Center"
-                             VerticalAlignment="Center"
-                             FontSize="14"
-                             Symbol="CheckMark"
-                             Visibility="Collapsed"/>
+        <Viewbox Width="14"
+                 Height="14"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Center">
+          <ex:FluentSystemIcon x:Name="MultiSelectionBoxCheckMark"
+                               Grid.Column="1"
+                               Margin="-2,-1"
+                               FontSize="16"
+                               IconStyle="Filled"
+                               Symbol="CheckMark"
+                               Visibility="Collapsed"/>
+        </Viewbox>
       </Border>
       <Grid x:Name="ContentGrid"
             Grid.Column="2"

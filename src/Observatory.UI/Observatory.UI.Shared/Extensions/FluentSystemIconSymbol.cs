@@ -62,5 +62,6 @@ namespace Observatory.UI.Extensions
         CheckList,
         CheckMark,
         Filter,
+        MultiSelect
     }
 }

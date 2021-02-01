@@ -567,7 +567,7 @@
         </win:AppBarButton>
         <AppBarToggleButton x:Name="MultiSelectionToggleButton"
                             Width="45"
-                            Icon="{ex:FluentSystemIcon Symbol=CheckList}"
+                            Icon="{ex:FluentSystemIcon Symbol=MultiSelect}"
                             IsChecked="{x:Bind ViewModel.Messages.IsSelecting, Mode=TwoWay}"
                             IsCompact="True"
                             LabelPosition="Collapsed"
