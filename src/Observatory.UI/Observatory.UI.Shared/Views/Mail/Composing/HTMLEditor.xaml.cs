@@ -167,6 +167,16 @@ namespace Observatory.UI.Views.Mail.Composing
         }
 
         /// <summary>
+        /// Increases the indent of the current paragraph.
+        /// </summary>
+        public async void IncreaseIndent() => await SetCurrentFormat(ScriptConstants.FORMAT_INDENT);
+
+        /// <summary>
+        /// Decreases the indent of the current paragraph.
+        /// </summary>
+        public async void DecreaseIndent() => await SetCurrentFormat(ScriptConstants.FORMAT_OUTDENT);
+
+        /// <summary>
         /// Sets the font of the current selection.
         /// </summary>
         /// <param name="fontName"></param>
@@ -239,6 +249,8 @@ namespace Observatory.UI.Views.Mail.Composing
             public const string FORMAT_ALIGN_CENTER = "justifyCenter";
             public const string FORMAT_ALIGN_RIGHT = "justifyRight";
             public const string FORMAT_ALIGN_JUSTIFIED = "justifyFull";
+            public const string FORMAT_INDENT = "indent";
+            public const string FORMAT_OUTDENT = "outdent";
         }
     }
 }

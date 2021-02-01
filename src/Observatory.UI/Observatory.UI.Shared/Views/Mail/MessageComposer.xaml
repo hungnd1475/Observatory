@@ -591,10 +591,12 @@
                 <Flyout FlyoutPresenterStyle="{StaticResource EditorToolBarFlyoutPresenterStyle}"
                         Placement="BottomEdgeAlignedLeft">
                   <StackPanel Orientation="Horizontal">
-                    <AppBarButton Icon="{ex:FluentSystemIcon Symbol=IndentDecreased}"
+                    <AppBarButton Click="{x:Bind Editor.DecreaseIndent, Mode=OneTime}"
+                                  Icon="{ex:FluentSystemIcon Symbol=IndentDecreased}"
                                   LabelPosition="Collapsed"
                                   ToolTipService.ToolTip="Decrease Indent"/>
-                    <AppBarButton Icon="{ex:FluentSystemIcon Symbol=IndentIncreased}"
+                    <AppBarButton Click="{x:Bind Editor.IncreaseIndent, Mode=OneTime}"
+                                  Icon="{ex:FluentSystemIcon Symbol=IndentIncreased}"
                                   LabelPosition="Collapsed"
                                   ToolTipService.ToolTip="Increase Indent"/>
                   </StackPanel>
