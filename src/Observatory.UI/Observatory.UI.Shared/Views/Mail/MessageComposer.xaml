@@ -2,6 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:composing="using:Observatory.UI.Views.Mail.Composing"
+             xmlns:controls="using:Observatory.UI.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:ex="using:Observatory.UI.Extensions"
              xmlns:interactions="using:Microsoft.Xaml.Interactions.Core"
@@ -19,9 +20,9 @@
   <UserControl.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="ms-appx:///Styles/RecipientsTokenizingTextBox.xaml"/>
-        <ResourceDictionary Source="ms-appx:///Styles/SubjectTextBox.xaml"/>
-        <ResourceDictionary Source="ms-appx:///Styles/EditorToolBar.xaml"/>
+        <ResourceDictionary Source="/Styles/RecipientsTokenizingTextBox.xaml"/>
+        <ResourceDictionary Source="/Styles/SubjectTextBox.xaml"/>
+        <ResourceDictionary Source="/Styles/EditorToolBar.xaml"/>
       </ResourceDictionary.MergedDictionaries>
 
       <DataTemplate x:Key="RecipientsTokenizingTextBoxTokenItemDataTemplate"
@@ -510,12 +511,12 @@
                                 IsChecked="{x:Bind DisplayTextFormat.IsUnderlined}"
                                 LabelPosition="Collapsed"
                                 ToolTipService.ToolTip="Underline"/>
-            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Highlight}"
+            <!--<AppBarButton Icon="{ex:FluentSystemIcon Symbol=Highlight}"
                           LabelPosition="Collapsed"
                           ToolTipService.ToolTip="Highlight"/>
             <AppBarButton Icon="{ex:FluentSystemIcon Symbol=TextColor}"
                           LabelPosition="Collapsed"
-                          ToolTipService.ToolTip="Font Color"/>
+                          ToolTipService.ToolTip="Font Color"/>-->
             <AppBarButton Icon="{ex:FluentSystemIcon Symbol=ChevronDown}"
                           LabelPosition="Collapsed"
                           ToolTipService.ToolTip="Font Formatting">
@@ -545,16 +546,6 @@
               </AppBarButton.Flyout>
             </AppBarButton>
             <AppBarSeparator IsCompact="True"/>
-            <AppBarToggleButton Click="{x:Bind Editor.ToggleBullets, Mode=OneTime}"
-                                Icon="{ex:FluentSystemIcon Symbol=Bullets}"
-                                IsChecked="{x:Bind ui:Converters.Equality(DisplayTextFormat.ListType, composing:HTMLEditorTextListType.Bullets)}"
-                                LabelPosition="Collapsed"
-                                ToolTipService.ToolTip="Bullets"/>
-            <AppBarToggleButton Click="{x:Bind Editor.ToggleNumbering, Mode=OneTime}"
-                                Icon="{ex:FluentSystemIcon Symbol=Numbering}"
-                                IsChecked="{x:Bind ui:Converters.Equality(DisplayTextFormat.ListType, composing:HTMLEditorTextListType.Numbering)}"
-                                LabelPosition="Collapsed"
-                                ToolTipService.ToolTip="Numbering"/>
             <AppBarButton LabelPosition="Collapsed"
                           ToolTipService.ToolTip="Alignment">
               <AppBarButton.Icon>
@@ -588,6 +579,16 @@
                 </Flyout>
               </AppBarButton.Flyout>
             </AppBarButton>
+            <AppBarToggleButton Click="{x:Bind Editor.ToggleBullets, Mode=OneTime}"
+                                Icon="{ex:FluentSystemIcon Symbol=Bullets}"
+                                IsChecked="{x:Bind ui:Converters.Equality(DisplayTextFormat.ListType, composing:HTMLEditorTextListType.Bullets)}"
+                                LabelPosition="Collapsed"
+                                ToolTipService.ToolTip="Bullets"/>
+            <AppBarToggleButton Click="{x:Bind Editor.ToggleNumbering, Mode=OneTime}"
+                                Icon="{ex:FluentSystemIcon Symbol=Numbering}"
+                                IsChecked="{x:Bind ui:Converters.Equality(DisplayTextFormat.ListType, composing:HTMLEditorTextListType.Numbering)}"
+                                LabelPosition="Collapsed"
+                                ToolTipService.ToolTip="Numbering"/>
             <AppBarButton Icon="{ex:FluentSystemIcon Symbol=ChevronDown}"
                           LabelPosition="Collapsed"
                           ToolTipService.ToolTip="Paragraph Formatting">
@@ -616,7 +617,19 @@
                           Label="Files"/>
             <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Table}"
                           IsEnabled="{x:Bind IsFormattingEnabled}"
-                          Label="Table"/>
+                          Label="Table">
+              <AppBarButton.Flyout>
+                <Flyout x:Name="TableSizeSelectionFlyout"
+                        Placement="BottomEdgeAlignedLeft">
+                  <Flyout.FlyoutPresenterStyle>
+                    <Style BasedOn="{StaticResource EditorToolBarFlyoutPresenterStyle}" TargetType="FlyoutPresenter">
+                      <Setter Property="Padding" Value="8,8,8,4"/>
+                    </Style>
+                  </Flyout.FlyoutPresenterStyle>
+                  <controls:TableSizeSelectionGrid x:Name="TableSizeSelectionGrid"/>
+                </Flyout>
+              </AppBarButton.Flyout>
+            </AppBarButton>
             <AppBarButton Icon="{ex:FluentSystemIcon Symbol=Picture}"
                           IsEnabled="{x:Bind IsFormattingEnabled}"
                           Label="Pictures"/>

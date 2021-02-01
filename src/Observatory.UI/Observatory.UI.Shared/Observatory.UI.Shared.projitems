@@ -20,6 +20,9 @@
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Controls\MessageListViewItem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Controls\OneWayToggleButton.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\TableSizeSelectionEventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\TableSizeSelectionGrid.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\TableSizeSelectionGridCell.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\FluentSystemIcon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\FluentSystemIconFontFamily.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\FluentSystemIconSource.cs" />
@@ -103,6 +106,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="$(MSBuildThisFileDirectory)Styles\SubjectTextBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Styles\TableSizeSelectionGrid.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

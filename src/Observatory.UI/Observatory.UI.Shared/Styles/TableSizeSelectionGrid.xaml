@@ -1,0 +1,66 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:Observatory.UI.Controls">
+  <Style TargetType="controls:TableSizeSelectionGridCell">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="{ThemeResource SystemBaseMediumLowColor}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="controls:TableSizeSelectionGridCell">
+          <Border Padding="1"
+                  Background="Transparent">
+            <Border x:Name="Border"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"/>
+            <VisualStateManager.VisualStateGroups>
+              <VisualStateGroup>
+                <VisualState>
+                  <VisualState.StateTriggers>
+                    <StateTrigger IsActive="{Binding IsSelected, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>
+                  </VisualState.StateTriggers>
+                  <VisualState.Setters>
+                    <Setter Target="Border.BorderBrush" Value="{ThemeResource SystemAccentColorDark1}"/>
+                    <Setter Target="Border.Background" Value="{ThemeResource SystemAccentColorLight3}"/>
+                  </VisualState.Setters>
+                </VisualState>
+              </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="controls:TableSizeSelectionGrid">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="controls:TableSizeSelectionGrid">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <ItemsControl ItemsSource="{TemplateBinding Cells}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <ItemsWrapGrid ItemHeight="18"
+                                 ItemWidth="18"
+                                 MaximumRowsOrColumns="10"
+                                 Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <TextBlock Grid.Row="1"
+                       Margin="0,4,0,0"
+                       HorizontalAlignment="Center"
+                       Text="{TemplateBinding DisplaySize}"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+</ResourceDictionary>

@@ -19,6 +19,7 @@ using Uno.Logging;
 using Windows.UI.ViewManagement.Core;
 using Windows.UI.Xaml.Input;
 using Observatory.UI.Extensions;
+using Observatory.UI.Controls;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -96,6 +97,7 @@ namespace Observatory.UI.Views.Mail
         {
             this.InitializeComponent();
             EditorToolBarShadow.Receivers.Add(MailHeaderGrid);
+            TableSizeSelectionGrid.SizeSelected += TableSizeSelectionGrid_SizeSelected;
 
             this.WhenActivated(disposables =>
             {
@@ -153,6 +155,11 @@ namespace Observatory.UI.Views.Mail
                 })
                 .DisposeWith(disposables);
             });
+        }
+
+        private void TableSizeSelectionGrid_SizeSelected(object sender, TableSizeSelectionEventArgs e)
+        {
+            TableSizeSelectionFlyout.Hide();   
         }
 
         public string FindMatchingFontFamily(IEnumerable<string> fontFamiliesToFind)
