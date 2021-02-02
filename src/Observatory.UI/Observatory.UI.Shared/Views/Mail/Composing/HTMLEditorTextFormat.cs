@@ -12,7 +12,6 @@ namespace Observatory.UI.Views.Mail.Composing
         private static JsonSerializerOptions JsonSerializerOptions { get; } = new JsonSerializerOptions()
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            IgnoreNullValues = true,
         };
 
         public const int MAX_FONT_SIZE = 7;
@@ -45,7 +44,7 @@ namespace Observatory.UI.Views.Mail.Composing
         /// <summary>
         /// Gets the font size of the text.
         /// </summary>
-        public int FontSize { get; set; }
+        public int? FontSize { get; set; }
 
         /// <summary>
         /// Gets the value indicating whether the text is bold.

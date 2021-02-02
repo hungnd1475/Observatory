@@ -24,7 +24,15 @@ namespace Observatory.UI.Views.Mail.Composing
 
         public static DependencyProperty TextFormatProperty { get; } =
             DependencyProperty.Register(nameof(TextFormat), typeof(HTMLEditorTextFormat),
-                typeof(HTMLEditor), new PropertyMetadata(HTMLEditorTextFormat.Default));
+                typeof(HTMLEditor), new PropertyMetadata(HTMLEditorTextFormat.Default, OnTextFormatChanged));
+
+        private static void OnTextFormatChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var editor = (HTMLEditor)d;
+            var format = (HTMLEditorTextFormat)e.NewValue;
+            editor.CanIncreaseFontSize = format.FontSize < HTMLEditorTextFormat.MAX_FONT_SIZE;
+            editor.CanDecreaseFontSize = format.FontSize > HTMLEditorTextFormat.MIN_FONT_SIZE;
+        }
 
         public static DependencyProperty CanIncreaseFontSizeProperty { get; } =
             DependencyProperty.Register(nameof(CanIncreaseFontSize), typeof(bool), typeof(HTMLEditor), new PropertyMetadata(true));
@@ -148,8 +156,6 @@ namespace Observatory.UI.Views.Mail.Composing
             if (CanIncreaseFontSize)
             {
                 await SetCurrentFormat(ScriptConstants.FORMAT_FONT_SIZE, $"{TextFormat.FontSize + 1}");
-                CanIncreaseFontSize = TextFormat.FontSize < HTMLEditorTextFormat.MAX_FONT_SIZE;
-                CanDecreaseFontSize = TextFormat.FontSize > HTMLEditorTextFormat.MIN_FONT_SIZE;
             }
         }
 
@@ -161,8 +167,6 @@ namespace Observatory.UI.Views.Mail.Composing
             if (CanDecreaseFontSize)
             {
                 await SetCurrentFormat(ScriptConstants.FORMAT_FONT_SIZE, $"{TextFormat.FontSize - 1}");
-                CanIncreaseFontSize = TextFormat.FontSize < HTMLEditorTextFormat.MAX_FONT_SIZE;
-                CanDecreaseFontSize = TextFormat.FontSize > HTMLEditorTextFormat.MIN_FONT_SIZE;
             }
         }
 
