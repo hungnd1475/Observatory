@@ -159,7 +159,8 @@ namespace Observatory.UI.Views.Mail
 
         private void TableSizeSelectionGrid_SizeSelected(object sender, TableSizeSelectionEventArgs e)
         {
-            TableSizeSelectionFlyout.Hide();   
+            TableSizeSelectionFlyout.Hide();
+            Editor.InsertTable(e.RowCount, e.ColumnCount);
         }
 
         public string FindMatchingFontFamily(IEnumerable<string> fontFamiliesToFind)

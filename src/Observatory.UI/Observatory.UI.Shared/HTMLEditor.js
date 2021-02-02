@@ -77,6 +77,30 @@ function getHtml() {
     return document.documentElement.outerHTML;
 }
 
+function insertTable(rowCount, columnCount) {
+    rowCount = parseInt(rowCount);
+    columnCount = parseInt(columnCount);
+
+    const tbl = document.createElement('table');
+    tbl.border = '1';
+    tbl.style.width = '100%';
+    tbl.style.borderCollapse = 'collapse';
+
+    const columnWidth = 100 / columnCount + '%';
+
+    for (let i = 0; i < rowCount; i++) {
+        const tr = tbl.insertRow();
+        for (let j = 0; j < columnCount; j++) {
+            const td = tr.insertCell();
+            td.appendChild(document.createElement('br'));
+            td.style.padding = '4px';
+            td.style.width = columnWidth;
+        }
+    }
+
+    document.execCommand('insertHtml', false, tbl.outerHTML);
+}
+
 document.designMode = 'on';
 document.body.contentEditable = true;
 

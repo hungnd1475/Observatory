@@ -193,6 +193,17 @@ namespace Observatory.UI.Views.Mail.Composing
         public async void SetFont(string fontName) => await SetCurrentFormat(
             ScriptConstants.FORMAT_FONT_NAME, fontName);
 
+        /// <summary>
+        /// Inserts table into the editor.
+        /// </summary>
+        /// <param name="rowCount"></param>
+        /// <param name="columnCount"></param>
+        public async void InsertTable(int rowCount, int columnCount)
+        {
+            await EditorWebView.InvokeScriptAsync(ScriptConstants.FUNCTION_INSERT_TABLE,
+                new string[] { rowCount.ToString(), columnCount.ToString() });
+        }
+
         private async void NavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
         {
             if (args.Uri != null)
@@ -244,6 +255,7 @@ namespace Observatory.UI.Views.Mail.Composing
 
             public const string FUNCTION_EVAL = "eval";
             public const string FUNCTION_SET_CURRENT_FORMAT = "setCurrentFormat";
+            public const string FUNCTION_INSERT_TABLE = "insertTable";
 
             public const string FORMAT_BOLD = "bold";
             public const string FORMAT_ITALIC = "italic";
@@ -263,6 +275,8 @@ namespace Observatory.UI.Views.Mail.Composing
             public const string FORMAT_OUTDENT = "outdent";
             public const string FORMAT_BULLETS = "insertUnorderedList";
             public const string FORMAT_NUMBERING = "insertOrderedList";
+
+            public const string FORMAT_INSERT_HTML = "insertHtml";
         }
     }
 }
