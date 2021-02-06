@@ -96,8 +96,9 @@ namespace Observatory.UI.Views.Mail
         public MessageComposer()
         {
             this.InitializeComponent();
-            EditorToolBarShadow.Receivers.Add(MailHeaderGrid);
+            EditorToolBarShadow.Receivers.Add(MailHeaderGrid);            
             TableSizeSelectionGrid.SizeSelected += TableSizeSelectionGrid_SizeSelected;
+            EditorToolBarTableTab.Loaded += EditorToolBarTableTab_Loaded;
 
             this.WhenActivated(disposables =>
             {
@@ -147,6 +148,23 @@ namespace Observatory.UI.Views.Mail
                     .Subscribe()
                     .DisposeWith(disposables);
 
+                this.WhenAnyValue(x => x.DisplayTextFormat.IsTable)
+                    .DistinctUntilChanged()
+                    .Do(isTable =>
+                    {
+                        if (isTable)
+                        {
+                            EditorToolBar.Items.Add(EditorToolBarTableTab);
+                        }
+                        else
+                        {
+                            EditorToolBar.Items.Remove(EditorToolBarTableTab);
+                        }
+                    })
+                    .Subscribe()
+                    .DisposeWith(disposables);
+
+
                 Disposable.Create(() =>
                 {
                     _isFontChangedFromEditor = false;
@@ -155,6 +173,11 @@ namespace Observatory.UI.Views.Mail
                 })
                 .DisposeWith(disposables);
             });
+        }
+
+        private void EditorToolBarTableTab_Loaded(object sender, RoutedEventArgs e)
+        {
+            EditorToolBar.SelectedItem = EditorToolBarTableTab;
         }
 
         private void TableSizeSelectionGrid_SizeSelected(object sender, TableSizeSelectionEventArgs e)

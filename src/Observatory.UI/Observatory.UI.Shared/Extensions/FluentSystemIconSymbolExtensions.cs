@@ -68,6 +68,14 @@ namespace Observatory.UI.Extensions
                 FluentSystemIconSymbol.Filter => "\uF406",
                 FluentSystemIconSymbol.MultiSelect => "\uF55B",
                 FluentSystemIconSymbol.Send => "\uF699",
+                FluentSystemIconSymbol.TableDelete => "\uFB54",
+                FluentSystemIconSymbol.TableDeleteColumn => "\uFC7B",
+                FluentSystemIconSymbol.TableDeleteRow => "\uFC7C",
+                FluentSystemIconSymbol.TableMoveLeft => "\uF771",
+                FluentSystemIconSymbol.TableMoveRight => "\uF772",
+                FluentSystemIconSymbol.TableMoveAbove => "\uFC80",
+                FluentSystemIconSymbol.TableMoveBelow => "\uFC81",
+                FluentSystemIconSymbol.TableAdd => "\uFB53",
                 _ => throw new NotSupportedException(),
             };
         }

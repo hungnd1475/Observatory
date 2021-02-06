@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "System",
+    "target": "es6",
+    "lib": [ "es6", "DOM" ],
+    "removeComments": true,
+    "outFile": "./HTMLEditor.js",
+    "sourceMap": true
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

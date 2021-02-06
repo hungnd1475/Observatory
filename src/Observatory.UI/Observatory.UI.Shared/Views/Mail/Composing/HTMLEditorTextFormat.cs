@@ -35,6 +35,7 @@ namespace Observatory.UI.Views.Mail.Composing
             Foreground = Colors.Black,
             Alignment = HTMLEditorTextAlignment.Left,
             ListType = HTMLEditorTextListType.None,
+            IsTable = false,
         };
 
         /// <summary>
@@ -91,6 +92,11 @@ namespace Observatory.UI.Views.Mail.Composing
         /// Gets the list type of the text.
         /// </summary>
         public HTMLEditorTextListType ListType { get; set; }
+
+        /// <summary>
+        /// Gets a value indicating whether the current caret position is inside a table.
+        /// </summary>
+        public bool IsTable { get; set; }
 
         /// <summary>
         /// Constructs an instance of <see cref="HTMLEditorTextFormat"/> by deserializing the given text. 

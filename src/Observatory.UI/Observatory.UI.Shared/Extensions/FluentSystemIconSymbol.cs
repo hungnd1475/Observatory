@@ -64,5 +64,13 @@ namespace Observatory.UI.Extensions
         Filter,
         MultiSelect,
         Send,
+        TableDelete,
+        TableDeleteColumn,
+        TableDeleteRow,
+        TableMoveLeft,
+        TableMoveRight,
+        TableMoveAbove,
+        TableMoveBelow,
+        TableAdd,
     }
 }

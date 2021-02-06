@@ -50,7 +50,8 @@
     </Grid.RowDefinitions>
     <Grid Shadow="{StaticResource EditorToolBarShadow}"
           Translation="0,0,4">
-      <Pivot Background="{ThemeResource CommandBarBackground}"
+      <Pivot x:Name="EditorToolBar"
+             Background="{ThemeResource CommandBarBackground}"
              GettingFocus="EditorToolBar_GettingFocus"
              IsTabStop="False">
         <Pivot.Resources>
@@ -242,6 +243,40 @@
                           LabelPosition="Collapsed"/>
             <AppBarButton Icon="{ex:FluentSystemIcon Symbol=ArrowDown}"
                           LabelPosition="Collapsed"/>
+          </CommandBar>
+        </PivotItem>
+        <PivotItem x:Name="EditorToolBarTableTab"
+                   Header="Table">
+          <CommandBar Height="{StaticResource NavigationViewCompactPaneLength}"
+                      DefaultLabelPosition="Right">
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=TableDelete}"
+                          Label="Delete">
+              <AppBarButton.Flyout>
+                <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                  <MenuFlyoutItem Icon="{ex:FluentSystemIcon Symbol=TableDeleteColumn}"
+                                  Text="Delete Columns"/>
+                  <MenuFlyoutItem Icon="{ex:FluentSystemIcon Symbol=TableDeleteRow}"
+                                  Text="Delete Rows"/>
+                  <MenuFlyoutItem Icon="{ex:FluentSystemIcon Symbol=TableDelete}"
+                                  Text="Delete Table"/>
+                </MenuFlyout>
+              </AppBarButton.Flyout>
+            </AppBarButton>
+            <AppBarButton Icon="{ex:FluentSystemIcon Symbol=TableAdd}"
+                          Label="Insert">
+              <AppBarButton.Flyout>
+                <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                  <MenuFlyoutItem Icon="{ex:FluentSystemIcon Symbol=TableMoveAbove}"
+                                  Text="Insert Above"/>
+                  <MenuFlyoutItem Icon="{ex:FluentSystemIcon Symbol=TableMoveBelow}"
+                                  Text="Insert Below"/>
+                  <MenuFlyoutItem Icon="{ex:FluentSystemIcon Symbol=TableMoveLeft}"
+                                  Text="Insert Left"/>
+                  <MenuFlyoutItem Icon="{ex:FluentSystemIcon Symbol=TableMoveRight}"
+                                  Text="Insert Right"/>
+                </MenuFlyout>
+              </AppBarButton.Flyout>
+            </AppBarButton>
           </CommandBar>
         </PivotItem>
       </Pivot>
