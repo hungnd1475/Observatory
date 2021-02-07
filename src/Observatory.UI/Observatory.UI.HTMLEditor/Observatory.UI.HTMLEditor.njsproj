@@ -44,6 +44,9 @@
     <TypeScriptCompile Include="src\format.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="src\platform.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\selection.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>

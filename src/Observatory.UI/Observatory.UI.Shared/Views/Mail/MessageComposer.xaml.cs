@@ -188,7 +188,7 @@ namespace Observatory.UI.Views.Mail
 
         public string FindMatchingFontFamily(IEnumerable<string> fontFamiliesToFind)
         {
-            return fontFamiliesToFind.FirstOrDefault(x => FontFamilies.Contains(x));
+            return fontFamiliesToFind?.FirstOrDefault(x => FontFamilies.Contains(x));
         }
 
         public void ShowCcTextBox()

@@ -24,6 +24,22 @@ namespace Utils {
         export function contains<T>(arr: ArrayLike<T>, value: T): boolean {
             return Array.prototype.indexOf.call(arr, value) > -1;
         }
+
+        export function find<T>(arr: ArrayLike<T>, pred: (value: T) => boolean): T {
+            for (let i = 0; i < arr.length; ++i) {
+                const x = arr[i];
+                if (pred(x)) {
+                    return x;
+                }
+            }
+            return null;
+        }
+    }
+
+    export namespace Strings {
+        export function contains(str: string, substr: string): boolean {
+            return str.indexOf(substr) !== -1;
+        }
     }
     
     export namespace NodeType {
