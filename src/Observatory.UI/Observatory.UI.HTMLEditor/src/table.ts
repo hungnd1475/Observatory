@@ -12,9 +12,8 @@ namespace Table {
         return null;
     }
 
-    export function createTable(rowCount: number, columnCount: number, id: string): HTMLTableElement {
+    export function createTable(rowCount: number, columnCount: number): HTMLTableElement {
         const tbl = document.createElement('table');
-        tbl.id = id;
         tbl.border = '1';
         tbl.style.width = '100%';
         tbl.style.borderCollapse = 'collapse';
@@ -46,7 +45,8 @@ namespace Table {
 
     export function insertTable(rowCount: number, columnCount: number) {
         const id = 'new-table';
-        let tbl = createTable(rowCount, columnCount, id);
+        let tbl = createTable(rowCount, columnCount);
+        tbl.id = id;
         document.execCommand('insertHtml', false, tbl.outerHTML);
 
         tbl = document.getElementById(id) as HTMLTableElement;

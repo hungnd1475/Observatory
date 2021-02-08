@@ -328,7 +328,7 @@ namespace Platform {
         deviceType: DeviceType;
     }
 
-    export function detect(userAgent: string, mediaMatch: (query: string) => boolean): PlatformDetection {
+    export function detect(userAgent: string = navigator.userAgent, mediaMatch: (query: string) => boolean = (query) => window.matchMedia(query).matches): PlatformDetection {
         const browsers = PlatformInfo.browsers;
         const oses = PlatformInfo.oses;
 
@@ -348,4 +348,4 @@ namespace Platform {
     };
 }
 
-const PLATFORM = Platform.detect(navigator.userAgent, (query) => window.matchMedia(query).matches);
+const PLATFORM = Platform.detect();

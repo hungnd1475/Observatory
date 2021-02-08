@@ -437,7 +437,7 @@ var Platform;
         };
     }
     Platform.DeviceType = DeviceType;
-    function detect(userAgent, mediaMatch) {
+    function detect(userAgent = navigator.userAgent, mediaMatch = (query) => window.matchMedia(query).matches) {
         const browsers = PlatformInfo.browsers;
         const oses = PlatformInfo.oses;
         const browserInfo = UaString.detectBrowser(browsers, userAgent);
@@ -454,7 +454,7 @@ var Platform;
     Platform.detect = detect;
     ;
 })(Platform || (Platform = {}));
-const PLATFORM = Platform.detect(navigator.userAgent, (query) => window.matchMedia(query).matches);
+const PLATFORM = Platform.detect();
 var SelectionUtils;
 (function (SelectionUtils) {
     SelectionUtils.MOVE_CARET_BEFORE_ON_ENTER_ELEMENTS_MAP = Utils.makeMap('td th iframe video audio object script code table ' +
@@ -592,9 +592,8 @@ var Table;
         return null;
     }
     Table.findParentTable = findParentTable;
-    function createTable(rowCount, columnCount, id) {
+    function createTable(rowCount, columnCount) {
         const tbl = document.createElement('table');
-        tbl.id = id;
         tbl.border = '1';
         tbl.style.width = '100%';
         tbl.style.borderCollapse = 'collapse';
@@ -621,7 +620,8 @@ var Table;
     }
     function insertTable(rowCount, columnCount) {
         const id = 'new-table';
-        let tbl = createTable(rowCount, columnCount, id);
+        let tbl = createTable(rowCount, columnCount);
+        tbl.id = id;
         document.execCommand('insertHtml', false, tbl.outerHTML);
         tbl = document.getElementById(id);
         tbl.removeAttribute('id');
@@ -735,4 +735,5 @@ document.body.contentEditable = 'true';
 document.addEventListener('selectionchange', Utils.debounce(100, () => {
     window.external.notify(getCurrentFormat());
 }));
+console.log(JSON.stringify(PLATFORM));
 //# sourceMappingURL=HTMLEditor.js.map
