@@ -4,7 +4,7 @@ Observatory is an experimental project attempting to create an email client usin
 
 ## Screenshots
 
-![](./img/screenshot-01.PNG)
+![](./img/screenshot-01.png)
 
 ![](./img/screenshot-02.png)
 
