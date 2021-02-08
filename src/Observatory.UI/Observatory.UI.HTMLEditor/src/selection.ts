@@ -123,29 +123,29 @@ namespace SelectionUtils {
         }
 
         // WebKit egde case selecting images works better using setBaseAndExtent when the image is floated
-        //if (!rng.collapsed && rng.startContainer === rng.endContainer && sel.setBaseAndExtent && !PLATFORM.browser.isIE()) {
-        //    if (rng.endOffset - rng.startOffset < 2) {
-        //        if (rng.startContainer.hasChildNodes()) {
-        //            let node: any = rng.startContainer.childNodes[rng.startOffset];
-        //            if (node && node.tagName === 'IMG') {
-        //                sel.setBaseAndExtent(
-        //                    rng.startContainer,
-        //                    rng.startOffset,
-        //                    rng.endContainer,
-        //                    rng.endOffset
-        //                );
+        if (!rng.collapsed && rng.startContainer === rng.endContainer && sel.setBaseAndExtent && !(PLATFORM.browser.isIE() || PLATFORM.browser.isEdge())) {
+            if (rng.endOffset - rng.startOffset < 2) {
+                if (rng.startContainer.hasChildNodes()) {
+                    let node: any = rng.startContainer.childNodes[rng.startOffset];
+                    if (node && node.tagName === 'IMG') {
+                        sel.setBaseAndExtent(
+                            rng.startContainer,
+                            rng.startOffset,
+                            rng.endContainer,
+                            rng.endOffset
+                        );
 
-        //                // Since the setBaseAndExtent is fixed in more recent Blink versions we
-        //                // need to detect if it's doing the wrong thing and falling back to the
-        //                // crazy incorrect behavior api call since that seems to be the only way
-        //                // to get it to work on Safari WebKit as of 2017-02-23
-        //                if (sel.anchorNode !== rng.startContainer || sel.focusNode !== rng.endContainer) {
-        //                    sel.setBaseAndExtent(node, 0, node, 1);
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
+                        // Since the setBaseAndExtent is fixed in more recent Blink versions we
+                        // need to detect if it's doing the wrong thing and falling back to the
+                        // crazy incorrect behavior api call since that seems to be the only way
+                        // to get it to work on Safari WebKit as of 2017-02-23
+                        if (sel.anchorNode !== rng.startContainer || sel.focusNode !== rng.endContainer) {
+                            sel.setBaseAndExtent(node, 0, node, 1);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     export function select(node: Node, content?: boolean) {

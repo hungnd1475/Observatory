@@ -564,6 +564,19 @@ var SelectionUtils;
                 sel.extend(rng.startContainer, rng.startOffset);
             }
         }
+        if (!rng.collapsed && rng.startContainer === rng.endContainer && sel.setBaseAndExtent && !(PLATFORM.browser.isIE() || PLATFORM.browser.isEdge())) {
+            if (rng.endOffset - rng.startOffset < 2) {
+                if (rng.startContainer.hasChildNodes()) {
+                    let node = rng.startContainer.childNodes[rng.startOffset];
+                    if (node && node.tagName === 'IMG') {
+                        sel.setBaseAndExtent(rng.startContainer, rng.startOffset, rng.endContainer, rng.endOffset);
+                        if (sel.anchorNode !== rng.startContainer || sel.focusNode !== rng.endContainer) {
+                            sel.setBaseAndExtent(node, 0, node, 1);
+                        }
+                    }
+                }
+            }
+        }
     }
     SelectionUtils.setRange = setRange;
     function select(node, content) {
@@ -735,5 +748,4 @@ document.body.contentEditable = 'true';
 document.addEventListener('selectionchange', Utils.debounce(100, () => {
     window.external.notify(getCurrentFormat());
 }));
-console.log(JSON.stringify(PLATFORM));
 //# sourceMappingURL=HTMLEditor.js.map
