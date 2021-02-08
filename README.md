@@ -8,6 +8,10 @@ Observatory is an experimental project attempting to create an email client usin
 
 ![](./img/screenshot-02.png)
 
+## Editor demo
+
+![](./img/demo-01.gif)
+
 ## Features
 
 ### Functionalities
