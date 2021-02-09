@@ -72,6 +72,7 @@ namespace Observatory.UI.Views.Mail
                     .DisposeWith(disposables);
 
                 this.WhenAnyValue(x => x.ViewModel.Messages.IsSelecting)
+                    .DistinctUntilChanged()
                     .Do(isSelecting =>
                     {
                         if (isSelecting)
@@ -89,21 +90,29 @@ namespace Observatory.UI.Views.Mail
                     .Subscribe()
                     .DisposeWith(disposables);
 
+                this.WhenAnyValue(x => x.ViewModel)
+                    .DistinctUntilChanged()
+                    .Do(_ => SelectedMessage = null)
+                    .Subscribe()
+                    .DisposeWith(disposables);
+
                 this.OneWayBind(ViewModel,
                         x => x.Messages.SelectionCount,
                         x => x.SelectionCountTextBlock.Text,
                         value => $"({value})")
                     .DisposeWith(disposables);
 
-                Observable.CombineLatest(
-                        this.WhenAnyValue(x => x.ViewModel.Messages.IsSelecting),
-                        this.WhenAnyValue(x => x.ViewModel.Messages.SelectionCount),
+                this.WhenAnyValue(
+                        x => x.ViewModel.Messages.IsSelecting,
+                        x => x.ViewModel.Messages.SelectionCount,
                         (isSelecting, selectionCount) => isSelecting && selectionCount > 0)
+                    .DistinctUntilChanged()
                     .Select(x => x ? Visibility.Visible : Visibility.Collapsed)
                     .BindTo(this, x => x.SelectionCountTextBlock.Visibility)
                     .DisposeWith(disposables);
 
                 this.WhenAnyValue(x => x.ViewModel.Messages.Cache)
+                    .DistinctUntilChanged()
                     .Do(_ => SelectAllCheckBox.IsChecked = false)
                     .Subscribe()
                     .DisposeWith(disposables);
